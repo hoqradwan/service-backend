@@ -1,12 +1,12 @@
 import { UserModel } from './user.model.js';
 import bcrypt from 'bcrypt';
-import { createUser, findUserByEmail } from './user.service.js';
+import { createUser, deleteUserById, findUserByEmail, findUserById, updateUserById } from './user.service.js';
 import { validateUserInput } from './user.validation.js';
 import { generateToken, hashPassword } from './user.utils.js';
 
 export const registerUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password,phone,role } = req.body;
     
       const validationError = validateUserInput(name, email, password);
    
@@ -22,17 +22,11 @@ export const registerUser = async (req, res) => {
       });
     }
 
-    const isUserPresent = await findUserByEmail(email, UserModel);
-    if (isUserPresent) {
-      return res.status(400).json({
-        isOk: false,
-        message: "You have already an account."
-      });
-    }
+
 
     const hashedPassword = hashPassword(password);
     const { createdUser } = await createUser({
-      name, email, hashedPassword, 
+      name, email, hashedPassword, phone,role
     });
 
     const token = generateToken({ name, email });
@@ -104,6 +98,64 @@ export const loginUser = async (req, res) => {
   
     } catch (error) {
       console.error("Error during user login:", error);
+      return res.status(500).json({ isOk: false, message: "Internal server error" });
+    }
+};
+  
+export const updateUser = async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { name, email, password, phone } = req.body;
+      
+      const user = await findUserById(userId);
+      if (!user) {
+        return res.status(404).json({
+          isOk: false,
+          message: "User not found."
+        });
+      }
+      
+      // Create an update object and only add fields that are provided in the request body
+      const updateData = {};
+      if (name) updateData.name = name;
+      if (email) updateData.email = email;
+      if (password) updateData.password = hashPassword(password);
+      if (phone) updateData.phone = phone;
+  
+      const updatedUser = await updateUserById(userId, updateData);
+  
+      return res.json({
+        isOk: true,
+        message: "User updated successfully",
+        user: updatedUser
+      });
+    } catch (error) {
+      console.error("Error updating user:", error);
+      return res.status(500).json({ isOk: false, message: "Internal server error" });
+    }
+  };
+  
+  
+  export const deleteUser = async (req, res) => {
+    try {
+      const { userId } = req.params;
+      
+      const user = await findUserById(userId);
+      if (!user) {
+        return res.status(404).json({
+          isOk: false,
+          message: "User not found."
+        });
+      }
+      
+      await deleteUserById(userId);
+  
+      return res.json({
+        isOk: true,
+        message: "User deleted successfully"
+      });
+    } catch (error) {
+      console.error("Error deleting user:", error);
       return res.status(500).json({ isOk: false, message: "Internal server error" });
     }
   };
