@@ -7,6 +7,6 @@ export const hashPassword = (password) => {
 };
 
 export const generateToken = (payload) => {
-  const expiresIn = '7d'; // 7 days
+  const expiresIn = '7d'; // 7 days expire
   return jwt.sign(payload, process.env.JWT_SECRET_KEY, { expiresIn });
 };
