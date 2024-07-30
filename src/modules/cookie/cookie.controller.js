@@ -26,16 +26,18 @@ import { getCookie } from './cookie.utils.js';
 
 export const handleDownload = async (req, res) => {
   try {
-      const { url } = req.body;
-      
+    const { url } = req.body;
+
     const cookie = getCookie();
-console.log(cookie,"cookie")
+    console.log(cookie, 'cookie');
     if (!url) {
       return res.status(400).json({ isOk: false, message: 'URL is required' });
     }
 
     if (!cookie) {
-      return res.status(400).json({ isOk: false, message: 'Cookie is required' });
+      return res
+        .status(400)
+        .json({ isOk: false, message: 'Cookie is required' });
     }
 
     const { filePath, message } = await downloadContent(url, cookie);
@@ -43,7 +45,7 @@ console.log(cookie,"cookie")
     res.json({
       isOk: true,
       message,
-      filePath
+      filePath,
     });
   } catch (error) {
     console.error('Error handling download:', error);
