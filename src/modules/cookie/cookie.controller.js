@@ -26,10 +26,16 @@ import { getCookie } from './cookie.utils.js';
 
 export const handleDownload = async (req, res) => {
   try {
-      const { url } = req.body;
-      
+    const { URL } = req.body;
+    const url = 'https://elements.envato.com/elements-api/items/6FTX28T/download_and_license.json';
+    const payload = {
+      licenseType: "project",
+      projectName: "04digitaltoolsbd",
+      searchCorrelationId: "61964461-3f5c-4eeb-85f7-2548bd03a97c"
+    };
+
     const cookie = getCookie();
-console.log(cookie,"cookie")
+    // console.log(cookie,"cookie")
     if (!url) {
       return res.status(400).json({ isOk: false, message: 'URL is required' });
     }
@@ -38,7 +44,7 @@ console.log(cookie,"cookie")
       return res.status(400).json({ isOk: false, message: 'Cookie is required' });
     }
 
-    const { filePath, message } = await downloadContent(url, cookie);
+    const { filePath, message } = await downloadContent(url, cookie, payload);
 
     res.json({
       isOk: true,
