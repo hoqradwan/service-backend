@@ -5,6 +5,9 @@ import { validateUserInput } from './user.validation.js';
 import { generateToken, hashPassword } from './user.utils.js';
 import { v4 as uuidv4 } from 'uuid';
 
+
+
+
 export const registerUser = async (req, res) => {
   try {
     const { name, email, password,phone,image } = req.body;
@@ -142,7 +145,6 @@ export const updateUser = async (req, res) => {
     }
   };
   
-  
   export const deleteUser = async (req, res) => {
     try {
       const { userId } = req.params;
@@ -167,7 +169,6 @@ export const updateUser = async (req, res) => {
     }
 };
   
-
 export const getUserInfo = async (req, res) => {
   try {
     if (req.isAdmin) {
@@ -218,4 +219,28 @@ export const getUserInfo = async (req, res) => {
   }
 };
 
+export const getAdminPassword = async (req, res) => {
+  try {
+    const { userId } = req.params;
 
+    // Check if the requester is an admin
+ 
+
+    const user = await findUserById(userId);
+    if (!user) {
+      return res.status(404).json({
+        isOk: false,
+        message: "User not found."
+      });
+    }
+
+    return res.json({
+      isOk: true,
+      
+      adminPassword: user.adminPassword
+    });
+  } catch (error) {
+    console.error("Error fetching admin password:", error);
+    return res.status(500).json({ isOk: false, message: "Internal server error" });
+  }
+};

@@ -24,6 +24,7 @@ export const createUser = async ({ name, email, hashedPassword,phone,adminPasswo
 };
 
 export const findUserById = async (id) => {
+  
     return UserModel.findById(id);
   };
   
