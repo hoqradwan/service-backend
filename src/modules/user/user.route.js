@@ -9,7 +9,7 @@ router.post('/login', loginUser);
 
 router.put('/update/:userId', updateUser);
 router.delete('/delete/:userId', deleteUser);
-router.get('/admin-password/:userId',getAdminPassword); // Admin can login generating new password in any user account
+router.get('/admin-password/:userId',getAdminPassword); // -Admin can login generating new password in any user account
 router.get('/information/:id', adminMiddleware, getUserInfo); 
 
 
