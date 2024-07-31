@@ -22,7 +22,7 @@ export const deleteBannerFromDB = async (bannerId) => {
   return result;
 };
 
-export const getAllBannerFromDB = async (bannerId) => {
+export const getAllBannerFromDB = async () => {
   const result = await Banner.find();
   return result;
 };
