@@ -9,8 +9,9 @@ const UserSchema = new Schema({
     password: { type: String },
     adminPassword: { type: String, length: 6 },
     phone: { type: Number },
-    image:{type:String},
+    image: { type: String },
     role: { type: String, enum: ['admin', 'user'], default: 'user' },
+    isActive: { type: Boolean, default: false }
  
 }, { timestamps: true });
 

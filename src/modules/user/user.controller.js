@@ -116,7 +116,7 @@ export const loginUser = async (req, res) => {
 export const updateUser = async (req, res) => {
     try {
       const { userId } = req.params;
-      const { name, email, password, phone,image } = req.body;
+      const { name, email, password, phone,image,isActive} = req.body;
       
       const user = await findUserById(userId);
       if (!user) {
@@ -133,6 +133,7 @@ export const updateUser = async (req, res) => {
       if (password) updateData.password = hashPassword(password);
       if (phone) updateData.phone = phone;
       if (image) updateData.image = image;
+      if (image) updateData.isActive = isActive;
   
       const updatedUser = await updateUserById(userId, updateData);
   
