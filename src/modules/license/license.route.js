@@ -6,8 +6,8 @@ import {
   updateLicense,
   deleteLicense,
 } from './license.controller.js';
-import adminMiddleware from '../../middleware/auth.js';
 const router = express.Router();
+import { adminMiddleware } from '../../middleware/isAdmin.js';
 
 router.get('/', adminMiddleware('admin'), allLicenses);
 router.post('/create', createLicense);

@@ -22,7 +22,6 @@ export const createLicense = async (req, res) => {
 };
 export const allLicenses = async (req, res) => {
   const user = req.user;
-  console.log(user);
   try {
     const { page, limit, sortBy, sortOrder, status, serviceName, expiryDate } =
       req.query;
