@@ -22,6 +22,6 @@ router.get('/user-list', adminMiddleware("admin"), getUserInfo);
 
 router.get('/information/:id', getSelfInfo); 
 
-router.get('/information/:id', getSelfInfo);
+
 
 export default router;
