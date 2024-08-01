@@ -31,7 +31,7 @@
 //             message: "Internal server error"
 //         });
 //     }
-// };
+// };..
 
 import jwt from 'jsonwebtoken';
 
