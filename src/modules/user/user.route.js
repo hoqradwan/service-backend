@@ -1,5 +1,13 @@
 import express from 'express';
-import { deleteUser, getAdminPassword, getSelfInfo, getUserInfo, loginUser, registerUser, updateUser } from './user.controller.js';
+import {
+  deleteUser,
+  getAdminPassword,
+  getSelfInfo,
+  getUserInfo,
+  loginUser,
+  registerUser,
+  updateUser,
+} from './user.controller.js';
 import { adminMiddleware } from '../../middleware/isAdmin.js';
 
 const router = express.Router();
@@ -14,5 +22,6 @@ router.get('/user-list', adminMiddleware("admin"), getUserInfo);
 
 router.get('/information/:id', getSelfInfo); 
 
+router.get('/information/:id', getSelfInfo);
 
 export default router;
