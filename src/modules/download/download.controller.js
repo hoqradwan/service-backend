@@ -1,13 +1,13 @@
 import axios from 'axios';
-import { getCookie, getHeaders, getPayload } from '../cookie/cookie.utils';
+import { getCookie, getHeaders, getPayload } from './download.utils.js';
 
 export const handleDownload = async (req, res) => {
   try {
+    console.log("hitting");
     const { url } = req.body;
     if (!url) {
       return res.status(400).json({ isOk: false, message: 'URL is required' });
     }
-    // const url = "https://elements.envato.com/futuristic-gradient-textures-6FTX28T";
     const lastIndex = (url?.split("/")[3]?.split("-")?.length) - 1;
     const itemCode = url?.split("/")[3]?.split("-")[lastIndex];
     // console.log(itemCode);
@@ -17,15 +17,10 @@ export const handleDownload = async (req, res) => {
 
     // credentials for download request
     const mainURL = `https://elements.envato.com/elements-api/items/${itemCode}/download_and_license.json`;
-    const cookie =  getCookie();
     const payload =  getPayload();
     const headers =  getHeaders(url);
-    // console.log(cookie,"cookie")
-    // console.log(cookie,"payload")
 
-    if (!cookie) {
-      return res.status(400).json({ isOk: false, message: 'Cookie is required' });
-    }
+
     if (!payload) {
       return res.status(400).json({ isOk: false, message: 'Payload is required' });
     }
@@ -41,7 +36,7 @@ export const handleDownload = async (req, res) => {
       data: payload,
     });
 
-    console.log('download link response', response);
+    // console.log('download link response', response.data);
     // Extract the download URL from the first response
     const downloadUrl = response?.data?.data?.attributes?.downloadUrl;
     console.log("download link", downloadUrl);

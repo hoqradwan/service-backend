@@ -1,68 +1,34 @@
-import axios from 'axios';
-import { getCookie, getHeaders, getPayload } from './cookie.utils.js';
+import { Cookie } from './cookie.model.js';
 
-export const handleDownload = async (req, res) => {
-  try {
-    const { url } = req.body;
-    if (!url) {
-      return res.status(400).json({ isOk: false, message: 'URL is required' });
+export const createCookie = async (req, res) => {
+    try {
+        const data = req.body;
+
+        // Check if required data is provided
+        if (!data.serviceName || !data.account  || !data.cookie || !data.csrfToken || !data.status) {
+            return res.status(400).json({
+                message: 'Missing required fields'
+            });
+        }
+
+        // Create a new Cookie instance
+        const newCookie = new Cookie(data);
+
+        // Save the document to the database
+        const savedCookie = await newCookie.save();
+
+        // Send a success response
+        res.status(201).json({
+            message: 'Cookie created successfully!',
+            data: savedCookie
+        });
+
+    } catch (error) {
+        // Handle errors and send an error response
+        console.error('Error creating cookie:', error);
+        res.status(500).json({
+            message: 'Failed to create cookie',
+            error: error.message
+        });
     }
-    // const url = "https://elements.envato.com/futuristic-gradient-textures-6FTX28T";
-    const lastIndex = (url?.split("/")[3]?.split("-")?.length) - 1;
-    const itemCode = url?.split("/")[3]?.split("-")[lastIndex];
-    // console.log(itemCode);
-    if (!itemCode) {
-      return res.status(400).json({ isOk: false, message: 'Invalid url' });
-    }
-
-    // credentials for download request
-    const mainURL = `https://elements.envato.com/elements-api/items/${itemCode}/download_and_license.json`;
-    const cookie = await getCookie();
-    const payload = await getPayload();
-    const headers = await getHeaders();
-    // console.log(cookie,"cookie")
-    // console.log(cookie,"payload")
-
-    if (!cookie) {
-      return res.status(400).json({ isOk: false, message: 'Cookie is required' });
-    }
-    if (!payload) {
-      return res.status(400).json({ isOk: false, message: 'Payload is required' });
-    }
-    if (!headers) {
-      return res.status(400).json({ isOk: false, message: 'Headers is required' });
-    }
-
-    // Make the first HTTP request
-    const response = await axios({
-      method: 'POST',
-      url: mainURL,
-      headers: headers,
-      data: payload,
-    });
-
-    console.log('download link response', response);
-    // Extract the download URL from the first response
-    const downloadUrl = response?.data?.data?.attributes?.downloadUrl;
-    console.log("download link", downloadUrl);
-
-    if (downloadUrl) {
-      return res.status(200).json({
-        isOk: true,
-        message: "Download request successful",
-        downloadUrl
-      });
-    }
-    else {
-      return res.status(400).json({
-        isOk: false,
-        message: "Download request is unsuccessful",
-      });
-    }
-
-
-  } catch (error) {
-    console.error('Error handling download:', error);
-    res.status(500).json({ isOk: false, message: 'Internal server error' });
-  }
 };

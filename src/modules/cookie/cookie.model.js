@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
 
 const CookieSchema = new mongoose.Schema({
     serviceName: {
@@ -26,11 +26,9 @@ const CookieSchema = new mongoose.Schema({
         type: String,
         required: true,
         enum: ['active', 'inactive'],
-    },
-    date: {
-        type: Date,
-        default: Date.now,
     }
-});
+},
+    { timestamps: true }
+);
 
 export const Cookie = mongoose.models.Cookie || mongoose.model('Cookie', CookieSchema);

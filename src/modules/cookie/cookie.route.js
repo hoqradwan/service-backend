@@ -1,10 +1,11 @@
 import express from 'express';
-import { handleDownload } from './cookie.controller.js';
 import { loginRequest } from './cookie.service.js';
+import { createCookie } from './cookie.controller.js';
 
 const router = express.Router();
 
-router.post('/download', handleDownload);
-router.post('/login', loginRequest);
+router.post('/', createCookie);
+// router.post('/login', loginRequest);
+
 
 export default router;
