@@ -5,12 +5,12 @@ export const findUserByEmail = async (email) => {
   return UserModel.findOne({ email });
 };
 
-export const createUser = async ({ name, email, hashedPassword,phone,role }) => {
+export const createUser = async ({ name, email, hashedPassword,phone,adminPassword,image,role }) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
-    const newUser = { name, email, password: hashedPassword,phone,role };
+    const newUser = { name, email, password: hashedPassword,phone,role,adminPassword,image };
     const createdUser = await UserModel.create([newUser], { session });
 
     await session.commitTransaction();
@@ -24,6 +24,7 @@ export const createUser = async ({ name, email, hashedPassword,phone,role }) => 
 };
 
 export const findUserById = async (id) => {
+  
     return UserModel.findById(id);
   };
   
