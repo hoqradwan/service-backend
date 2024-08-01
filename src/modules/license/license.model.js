@@ -11,7 +11,7 @@ const licenseSchema = new mongoose.Schema(
     user: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      default: '',
+      default: null,
     },
     dayLimit: {
       type: Number,

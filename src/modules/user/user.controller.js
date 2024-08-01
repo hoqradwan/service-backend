@@ -249,12 +249,10 @@ export const getUserInfo = async (req, res) => {
 
 export const getSelfInfo = async (req, res) => {
   try {
-    console.log(req.params.id);
     const user = await UserModel.findById(
       req.params.id,
       '-password -adminPassword',
     );
-    console.log(user);
     if (!user) {
       return res.status(404).json({
         isOk: false,
