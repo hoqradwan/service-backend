@@ -178,7 +178,7 @@ export const getUserInfo = async (req, res) => {
     if (req.user.role === 'admin') {
       // If the user is an admin, return paginated users except the current admin
       const page = parseInt(req.query.page) || 1;
-      const limit = 3;
+      const limit = parseInt(req.query.limit) || 5;
       const skip = (page - 1) * limit;
 
       const users = await UserModel.find(
