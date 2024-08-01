@@ -1,6 +1,6 @@
+import moment from "moment";
 
 
 export const getTime = (time) => {
-    console.log(time);
-    return "16 minutes ago"
+    return moment(time).fromNow();
 }

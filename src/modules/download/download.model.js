@@ -6,6 +6,7 @@ const DownloadSchema = new Schema(
     content: { type: String, required: true },
     status: { type: String, enum: ['pending', 'accepted'], required: true },
     downloadedAt: { type: String, required: true },
+    downloadedBy: { type: String, required: true },
   },
   { timestamps: true, versionKey: false },
 );
