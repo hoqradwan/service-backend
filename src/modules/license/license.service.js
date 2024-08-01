@@ -1,3 +1,4 @@
+import { UserModel } from '../user/user.model.js';
 import { LicenseModel } from './license.model.js';
 
 export const createLicenseIntoDB = async (payload) => {
@@ -45,8 +46,21 @@ export const updateLicenseIntoDB = async (licenseid, data) => {
   const result = await LicenseModel.findByIdAndUpdate(licenseid, data);
   return result;
 };
-export const activateLicense = async (licenseid, data) => {
-  const result = await LicenseModel.findByIdAndUpdate(licenseid, data);
+export const activateLicense = async (licenseKey, user) => {
+  const license = await LicenseModel.findOneAndUpdate(
+    { licenseKey, status: 'new' },
+    { status: 'used', user: user._id },
+    { new: true }, // Return the updated document
+  );
+
+  if (!license) {
+    throw new Error('License not found or already used.');
+  }
+  const result = await UserModel.findByIdAndUpdate(
+    user.id,
+    { isActive: true },
+    { new: true },
+  );
   return result;
 };
 export const deleteLicenseFromDB = async (licenseid, data) => {

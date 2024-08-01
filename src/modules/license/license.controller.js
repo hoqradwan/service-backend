@@ -21,6 +21,8 @@ export const createLicense = async (req, res) => {
   }
 };
 export const allLicenses = async (req, res) => {
+  const user = req.user;
+  console.log(user);
   try {
     const { page, limit, sortBy, sortOrder, status, serviceName, expiryDate } =
       req.query;
@@ -66,19 +68,37 @@ export const updateLicense = async (req, res) => {
     });
   }
 };
-export const activateLicense = async (req, res) => {
+export const activateLicense = async (licenseKey, user) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    const result = await activateLicense(req.body);
-    res.status(200).json({
-      success: true,
-      message: 'License activated successfully',
-      data: result,
-    });
+    // Find the license by licenseKey and update its status to 'used' and set the user
+    const license = await LicenseModel.findOneAndUpdate(
+      { licenseKey, status: 'new' },
+      { status: 'used', user: user._id },
+      { new: true, session }, // Include the session
+    );
+
+    if (!license) {
+      throw new Error('License not found or already used.');
+    }
+
+    // Update the user's isActive status
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      user._id, // Use user._id for consistency
+      { isActive: true },
+      { new: true, runValidators: true, session }, // Ensure to return the updated document, run validators, and include the session
+    );
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return { license, user: updatedUser };
   } catch (error) {
-    res.status(400).json({
-      success: false,
-      error: error.message,
-    });
+    await session.abortTransaction();
+    session.endSession();
+    throw new Error(error.message);
   }
 };
 export const deleteLicense = async (req, res) => {

@@ -1,6 +1,5 @@
 import jwt from 'jsonwebtoken';
-
-const authMiddleware = (role) => {
+const adminMiddleware = (role) => {
   return (req, res, next) => {
     const token = req.headers.authorization?.split(' ')[1];
 
@@ -11,7 +10,8 @@ const authMiddleware = (role) => {
     }
 
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+      console.log(decoded);
       req.user = decoded; // Attach user data to request object
 
       // Check if the user has the required role
@@ -24,9 +24,8 @@ const authMiddleware = (role) => {
 
       next();
     } catch (error) {
-      res.status(400).json({ success: false, message: 'Invalid token.' });
+      res.status(400).json({ success: false, message: 'Invalid token...' });
     }
   };
 };
-
-export default authMiddleware;
+export default adminMiddleware;
