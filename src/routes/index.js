@@ -6,7 +6,7 @@ import cookieRoutes from '../modules/cookie/cookie.route.js';
 const router = express.Router();
 
 router.use("/user", userRoutes);
-router.use("/download", downloadRoutes);
-router.use("/cookie", cookieRoutes);
+router.use("/api/download", downloadRoutes);
+router.use("/api/cookie", cookieRoutes);
 
 export default router;

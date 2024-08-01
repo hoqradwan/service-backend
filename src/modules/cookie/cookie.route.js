@@ -1,11 +1,12 @@
 import express from 'express';
-import { loginRequest } from './cookie.service.js';
-import { createCookie } from './cookie.controller.js';
+import { createCookie, getAllCookies, getCookieById, updateCookieById } from './cookie.controller.js';
 
 const router = express.Router();
 
+router.get('/all-cookies', getAllCookies);
+router.get('/:id', getCookieById);
+router.put('/:id', updateCookieById);
 router.post('/', createCookie);
-// router.post('/login', loginRequest);
 
 
 export default router;
