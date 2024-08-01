@@ -1,57 +1,41 @@
+import catchAsync from '../../utils/catchAsync.js';
+import sendResponse from '../../utils/sendResponse.js';
 import {
-    createSupportIntoDB,
-    deleteSupportFromDB,
-    getAllSupportFromDB,
+  createSupportIntoDB,
+  deleteSupportFromDB,
+  getAllSupportFromDB,
 } from './support.service.js';
 
-export const createSupport = async (req, res) => {
-  try {
-    const result = await createSupportIntoDB(req.body);
-    res.status(200).json({
-      success: true,
-      message: 'Support is added successfully.',
-      data: result,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to create support!',
-    });
-  }
-};
+export const createSupport = catchAsync(async (req, res) => {
+  const result = await createSupportIntoDB(req.body);
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Support is added successfully.',
+    data: result,
+  });
+});
 
-export const deleteSupport = async (req, res) => {
-  try {
-    const supportId = req.params?.id;
-    if (!supportId) {
-      throw new Error('id is required!');
-    }
-    const result = await deleteSupportFromDB(supportId);
-    res.status(200).json({
-      success: true,
-      message: 'Support is deleted successfully.',
-      data: result,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to delete support!',
-    });
+export const deleteSupport = catchAsync(async (req, res) => {
+  const supportId = req.params?.id;
+  if (!supportId) {
+    throw new Error('id is required!');
   }
-};
+  const result = await deleteSupportFromDB(supportId);
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Support is deleted successfully.',
+    data: result,
+  });
+});
 
-export const getAllSupport = async (req, res) => {
-  try {
-    const result = await getAllSupportFromDB();
-    res.status(200).json({
-      success: true,
-      message: 'All supoprts are retrieved successfully.',
-      data: result,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to get supports!',
-    });
-  }
-};
+export const getAllSupport = catchAsync(async (req, res) => {
+  const result = await getAllSupportFromDB();
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'All supports are retrieved successfully.',
+    data: result,
+  });
+});
