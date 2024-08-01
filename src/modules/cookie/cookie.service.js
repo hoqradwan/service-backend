@@ -27,3 +27,9 @@ export const updateCookieByIdService = async (id, updateData) => {
     runValidators: true // Ensure that the update data conforms to the schema
   });
 };
+
+// delete cookie service
+export const deleteCookieByIdService = async (id) => {
+  // delete the cookie
+  return Cookie.findByIdAndDelete(id);
+};

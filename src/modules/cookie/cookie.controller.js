@@ -1,4 +1,4 @@
-import { createCookieService, getAllCookiesService, getCookieByIdService, updateCookieByIdService } from './cookie.service.js';
+import { createCookieService, deleteCookieByIdService, getAllCookiesService, getCookieByIdService, updateCookieByIdService } from './cookie.service.js';
 
 // create method for cookie
 export const createCookie = async (req, res) => {
@@ -146,3 +146,44 @@ export const updateCookieById = async (req, res) => {
     }
 };
 
+
+
+// delete method for cookie with id
+export const deleteCookieById = async (req, res) => {
+    try {
+        // Extract the _id from the request parameters
+        const { id } = req.params;
+
+        // Find and delete the cookie by _id
+        const deletedCookie = await deleteCookieByIdService(id);
+
+        // Check if the cookie was found and deleted
+        if (!deletedCookie) {
+            return res.status(404).json({
+                message: 'Cookie not found'
+            });
+        }
+
+        // Send a success response confirming deletion
+        return res.status(200).json({
+            message: 'Cookie deleted successfully!',
+            data: deletedCookie
+        });
+
+    } catch (error) {
+        // Handle errors and send an error response
+        console.error('Error deleting cookie:', error);
+
+        // Check for invalid ObjectId format
+        if (error.kind === 'ObjectId') {
+            return res.status(400).json({
+                message: 'Invalid cookie ID format'
+            });
+        }
+
+        return res.status(500).json({
+            message: 'Failed to delete cookie',
+            error: error.message
+        });
+    }
+};
