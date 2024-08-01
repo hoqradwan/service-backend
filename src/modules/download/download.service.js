@@ -2,15 +2,15 @@ import moment from 'moment';
 import { getTime } from '../../helpers/momentHelpers.js';
 import { Download } from './download.model.js';
 
-export const addDownloadIntoDB = async (payload) => {
+export const addDownloadIntoDB = async (payload, requestedUser) => {
   payload['downloadedAt'] = moment();
-  payload['downloadedBy'] = "robin@gmail.com";
+  payload['downloadedBy'] = requestedUser.email;
   const result = await Download.create(payload);
   return result;
 };
 
-export const getMyDownloadsFromDB = async () => {
-    const downloads = await Download.find({downloadedBy: "robin@gmail.com"});
+export const getMyDownloadsFromDB = async (requestedUser) => {
+    const downloads = await Download.find({downloadedBy: requestedUser.email});
 
   const result = downloads.map(download => {
     return {

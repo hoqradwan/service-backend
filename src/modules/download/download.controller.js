@@ -5,7 +5,7 @@ import { addDownloadIntoDB, getMyDownloadsFromDB } from './download.service.js';
 
 
 export const addDownload = catchAsync(async (req, res) => {
-  const result = await addDownloadIntoDB(req.body);
+  const result = await addDownloadIntoDB(req.body, req.user);
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
@@ -14,7 +14,7 @@ export const addDownload = catchAsync(async (req, res) => {
   });
 });
 export const getMyDownloads = catchAsync(async (req, res) => {
-  const result = await getMyDownloadsFromDB();
+  const result = await getMyDownloadsFromDB(req.user);
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,

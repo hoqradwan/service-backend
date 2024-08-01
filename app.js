@@ -2,8 +2,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
 import connectDB from './config/db.js';
-import globalErrorHandler from './src/middlewares/globalErrorHandler.js';
-import notFoundRoute from './src/middlewares/notFoundRoute.js';
+import globalErrorHandler from './src/middleware/globalErrorHandler.js';
+import notFoundRoute from './src/middleware/notFoundRoute.js';
 import router from './src/routes/index.js';
 
 dotenv.config();
