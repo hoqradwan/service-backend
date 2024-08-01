@@ -1,57 +1,66 @@
-// import { downloadFromEnvato } from './cookie.service.js';
-
-// export const downloadContent = async (req, res) => {
-//   try {
-//     const { url } = req.body;
-//     if (!url) {
-//       return res.status(400).json({ isOk: false, message: 'URL is required' });
-//     }
-
-//       const content = await downloadFromEnvato(url);
-//       //console.log(content,"content")
-//     if (!content) {
-//       return res.status(500).json({ isOk: false, message: 'Failed to download content' });
-//     }
-
-//     res.setHeader('Content-Disposition', `attachment; filename="${content.filename}"`);
-//     res.setHeader('Content-Type', content.mimeType);
-//     res.send(content.data);
-//   } catch (error) {
-//     console.error('Error downloading content:', error);
-//     return res.status(500).json({ isOk: false, message: 'Internal server error' });
-//   }
-// };
-import { downloadContent } from './cookie.service.js';
-import { getCookie } from './cookie.utils.js';
+import axios from 'axios';
+import { getCookie, getHeaders, getPayload } from './cookie.utils.js';
 
 export const handleDownload = async (req, res) => {
   try {
-    const { URL } = req.body;
-    console.log("hitting");
-    const url = 'https://elements.envato.com/elements-api/items/PJ2ER57/download_and_license.json';
-    const payload = {
-      licenseType: "project",
-      projectName: "04digitaltoolsbd",
-      searchCorrelationId: "61964461-3f5c-4eeb-85f7-2548bd03a97c"
-    };
-
-    const cookie = getCookie();
-    // console.log(cookie,"cookie")
+    const { url } = req.body;
     if (!url) {
       return res.status(400).json({ isOk: false, message: 'URL is required' });
     }
+    // const url = "https://elements.envato.com/futuristic-gradient-textures-6FTX28T";
+    const lastIndex = (url?.split("/")[3]?.split("-")?.length) - 1;
+    const itemCode = url?.split("/")[3]?.split("-")[lastIndex];
+    // console.log(itemCode);
+    if (!itemCode) {
+      return res.status(400).json({ isOk: false, message: 'Invalid url' });
+    }
+
+    // credentials for download request
+    const mainURL = `https://elements.envato.com/elements-api/items/${itemCode}/download_and_license.json`;
+    const cookie = await getCookie();
+    const payload = await getPayload();
+    const headers = await getHeaders();
+    // console.log(cookie,"cookie")
+    // console.log(cookie,"payload")
 
     if (!cookie) {
       return res.status(400).json({ isOk: false, message: 'Cookie is required' });
     }
+    if (!payload) {
+      return res.status(400).json({ isOk: false, message: 'Payload is required' });
+    }
+    if (!headers) {
+      return res.status(400).json({ isOk: false, message: 'Headers is required' });
+    }
 
-    const { filePath, message } = await downloadContent(url, cookie, payload);
-
-    res.json({
-      isOk: true,
-      message,
-      filePath
+    // Make the first HTTP request
+    const response = await axios({
+      method: 'POST',
+      url: mainURL,
+      headers: headers,
+      data: payload,
     });
+
+    console.log('download link response', response);
+    // Extract the download URL from the first response
+    const downloadUrl = response?.data?.data?.attributes?.downloadUrl;
+    console.log("download link", downloadUrl);
+
+    if (downloadUrl) {
+      return res.status(200).json({
+        isOk: true,
+        message: "Download request successful",
+        downloadUrl
+      });
+    }
+    else {
+      return res.status(400).json({
+        isOk: false,
+        message: "Download request is unsuccessful",
+      });
+    }
+
+
   } catch (error) {
     console.error('Error handling download:', error);
     res.status(500).json({ isOk: false, message: 'Internal server error' });
