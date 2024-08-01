@@ -27,7 +27,8 @@ import { getCookie } from './cookie.utils.js';
 export const handleDownload = async (req, res) => {
   try {
     const { URL } = req.body;
-    const url = 'https://elements.envato.com/elements-api/items/6FTX28T/download_and_license.json';
+    console.log("hitting");
+    const url = 'https://elements.envato.com/elements-api/items/PJ2ER57/download_and_license.json';
     const payload = {
       licenseType: "project",
       projectName: "04digitaltoolsbd",
