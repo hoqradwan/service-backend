@@ -1,8 +1,13 @@
 import express from 'express';
-import { handleDownload } from './cookie.controller.js';
+import { createCookie, deleteCookieById, getAllCookies, getCookieById, updateCookieById } from './cookie.controller.js';
 
 const router = express.Router();
 
-router.post('/download', handleDownload);
+router.get('/all-cookies', getAllCookies);
+router.get('/:id', getCookieById);
+router.put('/:id', updateCookieById);
+router.delete('/:id', deleteCookieById);
+router.post('/', createCookie);
+
 
 export default router;

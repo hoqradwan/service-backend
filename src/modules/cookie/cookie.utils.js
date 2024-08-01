@@ -1,11 +1,41 @@
+// // cookies for download request
+// export const getCookie = () => {
+//   return "envato_client_id=fef508f9-3f6a-4cde-a5c8-8ed5a4e84013; _ce.clock_data=-46%2C180.148.213.24%2C1%2C362d7fe3d8b2581bffa359f0eeda7106%2CChrome%2CBD; _ce.irv=returning; cebs=1; _gcl_gs=2.1.k1$i1722424960; __cf_bm=FnrUvjmGP2TSnzyL2iE_DVlekEVtfxpVqfSxAc7bkWU-1722425199-1.0.1.1-0itW_cWJJKt450jSqdOypCCqAfVihvpAwvHend2ZPu462eo2s3PxA4bc292BKGwXqWNnMQOQhRRvN6FFLoFgHw; _cfuvid=9xNOMKNQqLxBYD3rnPAhP2Ae9ZgD1k3w_kotG0mFCUc-1722425199564-0.0.1.1-604800000; _gcl_aw=GCL.1722425216.Cj0KCQjwwae1BhC_ARIsAK4JfrxKTXOE0kZj47mtXGz3SDpYRvg6lEqXKcOs83LN4do8oItdLJgIMooaAhycEALw_wcB; _rdt_uuid=1722182354315.52f8ed0d-87d0-4f43-a165-a9f141748e0b; _uetsid=5685b7504cfa11ef81225ff85d1ffbf0; _uetvid=5685d7704cfa11ef8ba73dc9f75a5646; cebsp_=9; _elements_session_4=eFNORUM5Z3JKL2JucFdldXpFb29MbVQya2gxaDZzMzZ0NUdqckZEV0czbGNOUTBSclpxc0FabEhOSXZJbTJXYmhub3l1NE8xS1g4UURERUxWYkt0eE9RdmN5cHlDaWtuMnFUcVBYRzJLbVBCTWM0MjBDc1FYMFdSMTFTRzFIbXVBTXVjc3A1TFlOZmhMNFVoSDNmblVQYmlZODNpRTM0c2phVnRSeHpPYzN5KzNDakVKZFBhZ2VLd2FtQzVTd3pjSnhxamxIQjVyRWxRY0FnVjdVRkFHTnNFakwzODFqa0o2QlBkNlhzakVRZDRvVklVVExVWGc5VndGRzZXMElEV3BqcGxXR2ZPWitRZ29ja0VYSUxhMVBMUE9jY2VIdmpXZkh2RGhkT0VXaTBwZ2p6RWYzWktoQUFUN3pDdTNKKzBFWjc5WXRhSzhYSTZHQ0VUMmZnNGJwRkZ0QmpTbzVrL3J0NFV6a0xlYW03ei9VbmJQOGZMYjY1SDd6dWgxSHlHODlVVzhtSFhNOCtJMGxmMGU2Q0w2Zz09LS04NVNXMk44K1dlSGRoNlVuQmUvUkNRPT0%3D--6e8f644450f8621f497f404149cc0bcca258bb09; elements.session.5=Fe26.2*0*df4a638574b95e06d0892108081bc9a04dcba479a7931837f589491df3f84586*Gneh8JefWwvElHLxc-pYwg*K1xZNusb138rh6U4nezZljzkERe-80LtN5bG6ibOF8ctkjkgf1sA8Mg8yUkH28AT4wdKvIhBkEskdl2BEWk1aJT2oHa8er-n2MPBlFXhp9utc0_Cj27N__aI7URJscFi725JZugRnLhodBIZ8YG4Un816dK8-9Reqe0vvMt9Cpk*1723636313626*1ff931d922f2de3ae744230471861a81fdf3434aae1bb6cff78b0086c0fa5ef9*N-AgL91ogXfAhvYneUMEttkfqaCNAtN9hMr_fn9G92Y~2; __cf_bm=iIwY59IYVyB9j0XGD4.UcmY0M0jUQd_7AchrfkZIeiQ-1722426714-1.0.1.1-BDnK2gGV.eDamZZKOzuvB7gzadxIbTdy_pnR_wKfdaQP.vaD6uYDIsk.BDdwJO__nuGzmCCe7EwfnrmTp6k01g; _dd_s=rum=0&expire=1722427624818; _ce.s=v~2f76f03163871556b87c63c025026dfdc3d22779~lcw~1722426724907~lva~1722421003766~vpv~10~v11.fhb~1722419880913~v11.lhb~1722426708969~gtrk.la~lz9seer0~v11.cs~229985~v11.s~352e2ad0-4f2f-11ef-a8bd-ad62a3e471b6~v11.sla~1722426724907~v11slnt~1722426673202~v11.send~1722426679258~lcw~1722426724908; _ga_SFZC8HJ4D7=GS1.1.1722424606.18.1.1722426724.1.0.0";
+// };
+// // cookies for download request
+// export const getCSRFToken = () => {
+//   return "8MCzJGeWxTd874YnhWmRkUm7v6dOcuHLdGU8cdEcT4D6KoB7hbuphxeYRRnEEp_VibtCtHsrVBqDQCNL5D6k7Q";
+// };
 
-export const getCookie = () => {
-  return "envato_client_id=d3eda725-2456-4c40-b11c-1f5e5f05e268; original_landing_page_url=https://elements.envato.com/?gad_source=1&gclid=Cj0KCQjwkdO0BhDxARIsANkNcrcuyZ5i_IPELz1mNgMZky6TprTFzccf2BZWxzoDCw6LHP2ezUMQtmAaAueEEALw_wcB; CookieConsent={stamp:%27-1%27%2Cnecessary:true%2Cpreferences:true%2Cstatistics:true%2Cmarketing:true%2Cmethod:%27implied%27%2Cver:1%2Cutc:1721062008315%2Cregion:%27BD%27}; _gcl_au=1.1.340874151.1721062009; _ga=GA1.1.1299077498.1721062009; _pin_unauth=dWlkPVpETmxPV1pqT1RVdE1qWTNNaTAwWWpRNExUZzFPV010TVRJNFpHVm1OelprTVRBMQ; GO_EXP_STOREFRONT=306e2285-134a-4ff7-8393-f2fa71c461ee=1&2ef6d361-12b1-403c-9a52-265862b0be15=0&87c2464f-5927-40fe-a721-0ec7265412a1=2; psi={%22previouslySignedIn%22:true}; free_account_first_visit_dashboard=1; _ga_P25W8FT6F7=GS1.1.1722233597.1.1.1722234663.0.0.0; ajs_user_id=c28764b2-7b16-4175-93c9-5b39694fb3fd; ajs_anonymous_id=d238c7ce-b6cf-4fcb-94c2-dd10197501e7; _ce.clock_event=1; _gcl_gs=2.1.k1$i1722337098; _ce.clock_data=419%2C103.73.107.123%2C1%2C362d7fe3d8b2581bffa359f0eeda7106%2CChrome%2CBD; _gcl_aw=GCL.1722337232.CjwKCAjwnqK1BhBvEiwAi7o0XzeOhURXHBHmhwt67AwqhqJcZvjbgj0C2lWU_Xzj21FRbO2qVRBGnBoC2uoQAvD_BwE; _ce.irv=returning; cebs=1; __cf_bm=QDxZrkjC3wZcNtoNx0ypCZe3GD9XdwdP16JYCDwcEig-1722356092-1.0.1.1-ffJ0F4XicGyUPcCl5mvyY8SHXCfOg3YJYeGZyUY4M8H_n55eDpsU8QoOPcu6jKRKXY95bWceCQfwZzboQu5WjQ; __cf_bm=H3i0w0JXdoXOowcINOGOCYWPqf_TxJfrKcdNBbgXvT8-1722356095-1.0.1.1-8oVAEf6gJGBQdDs2z7g9.1akLCGwr5DwCbnwjOFobRM9l6wOOiMY_ybwSAeFW7r41qq5Xh6GMwVS3MlN7SI1IQ; _cfuvid=cVvrMxjRPfmWPUqDpWIOvT8RJ8VZE5dsbUwUASp0Fhk-1722356095823-0.0.1.1-604800000; _rdt_uuid=1721062009571.2fe2e7c6-ac49-4db5-bb35-5b329df50b89; _uetsid=956479c04d7111ef8d348ba82c76e18b; _uetvid=d4cd086042c911efa58ff32ebda17e73; _elements_session_4=TXNwYytuM01WUW14cTVxcmw0WC9GL0F1ZVNnU1Y0M2tnSzZ3QmlYNFdKZ2JsM2Y3bExqcDlhSXVLOVE0MUdIZFJ4U1JVc1A2NXU5K1RKeXJPYWh0K01VTCtqOXZDZzRXQWFndnZaaUYya29mMGZPV0hoUkIrQlZtNFI3bWZITFkvV2NHM1hZTkZWSEJqaVRLelF5REw4dkRzaWxKcDY4cTlNZkRjRFp6eWFzcHhCT1lhWmgwejQ3RTJHeTArTEUyb0hZeWdMSVJ1bHhwaFBueG9SNFZYcS81M3FjcDlJZnA3MmgxZUNSRzBvKzBVNzB2OU5Oa0w3RENYNjBWUko3b1hocHM1R2pHbytNS25ldEU3a0x6dEo3WGhSRTRsbWhmK0xUbGtsQjI3N2JyYWNvbkxXRUVIM0ptRHBaMWZSSWZmRnpvZXB4QXFnZ0lhbTJ4VkhnaDZYNXRVd1liTCtVcVBCRTMwcHNrY0V3c0VvRUZDT3dySTdEbkVUWHFnbTVWZ1pjRzNocTlXL25CUHhkZmQwemxrUT09LS1iM20zQ1JuSDE2MDFyV3VGMENrZlp3PT0%3D--f32c26c6fb3c3847750f2395a9999a4df375432c; cebsp_=9; _ga_SFZC8HJ4D7=GS1.1.1722356094.16.1.1722356443.58.0.0; elements.session.5=Fe26.2*0*80d6bb4dc6006132c9214ae3a0950de1db5c485f1ba2753ff74aa6aa461ddc59*cn_q1beIhx2J6LE-SqOf7Q*-T4yN_VbQacQps11RCXetcTz1pr4LAPo35p75XTOmjfmeGnkx-NekUV_p4pQtLd4S-kcXgvV_Z4it4cjIlkh-ixUjVJx-tl-sgTvI2OnAlOqb6JSBI5XGulIcNh3SFpri1j-THoc4CHE_M_7zwvO6m8bU2XOxdfiuv5MQKKIZjY*1723566043861*12581f638c308d8f61d5a9143feb04723693951c43f65a94d28c10e7d6a404b0*kTwyxEZUuvmdS68GkSvklYzrZn2dPe5kvZk-qRtwtrc~2; _dd_s=rum=0&expire=1722357385353; _ce.s=v~10a8a2da85e53896e96589b45999c5cc7df47e04~lcw~1722356485243~lva~1722348262823~vpv~5~v11.fhb~1722233571422~v11.lhb~1722356484302~v11.cs~229985~v11.s~dbdcfbf0-4e8e-11ef-abf8-d544d4304dda~v11.sla~1722356485242~gtrk.la~lz8mkxkm~lcw~1722356485366";
-};
+// // payload for download request 
+// export const getPayload = () => {
+//   return {
+//     licenseType: "project",
+//     projectName: "04digitaltoolsbd",
+//     searchCorrelationId: "61964461-3f5c-4eeb-85f7-2548bd03a97c"
+//   }
+// };
 
+// // payload for download request 
 
-  
-
-export const getCsrfToken = () => {
-      return "nfzceFllquM0HOCOtQaprbwW4jktP2zS6ghY0qIZEMO50ugPJKmKpdYSHr-dipjFsGuX5fS9zhUGA0I0AsQloQ"
-  }
+// export const getHeaders = async (url) => {
+//   const cookie = await getCookie();
+//   const csrfToken = await getCSRFToken();
+//   return {
+//     'Cookie': cookie,
+//     'Accept': 'application/json',
+//     'Accept-Encoding': 'gzip, deflate, br, zstd',
+//     'Accept-Language': 'en-US,en;q=0.9',
+//     'Content-Type': 'application/json',
+//     'Origin': 'https://elements.envato.com',
+//     'Referer': url,
+//     'Sec-CH-UA': '"Not)A;Brand";v="99", "Google Chrome";v="127", "Chromium";v="127"',
+//     'Sec-CH-UA-Mobile': '?1',
+//     'Sec-CH-UA-Platform': '"Android"',
+//     'Sec-Fetch-Dest': 'empty',
+//     'Sec-Fetch-Mode': 'cors',
+//     'Sec-Fetch-Site': 'same-origin',
+//     'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Mobile Safari/537.36',
+//     'X-CSRF-Token': csrfToken,
+//   }
+// };
