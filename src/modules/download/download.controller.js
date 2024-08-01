@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getCookie, getHeaders, getPayload } from './download.utils.js';
+import { cookieCredentials} from './download.utils.js';
 
 export const handleDownload = async (req, res) => {
   try {
@@ -17,9 +17,8 @@ export const handleDownload = async (req, res) => {
 
     // credentials for download request
     const mainURL = `https://elements.envato.com/elements-api/items/${itemCode}/download_and_license.json`;
-    const payload =  getPayload();
-    const headers =  getHeaders(url);
 
+    const {payload, headers} = await cookieCredentials("66ab8571f9960ae1fefea5d9", url);
 
     if (!payload) {
       return res.status(400).json({ isOk: false, message: 'Payload is required' });
