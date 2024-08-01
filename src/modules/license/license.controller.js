@@ -22,7 +22,22 @@ export const createLicense = async (req, res) => {
 };
 export const allLicenses = async (req, res) => {
   try {
-    const result = await getLicensesFromDB();
+    const { page, limit, sortBy, sortOrder, status, serviceName, expiryDate } =
+      req.query;
+
+    const filters = {};
+    if (status) filters.status = status;
+    if (serviceName) filters.serviceName = serviceName;
+    if (expiryDate) filters.expiryDate = { $gte: new Date(expiryDate) };
+
+    const paginationOptions = {
+      page: parseInt(page, 10) || 1,
+      limit: parseInt(limit, 10) || 10,
+      sortBy: sortBy || 'createdAt',
+      sortOrder: sortOrder || 'asc',
+    };
+
+    const result = await getLicensesFromDB(filters, paginationOptions);
     res.status(200).json({
       success: true,
       message: 'Licenses retrieved successfully',
@@ -42,6 +57,21 @@ export const updateLicense = async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'License updated successfully',
+      data: result,
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+export const activateLicense = async (req, res) => {
+  try {
+    const result = await activateLicense(req.body);
+    res.status(200).json({
+      success: true,
+      message: 'License activated successfully',
       data: result,
     });
   } catch (error) {
