@@ -4,7 +4,7 @@ import cookieRoutes from '../modules/cookie/cookie.route.js';
 import { downloadRoutes } from '../modules/download/download.route.js';
 import { supportRoutes } from '../modules/support/support.route.js';
 import userRoutes from '../modules/user/user.route.js';
-
+import licenseRoutes from '../modules/license/license.route.js';
 
 const router = express.Router();
 
@@ -13,6 +13,6 @@ router.use("/evanto", cookieRoutes);
 router.use("/banner", bannerRoutes);
 router.use("/support", supportRoutes);
 router.use("/download", downloadRoutes);
-
+router.use('/license', licenseRoutes)
 
 export default router;
