@@ -130,7 +130,7 @@ export const loginUser = async (req, res) => {
 export const updateUser = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { name, email, password, phone, image } = req.body;
+    const { name, email, password, phone, image, isActive } = req.body;
 
     const user = await findUserById(userId);
     if (!user) {
@@ -147,6 +147,7 @@ export const updateUser = async (req, res) => {
     if (password) updateData.password = hashPassword(password);
     if (phone) updateData.phone = phone;
     if (image) updateData.image = image;
+    if (image) updateData.isActive = isActive;
 
     const updatedUser = await updateUserById(userId, updateData);
 
@@ -193,8 +194,8 @@ export const getUserInfo = async (req, res) => {
   try {
     if (req.user.role === 'admin') {
       // If the user is an admin, return paginated users except the current admin
-      const page = parseInt(req.query.page) || 1; // Get the page number from query params, default to 1
-      const limit = 3; // Number of users per page
+      const page = parseInt(req.query.page) || 1;
+      const limit = 3;
       const skip = (page - 1) * limit;
 
       const users = await UserModel.find(
@@ -208,6 +209,14 @@ export const getUserInfo = async (req, res) => {
         _id: { $ne: req.user.id },
         role: { $ne: 'admin' },
       });
+
+      // Fetch admin list and count
+      const admins = await UserModel.find(
+        { role: 'admin' },
+        '-password -adminPassword',
+      );
+      const totalAdmins = admins.length;
+
       const totalPages = Math.ceil(totalUsers / limit);
       const currentPageUsers = users.length;
 
@@ -218,24 +227,44 @@ export const getUserInfo = async (req, res) => {
         totalPages: totalPages,
         totalUsers: totalUsers,
         currentPageUsers: currentPageUsers,
+
+        admins: admins,
+        totalAdmins: totalAdmins,
       });
     } else {
       // If not an admin, return only the requested user's info
-      const user = await UserModel.findById(
-        req.user.id,
-        '-password -adminPassword',
-      );
-      if (!user) {
-        return res.status(404).json({
-          isOk: false,
-          message: 'User not found.',
-        });
-      }
-      return res.json({
-        isOk: true,
-        user: user,
+      return res.status(404).json({
+        isOk: false,
+        message: 'Only admin can access all user list.',
       });
     }
+  } catch (error) {
+    console.error('Error fetching user data:', error);
+    return res.status(500).json({
+      isOk: false,
+      message: 'Internal server error',
+    });
+  }
+};
+
+export const getSelfInfo = async (req, res) => {
+  try {
+    console.log(req.params.id);
+    const user = await UserModel.findById(
+      req.params.id,
+      '-password -adminPassword',
+    );
+    console.log(user);
+    if (!user) {
+      return res.status(404).json({
+        isOk: false,
+        message: 'User not found.',
+      });
+    }
+    return res.json({
+      isOk: true,
+      information: user,
+    });
   } catch (error) {
     console.error('Error fetching user data:', error);
     return res.status(500).json({
