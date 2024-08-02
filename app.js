@@ -32,12 +32,12 @@ app.get('/', (req, res) => {
 //     console.error('Error updating license status:', err),
 //   );
 // });
-cron.schedule('* * * * *', () => {
-  console.log('Running license status update...');
-  updateLicenseStatus().catch((err) => {
-    console.error('Error updating license status:', err);
-  });
-});
+// cron.schedule('* * * * *', () => {
+//   console.log('Running license status update...');
+//   updateLicenseStatus().catch((err) => {
+//     console.error('Error updating license status:', err);
+//   });
+// });
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
