@@ -1,4 +1,4 @@
-import { createCookieService, deleteCookieByIdService, getAllCookiesService, getCookieByIdService, updateCookieByIdService } from './cookie.service.js';
+import { createCookieService, deleteCookieByIdService, getAllCookiesService, getCookieByAccountEmailService, getCookieByIdService, updateCookieByIdService } from './cookie.service.js';
 
 // create method for cookie
 export const createCookie = async (req, res) => {
@@ -9,6 +9,13 @@ export const createCookie = async (req, res) => {
         if (!data.serviceName || !data.account || !data.cookie || !data.csrfToken || !data.status) {
             return res.status(400).json({
                 message: 'Missing required fields'
+            });
+        }
+        // Checking if the account with same email already exists or not
+        const isAccountExist = await getCookieByAccountEmailService(data?.account);
+        if (isAccountExist) {
+            return res.status(400).json({
+                message: 'Account already exists with this email'
             });
         }
         const savedCookie = await createCookieService(data);
@@ -113,7 +120,7 @@ export const updateCookieById = async (req, res) => {
         const updateData = req.body;
 
         // Find the cookie by _id and update it with the new data
-        const updatedCookie = await updateCookieByIdService(id,updateData);
+        const updatedCookie = await updateCookieByIdService(id, updateData);
 
         // Check if the cookie exists
         if (!updatedCookie) {
