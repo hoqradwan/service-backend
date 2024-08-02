@@ -31,13 +31,7 @@ export const findUserById = async (id) => {
   export const updateUserById = async (id, updateData) => {
     return UserModel.findByIdAndUpdate(id, updateData, { new: true });
 };
-export const updateUserByEmail = async (email, updateData) => {
-  return UserModel.findOneAndUpdate(
-    { email: email },
-    updateData,
-    { new: true }
-  );
-};
+
   
   export const deleteUserById = async (id) => {
     return UserModel.findByIdAndDelete(id);

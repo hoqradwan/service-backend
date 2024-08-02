@@ -15,8 +15,8 @@ const router = express.Router();
 router.post('/register', registerUser);
 router.post('/login', loginUser);
 
-// router.put('/update/:userId', updateUser);
-router.put('/update/:email', updateUser);
+router.put('/update/:userId', updateUser);
+
 router.delete('/delete/:userId', deleteUser);
 router.get('/admin-password/:userId',getAdminPassword); // Admin can login generating new password in any user account
 router.get('/user-list', adminMiddleware("admin"), getUserInfo); 

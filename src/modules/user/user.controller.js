@@ -413,39 +413,11 @@ export const loginUser = catchAsync(async (req, res) => {
   });
 });
 
-// export const updateUser = catchAsync(async (req, res) => {
-//   const { userId } = req.params;
-//   const { name, email, password, phone, image, isActive } = req.body;
+ export const updateUser = catchAsync(async (req, res) => {
+  const { userId } = req.params;
+  const { name, email, password, phone, image, isActive } = req.body;
 
-//   const user = await findUserById(userId);
-//   if (!user) {
-//     return sendError(res, httpStatus.NOT_FOUND, {
-//       message: 'User not found.',
-//     });
-//   }
-
-//   const updateData = {};
-//   if (name) updateData.name = name;
-//   if (email) updateData.email = email;
-//   if (password) updateData.password = hashPassword(password);
-//   if (phone) updateData.phone = phone;
-//   if (image) updateData.image = image;
-//   if (isActive) updateData.isActive = isActive;
-
-//   const updatedUser = await updateUserById(userId, updateData);
-
-//   sendResponse(res, {
-//     statusCode: httpStatus.OK,
-//     success: true,
-//     message: 'User updated successfully',
-//     data: { user: updatedUser },
-//   });
-// });
-export const updateUser = catchAsync(async (req, res) => {
-  const { email } = req.params;
-  const { name,  password, phone, image, isActive } = req.body;
-
-  const user = await findUserByEmail(email);
+  const user = await findUserById(userId);
   if (!user) {
     return sendError(res, httpStatus.NOT_FOUND, {
       message: 'User not found.',
@@ -454,13 +426,13 @@ export const updateUser = catchAsync(async (req, res) => {
 
   const updateData = {};
   if (name) updateData.name = name;
+  if (email) updateData.email = email;
   if (password) updateData.password = hashPassword(password);
   if (phone) updateData.phone = phone;
   if (image) updateData.image = image;
   if (isActive) updateData.isActive = isActive;
 
-  const updatedUser = await updateUserByEmail(email, updateData);
-
+  const updatedUser = await updateUserById(userId, updateData);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -469,6 +441,7 @@ export const updateUser = catchAsync(async (req, res) => {
     data: { user: updatedUser },
   });
 });
+
 
 export const deleteUser = catchAsync(async (req, res) => {
   const { userId } = req.params;
