@@ -307,8 +307,7 @@ import {
   deleteUserById,
   findUserByEmail,
   findUserById,
-  updateUserByEmail,
-  updateUserById,
+  updateUserById
 } from './user.service.js';
 import { validateUserInput } from './user.validation.js';
 import { generateToken, hashPassword } from './user.utils.js';
@@ -449,7 +448,7 @@ export const deleteUser = catchAsync(async (req, res) => {
   const user = await findUserById(userId);
   if (!user) {
     return sendError(res, httpStatus.NOT_FOUND, {
-      message: 'User not found.',
+      message: 'User not found or maybe deleted.',
     });
   }
 

@@ -8,7 +8,7 @@ import {
   licenseByUser,
 } from './license.controller.js';
 const router = express.Router();
-import { adminMiddleware } from '../../middleware/isAdmin.js';
+import { adminMiddleware } from '../../middleware/auth.js';
 
 router.get('/', allLicenses);
 router.get('/user-licenses/:id', licenseByUser);

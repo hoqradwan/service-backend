@@ -8,7 +8,7 @@ import {
   registerUser,
   updateUser,
 } from './user.controller.js';
-import { adminMiddleware } from '../../middleware/isAdmin.js';
+import { adminMiddleware } from '../../middleware/auth.js';
 
 const router = express.Router();
 
