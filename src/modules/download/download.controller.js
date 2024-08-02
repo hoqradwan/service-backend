@@ -1,7 +1,8 @@
 import httpStatus from 'http-status';
 import catchAsync from '../../utils/catchAsync.js';
 import sendResponse from '../../utils/sendResponse.js';
-import { addDownloadIntoDB, getMyDownloadsFromDB } from './download.service.js';
+import { addDownloadIntoDB, getDailyDownloadCountService, getMyDownloadsFromDB, getTotalDownloadCountService } from './download.service.js';
+import { getRandomAccountService, getTotalDocumentCountService } from '../cookie/cookie.service.js';
 import axios from 'axios';
 import { cookieCredentials } from './download.utils.js';
 
@@ -14,6 +15,31 @@ export const addDownload = catchAsync(async (req, res) => {
     data: result,
   });
 });
+
+// daily download count by user email
+export const getDailyDownloadCount = catchAsync(async (req, res) => {
+  const email = req?.query?.email;
+  const result = await getDailyDownloadCountService(email);
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Daily download count is retrieved successfully',
+    data: {dailyDownloadCount : result},
+  });
+});
+
+// Total download count by user email
+export const getTotalDownloadCount = catchAsync(async (req, res) => {
+  const email = req?.query?.email;
+  const result = await getTotalDownloadCountService(email);
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Total download count is retrieved successfully',
+    data: {totalDownloadCount : result},
+  });
+});
+
 export const getMyDownloads = catchAsync(async (req, res) => {
   const result = await getMyDownloadsFromDB(req.user);
   sendResponse(res, {
@@ -26,8 +52,7 @@ export const getMyDownloads = catchAsync(async (req, res) => {
 
 
 
-import { getRandomAccountService, getTotalDocumentCountService } from '../cookie/cookie.service.js';
-
+// download request to envato official website
 export const handleDownload = async (req, res) => {
   try {
     console.log("hitting");
@@ -45,7 +70,10 @@ export const handleDownload = async (req, res) => {
     // credentials for download request
     const mainURL = `https://elements.envato.com/elements-api/items/${itemCode}/download_and_license.json`;
 
-    const { payload, headers } = await cookieCredentials("66ab8571f9960ae1fefea5d9", url);
+    // Getting random cookie details
+    const cookieDetails = await generateRandomAccount();
+
+    const { payload, headers } = await cookieCredentials(cookieDetails, url);
 
     if (!payload) {
       return res.status(400).json({ isOk: false, message: 'Payload is required' });
@@ -67,11 +95,12 @@ export const handleDownload = async (req, res) => {
     // console.log('download link response', response.data);
     // Extract the download URL from the first response
     const downloadUrl = response?.data?.data?.attributes?.downloadUrl;
-    console.log("download link", downloadUrl);
+    // console.log("download link", downloadUrl);
 
     if (downloadUrl) {
       return res.status(200).json({
         isOk: true,
+        serviceId: cookieDetails?._id,
         message: "Download request successful",
         downloadUrl
       });
@@ -94,7 +123,7 @@ export const handleDownload = async (req, res) => {
 export const generateRandomAccount = async () => {
   try {
     const count = await getTotalDocumentCountService();
-    console.log("total accounts = ", count);
+    // console.log("total accounts = ", count);
 
     // Generating a random number 
     const randomIndex = Math?.floor(Math?.random() * count);

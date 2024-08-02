@@ -9,8 +9,43 @@ export const addDownloadIntoDB = async (payload, requestedUser) => {
   return result;
 };
 
+// Daily download count service by user email
+export const getDailyDownloadCountService = async (userEmail) => {
+  const today = new Date();
+  const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+  const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+
+  const result = await Download.aggregate([
+    {
+      $match: {
+        downloadedBy: userEmail,
+        status: new RegExp('^accepted$', 'i'), // Case-insensitive match
+        createdAt: {
+          $gte: startOfDay,
+          $lte: endOfDay
+        }
+      }
+    },
+    {
+      $count: "dailyDownloadCount"
+    }
+  ]);
+
+  return result.length > 0 ? result[0].dailyDownloadCount : 0;
+};
+
+// Total download count service by user email
+export const getTotalDownloadCountService = async (userEmail) => {
+  return await Download.countDocuments(
+    {
+      downloadedBy: userEmail,
+      status: "accepted"
+    }
+  );
+};
+
 export const getMyDownloadsFromDB = async (requestedUser) => {
-    const downloads = await Download.find({downloadedBy: requestedUser.email});
+  const downloads = await Download.find({ downloadedBy: requestedUser.email });
 
   const result = downloads.map(download => {
     return {
