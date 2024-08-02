@@ -5,24 +5,29 @@ export const createCookieService = async (data) => {
   // Create a new Cookie instance
   const newCookie = new Cookie(data);
   // Save the document to the database
-  return await newCookie.save();
+  return await newCookie?.save();
 };
 
 // get all cookie service
 export const getAllCookiesService = async () => {
-  return await Cookie.find();
+  return await Cookie?.find();
 };
 
-// find single cookie service
+// find single cookie service with id
 export const getCookieByIdService = async (id) => {
   // Find the cookie by _id
-  return await Cookie.findById(id);
+  return await Cookie?.findById(id);
+};
+
+// Find single cookie service with account email
+export const getCookieByAccountEmailService = async (email) => {
+  return await Cookie?.findOne({ account: email });
 };
 
 // update cookie service
 export const updateCookieByIdService = async (id, updateData) => {
   // update the cookie
-  return await Cookie.findByIdAndUpdate(id, updateData, {
+  return await Cookie?.findByIdAndUpdate(id, updateData, {
     new: true,
     runValidators: true // Ensure that the update data conforms to the schema
   });
@@ -31,5 +36,15 @@ export const updateCookieByIdService = async (id, updateData) => {
 // delete cookie service
 export const deleteCookieByIdService = async (id) => {
   // delete the cookie
-  return Cookie.findByIdAndDelete(id);
+  return Cookie?.findByIdAndDelete(id);
+};
+
+// get the total number of cookies service
+export const getTotalDocumentCountService = async () => {
+  return Cookie?.countDocuments();
+};
+
+// get the total number of cookies service
+export const getRandomAccountService = async (randomIndex) => {
+  return Cookie?.findOne()?.skip(randomIndex);
 };
