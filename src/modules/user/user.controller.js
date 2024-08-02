@@ -147,7 +147,7 @@ export const updateUser = async (req, res) => {
     if (password) updateData.password = hashPassword(password);
     if (phone) updateData.phone = phone;
     if (image) updateData.image = image;
-    if (image) updateData.isActive = isActive;
+    if (isActive) updateData.isActive = isActive;
 
     const updatedUser = await updateUserById(userId, updateData);
 
