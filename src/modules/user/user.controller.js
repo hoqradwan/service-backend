@@ -302,17 +302,22 @@
 
 import { UserModel } from './user.model.js';
 import bcrypt from 'bcrypt';
+
+import jwt from 'jsonwebtoken';
 import {
   createUser,
   deleteUserById,
   findUserByEmail,
   findUserById,
+
+
+
   updateUserById
 } from './user.service.js';
 import { validateUserInput } from './user.validation.js';
 import { generateToken, hashPassword } from './user.utils.js';
 import { v4 as uuidv4 } from 'uuid';
-
+import nodemailer from "nodemailer";
 import httpStatus from 'http-status';
 import catchAsync from '../../utils/catchAsync.js';
 import sendResponse from '../../utils/sendResponse.js';
@@ -546,3 +551,81 @@ export const getAdminPassword = catchAsync(async (req, res) => {
     data: { adminPassword: user.adminPassword },
   });
 });
+
+
+
+
+export const forgotPassword = catchAsync(async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    return sendError(res, httpStatus.BAD_REQUEST, {
+      message: 'Please provide an email.',
+    });
+  }
+
+  const user = await findUserByEmail(email);
+  if (!user) {
+    return sendError(res, httpStatus.NOT_FOUND, {
+      message: 'This account does not exist.',
+    });
+  }
+
+  const token = jwt.sign({ email }, process.env.JWT_SECRET_KEY, { expiresIn: "1h" });
+  
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    secure: true,
+    auth: {
+      user: process.env.Nodemailer_GMAIL,
+      pass: process.env.Nodemailer_GMAIL_PASSWORD,
+    },
+  });
+  
+  const receiver = {
+    from: "info.arridevstudios@gmail.com",
+    to: email,
+    subject: "Reset Password",
+    text: `Click on the link below to reset your password: ${process.env.url}/reset-password/${token}`,
+  };
+
+  await transporter.sendMail(receiver);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Password reset link sent to your email. Please check!",
+    data: null,
+  });
+});
+
+export const resetPassword = catchAsync(async (req, res) => {
+  const { token } = req.params;
+  const { password } = req.body;
+
+  if (!password) {
+    return sendError(res, httpStatus.BAD_REQUEST, {
+      message: 'Please provide a password.',
+    });
+  }
+
+  const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+  const user = await findUserByEmail(decoded.email);
+
+  if (!user) {
+    return sendError(res, httpStatus.NOT_FOUND, {
+      message: 'User not found.',
+    });
+  }
+
+  const newPassword = await hashPassword(password);
+  user.password = newPassword;
+  await user.save();
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Password reset successfully",
+    data: null,
+  });
+});
+
