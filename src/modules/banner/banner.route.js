@@ -8,7 +8,7 @@ const router = express.Router();
 
 router.get('/all', getAllBanner);
 router.post('/create', adminMiddleware("admin"), validateRequest(createBannerValidationSchema), createBanner);
-router.post('/update/:id', adminMiddleware("admin"), validateRequest(updateBannerValidationSchema), updateBanner);
+router.patch('/update/:id', adminMiddleware("admin"), validateRequest(updateBannerValidationSchema), updateBanner);
 router.delete('/delete/:id', adminMiddleware("admin"), deleteBanner);
 
 export const bannerRoutes = router;
