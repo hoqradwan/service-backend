@@ -1,7 +1,7 @@
 import httpStatus from 'http-status';
 import catchAsync from '../../utils/catchAsync.js';
 import sendResponse from '../../utils/sendResponse.js';
-import { addDownloadIntoDB, getDailyDownloadCountService, getMyDownloadsFromDB, getTotalDownloadCountService } from './download.service.js';
+import { addDownloadIntoDB, getDailyDownloadCountForLicenseService, getDailyDownloadCountService, getMyDownloadsFromDB, getTotalDownloadCountForLicenseService, getTotalDownloadCountService } from './download.service.js';
 import { getRandomAccountService, getTotalDocumentCountService } from '../cookie/cookie.service.js';
 import axios from 'axios';
 import { cookieCredentials } from './download.utils.js';
@@ -40,6 +40,30 @@ export const getTotalDownloadCount = catchAsync(async (req, res) => {
   });
 });
 
+// daily download count for license
+export const getDailyDownloadCountForLicense = catchAsync(async (req, res) => {
+  const licenseId = req?.query?.licenseId;
+  const result = await getDailyDownloadCountForLicenseService(licenseId);
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Daily download count for license retrieved successfully',
+    data: {licenseDailyDownload : result},
+  });
+});
+
+// Total download count by user email
+export const getTotalDownloadCountForLicense = catchAsync(async (req, res) => {
+  const licenseId = req?.query?.licenseId;
+  const result = await getTotalDownloadCountForLicenseService(licenseId);
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Total download count for license is retrieved successfully',
+    data: {LicenseTotalDownload : result},
+  });
+});
+
 export const getMyDownloads = catchAsync(async (req, res) => {
   const result = await getMyDownloadsFromDB(req.user);
   sendResponse(res, {
@@ -60,20 +84,11 @@ export const handleDownload = async (req, res) => {
     if (!url) {
       return res.status(400).json({ isOk: false, message: 'URL is required' });
     }
-    const lastIndex = (url?.split("/")[3]?.split("-")?.length) - 1;
-    const itemCode = url?.split("/")[3]?.split("-")[lastIndex];
-
-    if ((((url?.split("/").length)) !== 4) || !itemCode) {
-      return res.status(400).json({ isOk: false, message: 'Invalid url' });
-    }
-
-    // credentials for download request
-    const mainURL = `https://elements.envato.com/elements-api/items/${itemCode}/download_and_license.json`;
-
+    
     // Getting random cookie details
     const cookieDetails = await generateRandomAccount();
 
-    const { payload, headers } = await cookieCredentials(cookieDetails, url);
+    const { payload, headers, mainURL } = await cookieCredentials(cookieDetails, url);
 
     if (!payload) {
       return res.status(400).json({ isOk: false, message: 'Payload is required' });
@@ -92,7 +107,6 @@ export const handleDownload = async (req, res) => {
     if (!response) {
       return res.status(400).json({ isOk: false, message: 'Item code is not valid' })
     }
-    // console.log('download link response', response.data);
     // Extract the download URL from the first response
     const downloadUrl = response?.data?.data?.attributes?.downloadUrl;
     // console.log("download link", downloadUrl);

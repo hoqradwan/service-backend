@@ -1,5 +1,15 @@
 export const cookieCredentials = async (cookieDetails, url) => {
-  
+
+  const lastIndex = (url?.split("/")[3]?.split("-")?.length) - 1;
+  const itemCode = url?.split("/")[3]?.split("-")[lastIndex];
+
+  if ((((url?.split("/").length)) !== 4) || !itemCode) {
+    return res.status(400).json({ isOk: false, message: 'Invalid url' });
+  }
+
+  // Main URL for download request
+  const mainURL = `https://elements.envato.com/elements-api/items/${itemCode}/download_and_license.json`;
+
   const cookie = cookieDetails?.cookie;
   const csrfToken = cookieDetails?.csrfToken;
   const project = cookieDetails?.project;
@@ -29,6 +39,6 @@ export const cookieCredentials = async (cookieDetails, url) => {
     'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Mobile Safari/537.36',
   }
 
-  return { payload, headers };
+  return { payload, headers, mainURL };
 }
 
