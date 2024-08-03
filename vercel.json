@@ -1,17 +1,22 @@
-
 {
     "version": 2,
     "builds": [
-        {
-            "src": "./app.js",
-            "use": "@vercel/node"
-        }
+      {
+        "src": "app.js",
+        "use": "@vercel/node"
+      }
     ],
     "routes": [
-        {
-            "src": "/(.*)",
-            "dest": "/",
-            "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
-        }
+      {
+        "src": "/api/(.*)",
+        "dest": "app.js",
+        "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+      },
+      {
+        "src": "/(.*)",
+        "dest": "app.js",
+        "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+      }
     ]
-}
+  }
+  
