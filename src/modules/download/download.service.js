@@ -23,42 +23,45 @@ export const getMyDownloadsFromDB = async (requestedUser) => {
 };
 
 // Daily download count service by user email
-export const getDailyDownloadCountService = async (userEmail) => {
+export const getDailyDownloadForUserService = async (userEmail) => {
   const today = new Date();
   const startOfDay = new Date(today.setHours(0, 0, 0, 0));
   const endOfDay = new Date(today.setHours(23, 59, 59, 999));
 
-  const result = await Download.aggregate([
-    {
-      $match: {
-        downloadedBy: userEmail,
-        status: new RegExp('^accepted$', 'i'), // Case-insensitive match
-        createdAt: {
-          $gte: startOfDay,
-          $lte: endOfDay
-        }
-      }
-    },
-    {
-      $count: "dailyDownloadCount"
+  const downloads = await Download.find({
+    downloadedBy: userEmail,
+    status: new RegExp('^accepted$', 'i'), // Case-insensitive match
+    createdAt: {
+      $gte: startOfDay,
+      $lte: endOfDay
     }
-  ]);
+  });
 
-  return result.length > 0 ? result[0].dailyDownloadCount : 0;
+  const dailyDownloadCount = downloads?.length;
+
+  return {
+    dailyDownloadCount,
+    dailyDownloads: downloads
+  };
 };
 
 // Total download count service by user email
-export const getTotalDownloadCountService = async (userEmail) => {
-  return await Download.countDocuments(
-    {
-      downloadedBy: userEmail,
-      status: "accepted"
-    }
-  );
+export const getTotalDownloadForUserService = async (userEmail) => {
+  const downloads = await Download.find({
+    downloadedBy: userEmail,
+    status: "accepted"
+  });
+
+  const totalDownloadCount = downloads?.length;
+  // Return both the count and the documents
+  return {
+    totalDownloadCount,
+    downloads
+  };
 };
 
 // Daily download count service for license
-export const getDailyDownloadCountForLicenseService = async (licenseId) => {
+export const getDailyDownloadForLicenseService = async (licenseId) => {
   const today = new Date();
   const startOfDay = new Date(today.setHours(0, 0, 0, 0));
   const endOfDay = new Date(today.setHours(23, 59, 59, 999));
@@ -67,7 +70,7 @@ export const getDailyDownloadCountForLicenseService = async (licenseId) => {
     {
       $match: {
         licenseId: licenseId,
-        status: new RegExp('^accepted$', 'i'), // Case-insensitive match
+        status: new RegExp('^accepted$', 'i'),
         createdAt: {
           $gte: startOfDay,
           $lte: endOfDay
@@ -75,21 +78,79 @@ export const getDailyDownloadCountForLicenseService = async (licenseId) => {
       }
     },
     {
-      $count: "dailyDownloadCountForLicense"
+      $group: {
+        _id: "$licenseId",
+        downloads: { $push: "$$ROOT" },
+        count: { $sum: 1 }
+      }
     }
   ]);
 
-  return result.length > 0 ? result[0].dailyDownloadCountForLicense : 0;
+  if (result.length > 0) {
+    return {
+      count: result[0].count,
+      licenseDailyDownload: result[0].downloads
+    };
+  } else {
+    return {
+      count: 0,
+      licenseDailyDownload: []
+    };
+  }
 };
 
-// Total download count service by user email
-export const getTotalDownloadCountForLicenseService = async (licenseId) => {
-  return await Download.countDocuments(
-    {
-      licenseId: licenseId,
-      status: "accepted"
+// Total download for license service 
+export const getTotalDownloadForLicenseService = async (licenseId) => {
+  const downloads = await Download.find({
+    licenseId: licenseId,
+    status: "accepted"
+  });
+
+  const count = downloads?.length;
+
+  return {
+    count,
+    licenseDownloads: downloads
+  };
+};
+
+
+// Daily download for cookie account by service Id
+export const getDailyDownloadForCookieService = async (serviceId) => {
+  const today = new Date();
+  const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+  const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+
+  const downloads = await Download.find({
+    serviceId: serviceId,
+    status: new RegExp('^accepted$', 'i'), // Case-insensitive match
+    createdAt: {
+      $gte: startOfDay,
+      $lte: endOfDay
     }
-  );
+  });
+
+  const dailyDownloadCount = downloads?.length;
+
+  return {
+    dailyDownloadCount,
+    dailyDownloads: downloads
+  };
+};
+
+// Total download for cookie account by service Id
+export const getTotalDownloadForCookieService = async (serviceId) => {
+  const downloads = await Download.find({
+    serviceId: serviceId,
+    status: "accepted"
+  });
+
+  const count = downloads?.length;
+
+  return {
+    count,
+    serviceDownloads: downloads
+  };
 };
 
 

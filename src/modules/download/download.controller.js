@@ -1,10 +1,11 @@
 import httpStatus from 'http-status';
 import catchAsync from '../../utils/catchAsync.js';
 import sendResponse from '../../utils/sendResponse.js';
-import { addDownloadIntoDB, getDailyDownloadCountForLicenseService, getDailyDownloadCountService, getMyDownloadsFromDB, getTotalDownloadCountForLicenseService, getTotalDownloadCountService } from './download.service.js';
+import { addDownloadIntoDB, getDailyDownloadForCookieService, getDailyDownloadForLicenseService, getDailyDownloadForUserService, getMyDownloadsFromDB, getTotalDownloadForCookieService, getTotalDownloadForLicenseService, getTotalDownloadForUserService } from './download.service.js';
 import { getRandomAccountService, getTotalDocumentCountService } from '../cookie/cookie.service.js';
 import axios from 'axios';
 import { cookieCredentials } from './download.utils.js';
+
 
 export const addDownload = catchAsync(async (req, res) => {
   const result = await addDownloadIntoDB(req.body, req.user);
@@ -13,54 +14,6 @@ export const addDownload = catchAsync(async (req, res) => {
     statusCode: httpStatus.OK,
     message: 'Item is downloaded successfully.',
     data: result,
-  });
-});
-
-// daily download count by user email
-export const getDailyDownloadCount = catchAsync(async (req, res) => {
-  const email = req?.query?.email;
-  const result = await getDailyDownloadCountService(email);
-  sendResponse(res, {
-    success: true,
-    statusCode: httpStatus.OK,
-    message: 'Daily download count is retrieved successfully',
-    data: {dailyDownloadCount : result},
-  });
-});
-
-// Total download count by user email
-export const getTotalDownloadCount = catchAsync(async (req, res) => {
-  const email = req?.query?.email;
-  const result = await getTotalDownloadCountService(email);
-  sendResponse(res, {
-    success: true,
-    statusCode: httpStatus.OK,
-    message: 'Total download count is retrieved successfully',
-    data: {totalDownloadCount : result},
-  });
-});
-
-// daily download count for license
-export const getDailyDownloadCountForLicense = catchAsync(async (req, res) => {
-  const licenseId = req?.query?.licenseId;
-  const result = await getDailyDownloadCountForLicenseService(licenseId);
-  sendResponse(res, {
-    success: true,
-    statusCode: httpStatus.OK,
-    message: 'Daily download count for license retrieved successfully',
-    data: {licenseDailyDownload : result},
-  });
-});
-
-// Total download count by user email
-export const getTotalDownloadCountForLicense = catchAsync(async (req, res) => {
-  const licenseId = req?.query?.licenseId;
-  const result = await getTotalDownloadCountForLicenseService(licenseId);
-  sendResponse(res, {
-    success: true,
-    statusCode: httpStatus.OK,
-    message: 'Total download count for license is retrieved successfully',
-    data: {LicenseTotalDownload : result},
   });
 });
 
@@ -74,6 +27,132 @@ export const getMyDownloads = catchAsync(async (req, res) => {
   });
 });
 
+// daily download count by user email
+export const getDailyDownloadForUser = catchAsync(async (req, res) => {
+  const email = req?.query?.email;
+  if (!email) {
+    sendResponse(res, {
+      success: false,
+      statusCode: httpStatus?.BAD_REQUEST,
+      message: 'User email is not provided',
+      data: null,
+    });
+  }
+  const result = await getDailyDownloadForUserService(email);
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Daily download  is retrieved successfully',
+    data: result,
+  });
+});
+
+// Total download count by user email
+export const getTotalDownloadForUser = catchAsync(async (req, res) => {
+  const email = req?.query?.email;
+  if (!email) {
+    sendResponse(res, {
+      success: false,
+      statusCode: httpStatus?.BAD_REQUEST,
+      message: 'User email is not provided',
+      data: null,
+    });
+  }
+  const result = await getTotalDownloadForUserService(email);
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Total download  is retrieved successfully',
+    data: result,
+  });
+});
+
+// daily download for license
+export const getDailyDownloadForLicense = catchAsync(async (req, res) => {
+  const licenseId = req?.query?.licenseId;
+
+  if (!licenseId) {
+    sendResponse(res, {
+      success: false,
+      statusCode: httpStatus?.BAD_REQUEST,
+      message: 'LicenseId is not provided',
+      data: null,
+    });
+  }
+  // Get the detailed data from the service
+  const result = await getDailyDownloadForLicenseService(licenseId);
+
+  // Send the response with both the total count and detailed data
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Daily download  for license retrieved successfully',
+    data: result,
+  });
+});
+
+// Total download count by user email
+export const getTotalDownloadForLicense = catchAsync(async (req, res) => {
+  const licenseId = req?.query?.licenseId;
+
+  if (!licenseId) {
+    sendResponse(res, {
+      success: false,
+      statusCode: httpStatus?.BAD_REQUEST,
+      message: 'LicenseId is not provided',
+      data: null,
+    });
+  }
+  const result = await getTotalDownloadForLicenseService(licenseId);
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Total download for license is retrieved successfully',
+    data: result,
+  });
+});
+
+
+// daily download for license
+export const getDailyDownloadForCookie = catchAsync(async (req, res) => {
+  const serviceId = req?.query?.serviceId;
+
+  if (!serviceId) {
+    sendResponse(res, {
+      success: false,
+      statusCode: httpStatus?.BAD_REQUEST,
+      message: 'Service id is not provided',
+      data: null,
+    });
+  }
+  const result = await getDailyDownloadForCookieService(serviceId);
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Daily download for service retrieved successfully',
+    data: result,
+  });
+});
+
+// Total download count by cookie account
+export const getTotalDownloadForCookie = catchAsync(async (req, res) => {
+  const serviceId = req?.query?.serviceId;
+  if (!serviceId) {
+    sendResponse(res, {
+      success: false,
+      statusCode: httpStatus?.BAD_REQUEST,
+      message: 'Service Id is not provided',
+      data: null,
+    });
+  }
+  const result = await getTotalDownloadForCookieService(serviceId);
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Total download  for service is retrieved successfully',
+    data: result,
+  });
+});
 
 
 // download request to envato official website
@@ -84,7 +163,7 @@ export const handleDownload = async (req, res) => {
     if (!url) {
       return res.status(400).json({ isOk: false, message: 'URL is required' });
     }
-    
+
     // Getting random cookie details
     const cookieDetails = await generateRandomAccount();
 
