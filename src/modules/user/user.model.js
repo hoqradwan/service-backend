@@ -11,8 +11,8 @@ const UserSchema = new Schema({
     phone: { type: Number },
     image: { type: String },
     role: { type: String, enum: ['admin', 'user'], default: 'user' },
-    isActive: { type: Boolean, default: false }
- 
+    isActive: { type: Boolean, default: false },
+    
 }, { timestamps: true });
 
 

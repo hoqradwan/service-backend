@@ -155,7 +155,8 @@ export const getTotalDownloadForCookie = catchAsync(async (req, res) => {
 });
 
 
-// download request to envato official website
+// download request to envato official websiteimport { getRandomAccountService, getTotalDocumentCountService } from '../cookie/cookie.service.js';
+
 export const handleDownload = async (req, res) => {
   try {
     console.log("hitting");
@@ -211,6 +212,7 @@ export const handleDownload = async (req, res) => {
     res.status(500).json({ isOk: false, message: 'Internal server error' });
   }
 };
+
 
 // Random account generator 
 export const generateRandomAccount = async () => {
