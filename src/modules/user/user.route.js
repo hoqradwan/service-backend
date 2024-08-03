@@ -1,20 +1,16 @@
 import express from 'express';
+import { adminMiddleware } from '../../middleware/auth.js';
 import {
   deleteUser,
-  
   forgotPassword,
-  
   getAdminPassword,
   getSelfInfo,
   getUserInfo,
   loginUser,
   registerUser,
-  
   resetPassword,
-  
   updateUser,
 } from './user.controller.js';
-import { adminMiddleware } from '../../middleware/auth.js';
 
 const router = express.Router();
 

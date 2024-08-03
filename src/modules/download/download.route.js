@@ -1,7 +1,6 @@
 import express from 'express';
-
-import { addDownload, getMyDownloads, handleDownload } from './download.controller.js';
 import { adminMiddleware } from '../../middleware/auth.js';
+import { addDownload, getMyDownloads, handleDownload } from './download.controller.js';
 
 const router = express.Router();
 
