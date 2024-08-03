@@ -1,4 +1,4 @@
-import mongoose, { Mongoose } from 'mongoose';
+import mongoose from 'mongoose';
 import { UserModel } from '../user/user.model.js';
 import { LicenseModel } from './license.model.js';
 
@@ -6,16 +6,43 @@ export const createLicenseIntoDB = async (payload) => {
   const result = await LicenseModel.create(payload);
   return result;
 };
+// export const getLicensesFromDB = async (
+//   filters = {},
+//   paginationOptions = {},
+// ) => {
+//   const { page, limit, sortBy, sortOrder } = paginationOptions;
+
+//   const query = { ...filters };
+
+//   const sortOptions = {};
+//   if (['dayLimit', 'dailyLimit', 'totalLimit', 'createdAt'].includes(sortBy)) {
+//     sortOptions[sortBy] = sortOrder === 'asc' ? 1 : -1;
+//   } else {
+//     sortOptions['createdAt'] = 1; // Default sorting
+//   }
+
+//   const result = await LicenseModel.find(query)
+//     .sort(sortOptions)
+//     .skip((page - 1) * limit)
+//     .limit(limit);
+
+//   const total = await LicenseModel.countDocuments(query);
+
+//   return {
+//     meta: {
+//       total,
+//       page,
+//       limit,
+//       totalPages: Math.ceil(total / limit),
+//     },
+//     data: result,
+//   };
+// };
 export const getLicensesFromDB = async (
   filters = {},
   paginationOptions = {},
 ) => {
-  const {
-    page = 1,
-    limit = 10,
-    sortBy = 'createdAt',
-    sortOrder = 'asc',
-  } = paginationOptions;
+  const { page, limit, sortBy, sortOrder } = paginationOptions;
 
   const query = { ...filters };
 
@@ -50,15 +77,10 @@ export const licenseByUserFromDB = async (
 ) => {
   const query = {
     ...filters,
-    user: userId, // Ensure userId is treated as ObjectId
+    user: userId,
   };
 
-  const {
-    page = 1,
-    limit = 10,
-    sortBy = 'createdAt',
-    sortOrder = 'asc',
-  } = paginationOptions;
+  const { page, limit, sortBy, sortOrder } = paginationOptions;
 
   const sortOptions = {};
   if (['dayLimit', 'dailyLimit', 'totalLimit', 'createdAt'].includes(sortBy)) {
@@ -96,7 +118,7 @@ export const activateLicenseIntoDB = async (licenseKey, user) => {
     // Find the license by licenseKey and update its status to 'used' and set the user
     const license = await LicenseModel.findOneAndUpdate(
       { licenseKey, status: 'new' },
-      { status: 'used', user: user._id },
+      { status: 'used', user: user.id },
       { new: true, session }, // Include the session
     );
 
@@ -106,7 +128,7 @@ export const activateLicenseIntoDB = async (licenseKey, user) => {
 
     // Update the user's isActive status
     const updatedUser = await UserModel.findByIdAndUpdate(
-      Mongoose.Types.ObjectId(user.id),
+      user.id,
       { isActive: true },
       { new: true, runValidators: true, session }, // Ensure to return the updated document, run validators, and include the session
     );

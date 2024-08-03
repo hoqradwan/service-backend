@@ -1,6 +1,5 @@
 // import { UserModel } from "../modules/user/user.model.js";
 
-
 // export const adminMiddleware = async (req, res, next) => {
 //     try {
 //         const userId = req.params.id;
@@ -38,7 +37,6 @@ import jwt from 'jsonwebtoken';
 export const adminMiddleware = (role) => {
   return (req, res, next) => {
     const token = req.headers.authorization?.split(' ')[1];
-
     if (!token) {
       return res
         .status(401)
@@ -47,7 +45,7 @@ export const adminMiddleware = (role) => {
 
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-     // console.log(decoded);
+      // console.log(decoded);
       req.user = decoded; // Attach user data to request object
 
       // Check if the user has the required role

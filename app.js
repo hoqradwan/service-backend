@@ -6,6 +6,8 @@ import router from './src/routes/index.js';
 import cron from 'node-cron';
 
 import { updateLicenseStatus } from './src/modules/license/license.utils.js';
+import globalErrorHandler from './src/middleware/globalErrorHandler.js';
+import notFoundRoute from './src/middleware/notFoundRoute.js';
 dotenv.config();
 const PORT = process.env.PORT || 5000;
 
@@ -44,6 +46,8 @@ cron.schedule('0 0 * * *', () => {
 //     console.error('Error updating license status:', err);
 //   });
 // });
+app.use('*', notFoundRoute);
+app.use(globalErrorHandler);
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
