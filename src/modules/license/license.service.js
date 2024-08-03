@@ -34,13 +34,13 @@ export const getLicensesFromDB = async (
   const total = await LicenseModel.countDocuments(query);
 
   return {
-    data: result,
-    pagination: {
+    meta: {
       total,
       page,
       limit,
       totalPages: Math.ceil(total / limit),
     },
+    data: result,
   };
 };
 export const licenseByUserFromDB = async (
