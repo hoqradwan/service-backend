@@ -1,7 +1,10 @@
 import mongoose from 'mongoose';
 import { UserModel } from './user.model.js';
-
+import jwt from 'jsonwebtoken';
+import nodemailer from "nodemailer";
+import httpStatus from 'http-status';
 export const findUserByEmail = async (email) => {
+  //console.log(email,"email")
   return UserModel.findOne({ email });
 };
 
@@ -30,8 +33,11 @@ export const findUserById = async (id) => {
   
   export const updateUserById = async (id, updateData) => {
     return UserModel.findByIdAndUpdate(id, updateData, { new: true });
-  };
+};
+
+
   
   export const deleteUserById = async (id) => {
     return UserModel.findByIdAndDelete(id);
-  };
+};
+  
