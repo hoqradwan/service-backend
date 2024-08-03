@@ -9,12 +9,12 @@ import licenseRoutes from '../modules/license/license.route.js';
 
 const router = express.Router();
 
-router.use("/api/user", userRoutes);
-router.use("/api/evanto", cookieRoutes);
-router.use("/api/banner", bannerRoutes);
-router.use("/api/support", supportRoutes);
-router.use("/api/download", downloadRoutes);
-router.use('/api/license', licenseRoutes)
-router.use("/api/cookie", cookieRoutes);
+router.use('/api/user', userRoutes);
+router.use('/api/envato', cookieRoutes);
+router.use('/api/banner', bannerRoutes);
+router.use('/api/support', supportRoutes);
+router.use('/api/download', downloadRoutes);
+router.use('/api/license', licenseRoutes);
+router.use('/api/cookie', cookieRoutes);
 
 export default router;
