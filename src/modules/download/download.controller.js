@@ -5,6 +5,8 @@ import { addDownloadIntoDB, getDailyDownloadForCookieService, getDailyDownloadFo
 import { getRandomAccountService, getTotalDocumentCountService } from '../cookie/cookie.service.js';
 import axios from 'axios';
 import { cookieCredentials } from './download.utils.js';
+import { getLicenseByIdService } from '../license/license.service.js';
+import mongoose from 'mongoose';
 
 
 export const addDownload = catchAsync(async (req, res) => {
@@ -79,6 +81,16 @@ export const getDailyDownloadForLicense = catchAsync(async (req, res) => {
       data: null,
     });
   }
+  // Check if licenseId is a valid MongoDB ObjectId
+  if (!mongoose?.Types?.ObjectId?.isValid(licenseId)) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: httpStatus?.BAD_REQUEST,
+      message: 'Invalid License Id format',
+      data: null,
+    });
+  }
+
   // Get the detailed data from the service
   const result = await getDailyDownloadForLicenseService(licenseId);
 
@@ -103,6 +115,17 @@ export const getTotalDownloadForLicense = catchAsync(async (req, res) => {
       data: null,
     });
   }
+
+  // Check if licenseId is a valid MongoDB ObjectId
+  if (!mongoose?.Types?.ObjectId?.isValid(licenseId)) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: httpStatus?.BAD_REQUEST,
+      message: 'Invalid License Id format',
+      data: null,
+    });
+  }
+
   const result = await getTotalDownloadForLicenseService(licenseId);
   sendResponse(res, {
     success: true,
@@ -125,6 +148,17 @@ export const getDailyDownloadForCookie = catchAsync(async (req, res) => {
       data: null,
     });
   }
+
+  // Check if serviceId is a valid MongoDB ObjectId
+  if (!mongoose?.Types?.ObjectId?.isValid(serviceId)) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: httpStatus?.BAD_REQUEST,
+      message: 'Invalid Service Id format',
+      data: null,
+    });
+  }
+
   const result = await getDailyDownloadForCookieService(serviceId);
   sendResponse(res, {
     success: true,
@@ -145,6 +179,16 @@ export const getTotalDownloadForCookie = catchAsync(async (req, res) => {
       data: null,
     });
   }
+  // Check if serviceId is a valid MongoDB ObjectId
+  if (!mongoose?.Types?.ObjectId?.isValid(serviceId)) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: httpStatus?.BAD_REQUEST,
+      message: 'Invalid Service Id format',
+      data: null,
+    });
+  }
+
   const result = await getTotalDownloadForCookieService(serviceId);
   sendResponse(res, {
     success: true,
@@ -155,71 +199,123 @@ export const getTotalDownloadForCookie = catchAsync(async (req, res) => {
 });
 
 
-// download request to envato official websiteimport { getRandomAccountService, getTotalDocumentCountService } from '../cookie/cookie.service.js';
+// download request to envato official website
+export const handleDownload = catchAsync(async (req, res) => {
+  const { url, licenseId } = req.body;
 
-export const handleDownload = async (req, res) => {
-  try {
-    console.log("hitting");
-    const { url } = req.body;
-    if (!url) {
-      return res.status(400).json({ isOk: false, message: 'URL is required' });
-    }
-
-    // Getting random cookie details
-    const cookieDetails = await generateRandomAccount();
-
-    const { payload, headers, mainURL } = await cookieCredentials(cookieDetails, url);
-
-    if (!payload) {
-      return res.status(400).json({ isOk: false, message: 'Payload is required' });
-    }
-    if (!headers) {
-      return res.status(400).json({ isOk: false, message: 'Headers is required' });
-    }
-
-    // Make the first HTTP request
-    const response = await axios({
-      method: 'POST',
-      url: mainURL,
-      headers: headers,
-      data: payload,
+  if (!licenseId) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: "License Id is not provided",
+      data: null,
     });
-    if (!response) {
-      return res.status(400).json({ isOk: false, message: 'Item code is not valid' })
-    }
-    // Extract the download URL from the first response
-    const downloadUrl = response?.data?.data?.attributes?.downloadUrl;
-    // console.log("download link", downloadUrl);
-
-    if (downloadUrl) {
-      return res.status(200).json({
-        isOk: true,
-        serviceId: cookieDetails?._id,
-        message: "Download request successful",
-        downloadUrl
-      });
-    }
-    else {
-      return res.status(400).json({
-        isOk: false,
-        message: "Download request is unsuccessful",
-      });
-    }
-
-
-  } catch (error) {
-    console.error('Error handling download:', error);
-    res.status(500).json({ isOk: false, message: 'Internal server error' });
   }
-};
+
+  // Check if licenseId is a valid MongoDB ObjectId
+  if (!mongoose.Types.ObjectId.isValid(licenseId)) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: "Invalid License Id format",
+      data: null,
+    });
+  }
+
+  if (!url) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'URL is required',
+      data: null,
+    });
+  }
+
+  // checking if daily limit has been exceeded or not
+  const limitCheck = await isDailyLimitExceed(licenseId);
+  if (!limitCheck.isOk) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: limitCheck.message,
+      data: null,
+    });
+  }
+
+  if (limitCheck.exceeded) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Daily download limit is exceeded',
+      data: null,
+    });
+  }
+
+  // Getting random cookie details
+  const cookieDetails = await generateRandomAccount();
+  const { payload, headers, mainURL } = await cookieCredentials(cookieDetails, url);
+
+  if (!payload) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Payload is required',
+      data: null,
+    });
+  }
+
+  if (!headers) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Headers are required',
+      data: null,
+    });
+  }
+
+  // Make the first HTTP request
+  const response = await axios({
+    method: 'POST',
+    url: mainURL,
+    headers: headers,
+    data: payload,
+  });
+
+  if (!response) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Item code is not valid',
+      data: null,
+    });
+  }
+
+  // Extract the download URL from the response
+  const downloadUrl = response?.data?.data?.attributes?.downloadUrl;
+
+  if (downloadUrl) {
+    return sendResponse(res, {
+      success: true,
+      statusCode: 200,
+      message: "Download request successful",
+      data: { downloadUrl, serviceId: cookieDetails?._id },
+    });
+  } else {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: "Download request is unsuccessful",
+      data: null,
+    });
+  }
+});
+
 
 
 // Random account generator 
 export const generateRandomAccount = async () => {
   try {
     const count = await getTotalDocumentCountService();
-    // console.log("total accounts = ", count);
-
     // Generating a random number 
     const randomIndex = Math?.floor(Math?.random() * count);
 
@@ -230,3 +326,28 @@ export const generateRandomAccount = async () => {
     console.error('Error fetching random account:', error);
   }
 }
+
+// Checking if the daily download limit has exceeded or not 
+export const isDailyLimitExceed = async (licenseId) => {
+  try {
+    const license = await getLicenseByIdService(licenseId);
+    if (!license) {
+      return { isOk: false, message: "License not found" };
+    }
+
+    if (license.status === "used" || license.status === "expired") {
+      return { isOk: false, message: "License is expired" };
+    }
+
+    const { count } = await getDailyDownloadForLicenseService(licenseId);
+
+    if (license.dailyLimit > count) {
+      return { isOk: true, exceeded: false };
+    } else {
+      return { isOk: true, exceeded: true };
+    }
+  } catch (error) {
+    console.error('Error checking daily limit:', error);
+    return { isOk: false, message: "Internal server error" };
+  }
+};
