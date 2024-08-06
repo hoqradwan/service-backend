@@ -1,15 +1,15 @@
-import { generateRandomAccount } from "./download.controller.js";
+export const cookieCredentials = async (cookieDetails, url) => {
 
-// cookie 
-// _elements_session_4=LzU4TWJxUlRScDZac0wzNjRnUUxFMnlRcG5TdUJlVTFpQnlEUFN4QWt4QWRadlM3eGVPYXJUeTNZUXdPS0Q4eHk5cFFqNzRPVHM2aFBNdzNwc00reWZDZmRPZ3ZwVXg5NEJqbjdNV092VVdUNUk2OXlhWXBNQlpqNFBFUVIvZG9LU2hQUzF5c2RGd2IwaThWdHZKN1d0WHVhRTQyL2VYY0NvMndRRjN6cVFnRGIxbWtFalp0ZytOdUxqZEtPeFM5U3BYNE93M25zckkvZzJjemU5NG8wTW1HQ0pIY1pmTExZZ29uYUhVVVFQSVVodXVqQ1FiKzFxRnNSREFzTGtVeG5yY2VtSHpYd25MelVhQjZPUDltSlJvRXZuczJ5OVpkSURrTWVxUmlpUjBvNVVGdUV5a1FsOTJad0RVdGNsdm5MZUtuOGsxZTdFRGhVSlBpeCtNeE5HRzFMNEIzWHk3VkRkaVNtdnVyY0U4YnF4WVp2cUM2L2EvdStPQ1JCUDNhVDVzT3R4V1lzWFFPZ2RxZENqczdaUT09LS1rT2xKL09FeHlqaUxTRjBVeGNDcTNnPT0%3D--fabe04e22c0e1a98808eb95b5d6118b0b0a2d46d
+  const lastIndex = (url?.split("/")[3]?.split("-")?.length) - 1;
+  const itemCode = url?.split("/")[3]?.split("-")[lastIndex];
 
-// csrfToken
-// teYkxcRu3l2hBirahp1itguEBjwDwN5pSve2AQvfBLu4r2iLYnNBIdpgMzT-QY64fM8Ftl1oeXx8tQrmECsJaA
+  if ((((url?.split("/").length)) !== 4) || !itemCode) {
+    return res.status(400).json({ isOk: false, message: 'Invalid url' });
+  }
 
+  // Main URL for download request
+  const mainURL = `https://elements.envato.com/elements-api/items/${itemCode}/download_and_license.json`;
 
-export const cookieCredentials = async (id, url) => {
-  // Getting random cookie details
-  const cookieDetails = await generateRandomAccount();
   const cookie = cookieDetails?.cookie;
   const csrfToken = cookieDetails?.csrfToken;
   const project = cookieDetails?.project;
@@ -39,6 +39,6 @@ export const cookieCredentials = async (id, url) => {
     'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Mobile Safari/537.36',
   }
 
-  return { payload, headers };
+  return { payload, headers, mainURL };
 }
 

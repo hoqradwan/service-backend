@@ -45,7 +45,7 @@ licenseSchema.pre('save', function (next) {
   if (this.isNew) {
     this.licenseKey = generateLicenseKey();
     this.expiryDate = new Date(this.createdAt);
-    this.expiryDate.setDate(this.expiryDate.getDate() + this.dayLimit);
+    this?.expiryDate?.setDate(this?.expiryDate?.getDate() + this.dayLimit);
   }
   next();
 });
