@@ -300,10 +300,16 @@
 // };
 
 
-import { UserModel } from './user.model.js';
 import bcrypt from 'bcrypt';
+import { UserModel } from './user.model.js';
 
+import httpStatus from 'http-status';
 import jwt from 'jsonwebtoken';
+import nodemailer from "nodemailer";
+import { v4 as uuidv4 } from 'uuid';
+import catchAsync from '../../utils/catchAsync.js';
+import sendError from '../../utils/sendError.js';
+import sendResponse from '../../utils/sendResponse.js';
 import {
   createUser,
   deleteUserById,
@@ -314,14 +320,8 @@ import {
 
   updateUserById
 } from './user.service.js';
-import { validateUserInput } from './user.validation.js';
 import { generateToken, hashPassword } from './user.utils.js';
-import { v4 as uuidv4 } from 'uuid';
-import nodemailer from "nodemailer";
-import httpStatus from 'http-status';
-import catchAsync from '../../utils/catchAsync.js';
-import sendResponse from '../../utils/sendResponse.js';
-import sendError from '../../utils/sendError.js';
+import { validateUserInput } from './user.validation.js';
 
 export const registerUser = catchAsync(async (req, res) => {
   const { name, email, password, phone, image } = req.body;
