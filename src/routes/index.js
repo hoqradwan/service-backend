@@ -10,7 +10,6 @@ import licenseRoutes from '../modules/license/license.route.js';
 const router = express.Router();
 
 router.use("/api/user", userRoutes);
-router.use("/api/evanto", cookieRoutes);
 router.use("/api/banner", bannerRoutes);
 router.use("/api/support", supportRoutes);
 router.use("/api/download", downloadRoutes);
