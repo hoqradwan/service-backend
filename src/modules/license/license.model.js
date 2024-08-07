@@ -34,21 +34,31 @@ const licenseSchema = new mongoose.Schema(
       enum: ['new', 'used', 'expired'],
       default: 'new',
     },
+    activationDate: {
+      type: Date,
+      default: null,
+    },
     expiryDate: {
       type: Date,
     },
   },
   { timestamps: true },
 );
-// save and generate a unique license key
+// Pre-save hook to generate a unique license key
 licenseSchema.pre('save', function (next) {
   if (this.isNew) {
     this.licenseKey = generateLicenseKey();
-    this.expiryDate = new Date(this.createdAt);
-    this?.expiryDate?.setDate(this?.expiryDate?.getDate() + this.dayLimit);
   }
   next();
 });
 
+// Pre-save hook to set the expiry date based on the activation date and day limit
+licenseSchema.pre('save', function (next) {
+  if (this.activationDate && !this.expiryDate) {
+    this.expiryDate = new Date(this.activationDate);
+    this.expiryDate.setDate(this.expiryDate.getDate() + this.dayLimit);
+  }
+  next();
+});
 export const LicenseModel =
   mongoose.models.License || mongoose.model('License', licenseSchema);
