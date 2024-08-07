@@ -10,7 +10,7 @@ export const addDownloadIntoDB = async (payload, requestedUser) => {
 };
 
 export const getMyDownloadsFromDB = async (requestedUser) => {
-  const downloads = await Download.find({ downloadedBy: requestedUser.email });
+  const downloads = await Download.find({ downloadedBy: requestedUser.email }).sort("-downloadedAt");
 
   const result = downloads.map(download => {
     return {

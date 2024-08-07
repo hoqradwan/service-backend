@@ -3,11 +3,22 @@ import httpStatus from 'http-status';
 import mongoose from 'mongoose';
 import catchAsync from '../../utils/catchAsync.js';
 import sendResponse from '../../utils/sendResponse.js';
-import { getRandomAccountService, getTotalDocumentCountService } from '../cookie/cookie.service.js';
+import {
+  getRandomAccountService,
+  getTotalDocumentCountService,
+} from '../cookie/cookie.service.js';
 import { getLicenseByIdService } from '../license/license.service.js';
-import { addDownloadIntoDB, getDailyDownloadForCookieService, getDailyDownloadForLicenseService, getDailyDownloadForUserService, getMyDownloadsFromDB, getTotalDownloadForCookieService, getTotalDownloadForLicenseService, getTotalDownloadForUserService } from './download.service.js';
+import {
+  addDownloadIntoDB,
+  getDailyDownloadForCookieService,
+  getDailyDownloadForLicenseService,
+  getDailyDownloadForUserService,
+  getMyDownloadsFromDB,
+  getTotalDownloadForCookieService,
+  getTotalDownloadForLicenseService,
+  getTotalDownloadForUserService,
+} from './download.service.js';
 import { cookieCredentials } from './download.utils.js';
-
 
 export const addDownload = catchAsync(async (req, res) => {
   const result = await addDownloadIntoDB(req.body, req.user);
@@ -33,12 +44,7 @@ export const getMyDownloads = catchAsync(async (req, res) => {
 export const getDailyDownloadForUser = catchAsync(async (req, res) => {
   const email = req?.query?.email;
   if (!email) {
-    sendResponse(res, {
-      success: false,
-      statusCode: httpStatus?.BAD_REQUEST,
-      message: 'User email is not provided',
-      data: null,
-    });
+    throw new Error('User email is not provided!');
   }
   const result = await getDailyDownloadForUserService(email);
   sendResponse(res, {
@@ -53,12 +59,7 @@ export const getDailyDownloadForUser = catchAsync(async (req, res) => {
 export const getTotalDownloadForUser = catchAsync(async (req, res) => {
   const email = req?.query?.email;
   if (!email) {
-    sendResponse(res, {
-      success: false,
-      statusCode: httpStatus?.BAD_REQUEST,
-      message: 'User email is not provided',
-      data: null,
-    });
+    throw new Error('User email is not provided!');
   }
   const result = await getTotalDownloadForUserService(email);
   sendResponse(res, {
@@ -74,21 +75,11 @@ export const getDailyDownloadForLicense = catchAsync(async (req, res) => {
   const licenseId = req?.query?.licenseId || req?.user?.currentLicense;
 
   if (!licenseId) {
-    sendResponse(res, {
-      success: false,
-      statusCode: httpStatus?.BAD_REQUEST,
-      message: 'LicenseId is not provided',
-      data: null,
-    });
+    throw new Error('licenseId is not provided!');
   }
   // Check if licenseId is a valid MongoDB ObjectId
   if (!mongoose?.Types?.ObjectId?.isValid(licenseId)) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: httpStatus?.BAD_REQUEST,
-      message: 'Invalid License Id format',
-      data: null,
-    });
+    throw new Error("Invalid licenseId format! expected ObjectId");
   }
 
   // Get the detailed data from the service
@@ -108,22 +99,12 @@ export const getTotalDownloadForLicense = catchAsync(async (req, res) => {
   const licenseId = req?.query?.licenseId || req?.user?.currentLicense;
 
   if (!licenseId) {
-    sendResponse(res, {
-      success: false,
-      statusCode: httpStatus?.BAD_REQUEST,
-      message: 'LicenseId is not provided',
-      data: null,
-    });
+    throw new Error('licenseId is not provided!');
   }
 
   // Check if licenseId is a valid MongoDB ObjectId
   if (!mongoose?.Types?.ObjectId?.isValid(licenseId)) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: httpStatus?.BAD_REQUEST,
-      message: 'Invalid License Id format',
-      data: null,
-    });
+    throw new Error("Invalid licenseId format! expected ObjectId");
   }
 
   const result = await getTotalDownloadForLicenseService(licenseId);
@@ -135,28 +116,17 @@ export const getTotalDownloadForLicense = catchAsync(async (req, res) => {
   });
 });
 
-
 // daily download for license
 export const getDailyDownloadForCookie = catchAsync(async (req, res) => {
   const serviceId = req?.query?.serviceId;
 
   if (!serviceId) {
-    sendResponse(res, {
-      success: false,
-      statusCode: httpStatus?.BAD_REQUEST,
-      message: 'Service id is not provided',
-      data: null,
-    });
+    throw new Error("serviceId is not provided!");
   }
 
   // Check if serviceId is a valid MongoDB ObjectId
   if (!mongoose?.Types?.ObjectId?.isValid(serviceId)) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: httpStatus?.BAD_REQUEST,
-      message: 'Invalid Service Id format',
-      data: null,
-    });
+    throw new Error("invalid serviceId format! expected ObjectId");
   }
 
   const result = await getDailyDownloadForCookieService(serviceId);
@@ -172,21 +142,11 @@ export const getDailyDownloadForCookie = catchAsync(async (req, res) => {
 export const getTotalDownloadForCookie = catchAsync(async (req, res) => {
   const serviceId = req?.query?.serviceId;
   if (!serviceId) {
-    sendResponse(res, {
-      success: false,
-      statusCode: httpStatus?.BAD_REQUEST,
-      message: 'Service Id is not provided',
-      data: null,
-    });
+    throw new Error("serviceId is not provided!")
   }
   // Check if serviceId is a valid MongoDB ObjectId
   if (!mongoose?.Types?.ObjectId?.isValid(serviceId)) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: httpStatus?.BAD_REQUEST,
-      message: 'Invalid Service Id format',
-      data: null,
-    });
+    throw new Error("invalid serviceId format! expected ObjectId")
   }
 
   const result = await getTotalDownloadForCookieService(serviceId);
@@ -198,17 +158,16 @@ export const getTotalDownloadForCookie = catchAsync(async (req, res) => {
   });
 });
 
-
 // download request to envato official website
 export const handleDownload = catchAsync(async (req, res) => {
   const { url } = req.body;
   const licenseId = req?.user?.currentLicense;
-  
+
   if (!licenseId) {
     return sendResponse(res, {
       success: false,
       statusCode: 400,
-      message: "You do not have a license activated",
+      message: 'You do not have a license activated',
       data: null,
     });
   }
@@ -218,7 +177,7 @@ export const handleDownload = catchAsync(async (req, res) => {
     return sendResponse(res, {
       success: false,
       statusCode: 400,
-      message: "Invalid License Id format",
+      message: 'Invalid License Id format',
       data: null,
     });
   }
@@ -245,7 +204,10 @@ export const handleDownload = catchAsync(async (req, res) => {
 
   // Getting random cookie details
   const cookieDetails = await generateRandomAccount();
-  const { payload, headers, mainURL } = await cookieCredentials(cookieDetails, url);
+  const { payload, headers, mainURL } = await cookieCredentials(
+    cookieDetails,
+    url,
+  );
 
   if (!payload) {
     return sendResponse(res, {
@@ -285,33 +247,30 @@ export const handleDownload = catchAsync(async (req, res) => {
   // Extract the download URL from the response
   const downloadUrl = response?.data?.data?.attributes?.downloadUrl;
   const textDownloadUrl = response?.data?.data?.attributes?.textDownloadUrl;
-  const licenseUrl = `https://elements.envato.com${textDownloadUrl}`
-
+  const licenseUrl = `https://elements.envato.com${textDownloadUrl}`;
 
   if (downloadUrl) {
     return sendResponse(res, {
       success: true,
       statusCode: 200,
-      message: "Download request successful",
+      message: 'Download request successful',
       data: { downloadUrl, licenseUrl, serviceId: cookieDetails?._id },
     });
   } else {
     return sendResponse(res, {
       success: false,
       statusCode: 400,
-      message: "Download request is unsuccessful",
+      message: 'Download request is unsuccessful',
       data: null,
     });
   }
 });
 
-
-
-// Random account generator 
+// Random account generator
 export const generateRandomAccount = async () => {
   try {
     const count = await getTotalDocumentCountService();
-    // Generating a random number 
+    // Generating a random number
     const randomIndex = Math?.floor(Math?.random() * count);
 
     // Getting the random account
@@ -320,22 +279,22 @@ export const generateRandomAccount = async () => {
   } catch (error) {
     console.error('Error fetching random account:', error);
   }
-}
+};
 
-// Checking if the daily download limit has exceeded or not 
+// Checking if the daily download limit has exceeded or not
 export const isDailyLimitExceed = async (licenseId) => {
   try {
     const license = await getLicenseByIdService(licenseId);
-    
+
     if (!license) {
-      return { isOk: false, message: "License not found" };
+      return { isOk: false, message: 'License not found' };
     }
 
-    if (license.status === "new") {
-      return { isOk: false, message: "License is not activated yet" };
+    if (license.status === 'new') {
+      return { isOk: false, message: 'License is not activated yet' };
     }
-    if (license.status === "expired") {
-      return { isOk: false, message: "License is expired" };
+    if (license.status === 'expired') {
+      return { isOk: false, message: 'License is expired' };
     }
 
     const { count } = await getDailyDownloadForLicenseService(licenseId);
@@ -347,6 +306,6 @@ export const isDailyLimitExceed = async (licenseId) => {
     }
   } catch (error) {
     console.error('Error checking daily limit:', error);
-    return { isOk: false, message: "Internal server error" };
+    return { isOk: false, message: 'Internal server error' };
   }
 };

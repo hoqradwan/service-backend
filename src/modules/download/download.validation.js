@@ -32,9 +32,5 @@ export const downloadValidationSchema = z.object({
       required_error: 'url is required!',
       invalid_type_error: 'url must be a string!',
     }),
-    licenseId: z.string({
-      required_error: 'licenseId is required!',
-      invalid_type_error: 'licenseId must be a string!',
-    }),
   }),
 });
