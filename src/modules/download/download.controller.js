@@ -71,7 +71,7 @@ export const getTotalDownloadForUser = catchAsync(async (req, res) => {
 
 // daily download for license
 export const getDailyDownloadForLicense = catchAsync(async (req, res) => {
-  const licenseId = req?.query?.licenseId;
+  const licenseId = req?.query?.licenseId || req?.user?.currentLicense;
 
   if (!licenseId) {
     sendResponse(res, {
@@ -105,7 +105,7 @@ export const getDailyDownloadForLicense = catchAsync(async (req, res) => {
 
 // Total download count by user email
 export const getTotalDownloadForLicense = catchAsync(async (req, res) => {
-  const licenseId = req?.query?.licenseId;
+  const licenseId = req?.query?.licenseId || req?.user?.currentLicense;
 
   if (!licenseId) {
     sendResponse(res, {
@@ -201,7 +201,19 @@ export const getTotalDownloadForCookie = catchAsync(async (req, res) => {
 
 // download request to envato official website
 export const handleDownload = catchAsync(async (req, res) => {
-  const { url, licenseId } = req.body;
+  const { url } = req.body;
+  const licenseId = req?.user?.currentLicense;
+  // console.log(req?.user);
+  
+
+  if (!licenseId) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: "You do not have a license activated",
+      data: null,
+    });
+  }
 
   // Check if licenseId is a valid MongoDB ObjectId
   if (!mongoose.Types.ObjectId.isValid(licenseId)) {
@@ -274,13 +286,16 @@ export const handleDownload = catchAsync(async (req, res) => {
 
   // Extract the download URL from the response
   const downloadUrl = response?.data?.data?.attributes?.downloadUrl;
+  const textDownloadUrl = response?.data?.data?.attributes?.textDownloadUrl;
+  const licenseUrl = `https://elements.envato.com${textDownloadUrl}`
+
 
   if (downloadUrl) {
     return sendResponse(res, {
       success: true,
       statusCode: 200,
       message: "Download request successful",
-      data: { downloadUrl, serviceId: cookieDetails?._id },
+      data: { downloadUrl, licenseUrl, serviceId: cookieDetails?._id },
     });
   } else {
     return sendResponse(res, {
@@ -317,7 +332,10 @@ export const isDailyLimitExceed = async (licenseId) => {
       return { isOk: false, message: "License not found" };
     }
 
-    if (license.status === "used" || license.status === "expired") {
+    if (license.status === "new") {
+      return { isOk: false, message: "License is not activated yet" };
+    }
+    if (license.status === "expired") {
       return { isOk: false, message: "License is expired" };
     }
 

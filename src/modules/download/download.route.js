@@ -14,6 +14,6 @@ router.get('/license-total-download', getTotalDownloadForLicense);
 router.get('/service-daily-download', getDailyDownloadForCookie);
 router.get('/service-total-download', getTotalDownloadForCookie);
 router.get('/my-downloads', adminMiddleware('user'), getMyDownloads);
-router.post('/envato-elements', validateRequest(downloadValidationSchema), handleDownload);
+router.post('/envato-elements',adminMiddleware('user'), handleDownload);
 
 export const downloadRoutes = router;
