@@ -488,7 +488,7 @@ export const getUserInfo = catchAsync(async (req, res) => {
   )
     .skip(skip)
     .limit(limit);
-
+console.log(users,"users")
   const totalUsers = await UserModel.countDocuments({
     _id: { $ne: req.user.id },
     role: { $ne: 'admin' },
