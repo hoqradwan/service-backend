@@ -31,7 +31,7 @@ export const getMyDownloads = catchAsync(async (req, res) => {
 
 // daily download count by user email
 export const getDailyDownloadForUser = catchAsync(async (req, res) => {
-  const email = req?.query?.email;
+  const email = req?.query?.email || req?.user?.email;
   if (!email) {
     sendResponse(res, {
       success: false,
@@ -51,7 +51,7 @@ export const getDailyDownloadForUser = catchAsync(async (req, res) => {
 
 // Total download count by user email
 export const getTotalDownloadForUser = catchAsync(async (req, res) => {
-  const email = req?.query?.email;
+  const email = req?.query?.email || req?.user?.email;
   if (!email) {
     sendResponse(res, {
       success: false,
@@ -138,7 +138,7 @@ export const getTotalDownloadForLicense = catchAsync(async (req, res) => {
 
 // daily download for license
 export const getDailyDownloadForCookie = catchAsync(async (req, res) => {
-  const serviceId = req?.query?.serviceId;
+  const serviceId = req?.query?.serviceId ;
 
   if (!serviceId) {
     sendResponse(res, {

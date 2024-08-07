@@ -7,10 +7,10 @@ import { downloadValidationSchema, storeDownloadValidationSchema } from './downl
 const router = express.Router();
 
 router.post('/add', adminMiddleware('user'), validateRequest(storeDownloadValidationSchema), addDownload);
-router.get('/user-daily-download', getDailyDownloadForUser);
-router.get('/user-total-download', getTotalDownloadForUser);
-router.get('/license-daily-download', getDailyDownloadForLicense);
-router.get('/license-total-download', getTotalDownloadForLicense);
+router.get('/user-daily-download', adminMiddleware('user'), getDailyDownloadForUser);
+router.get('/user-total-download',adminMiddleware('user'), getTotalDownloadForUser);
+router.get('/license-daily-download',adminMiddleware('user'), getDailyDownloadForLicense);
+router.get('/license-total-download',adminMiddleware('user'), getTotalDownloadForLicense);
 router.get('/service-daily-download', getDailyDownloadForCookie);
 router.get('/service-total-download', getTotalDownloadForCookie);
 router.get('/my-downloads', adminMiddleware('user'), getMyDownloads);
