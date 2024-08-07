@@ -50,6 +50,10 @@ export const registerUserValidationSchema = z.object({
         invalid_type_error: 'phone must be a number',
       })
       .optional(),
+    currentLicense: z.string({
+      required_error: 'currentLicense is required!',
+      invalid_type_error: 'currentLicense must be a string',
+    }),
   }),
 });
 
@@ -83,6 +87,11 @@ export const updateUserValidationSchema = z.object({
       .optional(),
     isActive: z
       .boolean({ invalid_type_error: 'isActive must be boolean' })
+      .optional(),
+    currentLicense: z
+      .string({
+        invalid_type_error: 'currentLicense must be a string',
+      })
       .optional(),
   }),
 });
