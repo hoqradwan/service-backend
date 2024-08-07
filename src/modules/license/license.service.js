@@ -115,16 +115,25 @@ export const activateLicenseIntoDB = async (licenseKey, user) => {
   session.startTransaction();
 
   try {
-    // Find the license by licenseKey and update its status to 'used' and set the user
-    const license = await LicenseModel.findOneAndUpdate(
-      { licenseKey, status: 'new' },
-      { status: 'used', user: user.id, activationDate: Date.now() },
-      { new: true, session }, // Include the session
-    );
+    const activationDate = new Date();
+    const expiryDate = new Date(activationDate);
 
-    if (!license) {
+    // Find the license to get dayLimit for expiryDate calculation
+    const licenseToUpdate = await LicenseModel.findOne({
+      licenseKey,
+      status: 'new',
+    });
+    if (!licenseToUpdate) {
       throw new Error('License not found or already used.');
     }
+    expiryDate.setDate(expiryDate.getDate() + licenseToUpdate.dayLimit);
+
+    // Update the license status to 'used', set the user, activationDate, and expiryDate
+    const license = await LicenseModel.findOneAndUpdate(
+      { licenseKey, status: 'new' },
+      { status: 'used', user: user.id, activationDate, expiryDate },
+      { new: true, session }, // Include the session
+    );
 
     // Update the user's isActive status
     const updatedUser = await UserModel.findByIdAndUpdate(
