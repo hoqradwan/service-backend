@@ -203,9 +203,7 @@ export const getTotalDownloadForCookie = catchAsync(async (req, res) => {
 export const handleDownload = catchAsync(async (req, res) => {
   const { url } = req.body;
   const licenseId = req?.user?.currentLicense;
-  // console.log(req?.user);
   
-
   if (!licenseId) {
     return sendResponse(res, {
       success: false,
@@ -328,6 +326,7 @@ export const generateRandomAccount = async () => {
 export const isDailyLimitExceed = async (licenseId) => {
   try {
     const license = await getLicenseByIdService(licenseId);
+    
     if (!license) {
       return { isOk: false, message: "License not found" };
     }
