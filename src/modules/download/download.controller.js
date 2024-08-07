@@ -245,6 +245,7 @@ export const handleDownload = catchAsync(async (req, res) => {
 
   // Getting random cookie details
   const cookieDetails = await generateRandomAccount();
+  
   const { payload, headers, mainURL } = await cookieCredentials(cookieDetails, url);
 
   if (!payload) {
