@@ -40,6 +40,7 @@ const licenseSchema = new mongoose.Schema(
     },
     expiryDate: {
       type: Date,
+      default: null,
     },
   },
   { timestamps: true },
@@ -52,13 +53,5 @@ licenseSchema.pre('save', function (next) {
   next();
 });
 
-// Pre-save hook to set the expiry date based on the activation date and day limit
-licenseSchema.pre('save', function (next) {
-  if (this.activationDate && !this.expiryDate) {
-    this.expiryDate = new Date(this.activationDate);
-    this.expiryDate.setDate(this.expiryDate.getDate() + this.dayLimit);
-  }
-  next();
-});
 export const LicenseModel =
   mongoose.models.License || mongoose.model('License', licenseSchema);
