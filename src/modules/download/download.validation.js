@@ -10,6 +10,10 @@ export const storeDownloadValidationSchema = z.object({
       required_error: 'content is required!',
       invalid_type_error: 'content must be a string!',
     }),
+    contentLicense: z.string({
+      required_error: 'contentLicense is required!',
+      invalid_type_error: 'contentLicense must be a string!',
+    }),
     serviceId: z.string({
       required_error: 'serviceId is required!',
       invalid_type_error: 'serviceId must be a string!',
