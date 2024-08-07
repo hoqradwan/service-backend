@@ -42,8 +42,7 @@ const globalErrorHandler = (error, req, res, next) => {
 
   const errorData = {
     message,
-    errorSources,
-    error,
+    errorSources
   };
   return sendError(res, statusCode, errorData);
 };
