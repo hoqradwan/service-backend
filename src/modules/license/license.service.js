@@ -138,7 +138,7 @@ export const activateLicenseIntoDB = async (licenseKey, user) => {
     // Update the user's isActive status
     const updatedUser = await UserModel.findByIdAndUpdate(
       user.id,
-      { isActive: true },
+      { isActive: true, currentLicense: licenseToUpdate._id },
       { new: true, runValidators: true, session }, // Ensure to return the updated document, run validators, and include the session
     );
 
