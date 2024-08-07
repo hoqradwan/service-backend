@@ -7,7 +7,6 @@ import { downloadValidationSchema, storeDownloadValidationSchema } from './downl
 const router = express.Router();
 
 router.post('/add', adminMiddleware('user'), validateRequest(storeDownloadValidationSchema), addDownload);
-router.post('/add', adminMiddleware('user'), addDownload);
 router.get('/user-daily-download', getDailyDownloadForUser);
 router.get('/user-total-download', getTotalDownloadForUser);
 router.get('/license-daily-download', getDailyDownloadForLicense);
@@ -15,6 +14,6 @@ router.get('/license-total-download', getTotalDownloadForLicense);
 router.get('/service-daily-download', getDailyDownloadForCookie);
 router.get('/service-total-download', getTotalDownloadForCookie);
 router.get('/my-downloads', adminMiddleware('user'), getMyDownloads);
-router.post('/envato-elements', handleDownload);
+router.post('/envato-elements',adminMiddleware('user'), handleDownload);
 
 export const downloadRoutes = router;
