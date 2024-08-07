@@ -1,12 +1,12 @@
+import axios from 'axios';
 import httpStatus from 'http-status';
+import mongoose from 'mongoose';
 import catchAsync from '../../utils/catchAsync.js';
 import sendResponse from '../../utils/sendResponse.js';
-import { addDownloadIntoDB, getDailyDownloadForCookieService, getDailyDownloadForLicenseService, getDailyDownloadForUserService, getMyDownloadsFromDB, getTotalDownloadForCookieService, getTotalDownloadForLicenseService, getTotalDownloadForUserService } from './download.service.js';
 import { getRandomAccountService, getTotalDocumentCountService } from '../cookie/cookie.service.js';
-import axios from 'axios';
-import { cookieCredentials } from './download.utils.js';
 import { getLicenseByIdService } from '../license/license.service.js';
-import mongoose from 'mongoose';
+import { addDownloadIntoDB, getDailyDownloadForCookieService, getDailyDownloadForLicenseService, getDailyDownloadForUserService, getMyDownloadsFromDB, getTotalDownloadForCookieService, getTotalDownloadForLicenseService, getTotalDownloadForUserService } from './download.service.js';
+import { cookieCredentials } from './download.utils.js';
 
 
 export const addDownload = catchAsync(async (req, res) => {
@@ -219,15 +219,6 @@ export const handleDownload = catchAsync(async (req, res) => {
       success: false,
       statusCode: 400,
       message: "Invalid License Id format",
-      data: null,
-    });
-  }
-
-  if (!url) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: 'URL is required',
       data: null,
     });
   }

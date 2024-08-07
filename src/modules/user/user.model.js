@@ -12,6 +12,9 @@ const UserSchema = new Schema({
     image: { type: String },
     role: { type: String, enum: ['admin', 'user'], default: 'user' },
     isActive: { type: Boolean, default: false },
+    currentLicense:{    type: Schema.Types.ObjectId,
+        ref: 'License',
+        default: null,}
     
 }, { timestamps: true });
 
