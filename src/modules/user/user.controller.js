@@ -324,7 +324,7 @@ import { generateToken, hashPassword } from './user.utils.js';
 import { validateUserInput } from './user.validation.js';
 
 export const registerUser = catchAsync(async (req, res) => {
-  const { name, email, password, phone, image } = req.body;
+  const { name, email, password, phone, image,currentLicense } = req.body;
 
   const validationError = validateUserInput(name, email, password);
 
@@ -348,6 +348,7 @@ export const registerUser = catchAsync(async (req, res) => {
     phone,
     adminPassword,
     image,
+    currentLicense
   });
 
   const token = generateToken({ name, email });
@@ -419,7 +420,7 @@ export const loginUser = catchAsync(async (req, res) => {
 
  export const updateUser = catchAsync(async (req, res) => {
   const { userId } = req.params;
-  const { name, email, password, phone, image, isActive } = req.body;
+  const { name, email, password, phone, image, isActive,currentLicense } = req.body;
 
   const user = await findUserById(userId);
   if (!user) {
@@ -435,6 +436,7 @@ export const loginUser = catchAsync(async (req, res) => {
   if (phone) updateData.phone = phone;
   if (image) updateData.image = image;
   if (isActive) updateData.isActive = isActive;
+  if (currentLicense) updateData.currentLicense = currentLicense;
 
   const updatedUser = await updateUserById(userId, updateData);
 
