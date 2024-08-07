@@ -118,7 +118,7 @@ export const activateLicenseIntoDB = async (licenseKey, user) => {
     // Find the license by licenseKey and update its status to 'used' and set the user
     const license = await LicenseModel.findOneAndUpdate(
       { licenseKey, status: 'new' },
-      { status: 'used', user: user.id },
+      { status: 'used', user: user.id, activationDate: Date.now() },
       { new: true, session }, // Include the session
     );
 
