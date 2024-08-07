@@ -147,3 +147,8 @@ export const deleteLicenseFromDB = async (licenseid, data) => {
   const result = await LicenseModel.findByIdAndDelete(licenseid, data);
   return result;
 };
+
+// License with _id
+export const getLicenseByIdService = async (licenseId) => {
+  return await LicenseModel.findById(licenseId);
+};

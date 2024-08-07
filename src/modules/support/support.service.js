@@ -1,6 +1,11 @@
 import { Support } from "./support.model.js";
 
 
+export const getAllSupportFromDB = async () => {
+  const result = await Support.find();
+  return result;
+};
+
 export const createSupportIntoDB = async (payload) => {
   const isExists = await Support.findOne({
     name: payload?.name,
@@ -13,6 +18,14 @@ export const createSupportIntoDB = async (payload) => {
   return result;
 };
 
+export const updateSupportIntoDB = async ( supportId, payload) => {
+  const isExists = await Support.findById(supportId);
+  if (!isExists) {
+    throw new Error('Support not found!');
+  }
+  const result = await Support.findByIdAndUpdate(supportId, payload, {new: true});
+  return result;
+};
 
 export const deleteSupportFromDB = async (supportId) => {
   const isExists = await Support.findById(supportId);
@@ -23,7 +36,3 @@ export const deleteSupportFromDB = async (supportId) => {
   return result;
 };
 
-export const getAllSupportFromDB = async () => {
-  const result = await Support.find();
-  return result;
-};

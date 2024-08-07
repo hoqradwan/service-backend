@@ -300,10 +300,16 @@
 // };
 
 
-import { UserModel } from './user.model.js';
 import bcrypt from 'bcrypt';
+import { UserModel } from './user.model.js';
 
+import httpStatus from 'http-status';
 import jwt from 'jsonwebtoken';
+import nodemailer from "nodemailer";
+import { v4 as uuidv4 } from 'uuid';
+import catchAsync from '../../utils/catchAsync.js';
+import sendError from '../../utils/sendError.js';
+import sendResponse from '../../utils/sendResponse.js';
 import {
   createUser,
   deleteUserById,
@@ -314,17 +320,11 @@ import {
 
   updateUserById
 } from './user.service.js';
-import { validateUserInput } from './user.validation.js';
 import { generateToken, hashPassword } from './user.utils.js';
-import { v4 as uuidv4 } from 'uuid';
-import nodemailer from "nodemailer";
-import httpStatus from 'http-status';
-import catchAsync from '../../utils/catchAsync.js';
-import sendResponse from '../../utils/sendResponse.js';
-import sendError from '../../utils/sendError.js';
+import { validateUserInput } from './user.validation.js';
 
 export const registerUser = catchAsync(async (req, res) => {
-  const { name, email, password, phone, image } = req.body;
+  const { name, email, password, phone, image,currentLicense } = req.body;
 
   const validationError = validateUserInput(name, email, password);
 
@@ -348,6 +348,7 @@ export const registerUser = catchAsync(async (req, res) => {
     phone,
     adminPassword,
     image,
+    currentLicense
   });
 
   const token = generateToken({ name, email });
@@ -392,6 +393,7 @@ export const loginUser = catchAsync(async (req, res) => {
     name: user.name,
     email: user.email,
     role: user.role,
+    currentLicense: user?.currentLicense
   });
 
   res.cookie('token', token, {
@@ -411,6 +413,7 @@ export const loginUser = catchAsync(async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        currentLicense: user?.currentLicense
       },
       token,
     },
@@ -419,7 +422,7 @@ export const loginUser = catchAsync(async (req, res) => {
 
  export const updateUser = catchAsync(async (req, res) => {
   const { userId } = req.params;
-  const { name, email, password, phone, image, isActive } = req.body;
+  const { name, email, password, phone, image, isActive,currentLicense } = req.body;
 
   const user = await findUserById(userId);
   if (!user) {
@@ -435,6 +438,7 @@ export const loginUser = catchAsync(async (req, res) => {
   if (phone) updateData.phone = phone;
   if (image) updateData.image = image;
   if (isActive) updateData.isActive = isActive;
+  if (currentLicense) updateData.currentLicense = currentLicense;
 
   const updatedUser = await updateUserById(userId, updateData);
 
@@ -580,13 +584,40 @@ export const forgotPassword = catchAsync(async (req, res) => {
       pass: process.env.Nodemailer_GMAIL_PASSWORD,
     },
   });
-  
+  const resetLink = `${process.env.url}/reset-password/${token}`;
+  const emailContent = `
+  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f0f0f0; padding: 20px;">
+    <h1 style="text-align: center; color: #4DBC60; font-family: 'Times New Roman', Times, serif;">
+      Digital <span style="color:#26547C; font-size: 0.9em;">ToolsBD</span>
+    </h1>
+    <div style="background-color: white; padding: 20px; border-radius: 5px;">
+      <h2 style="color:#4DBC60">Hello!</h2>
+      <p>You are receiving this email because we received a password reset request for your account.</p>
+      <div style="text-align: center; margin: 20px 0;">
+        <a href="${resetLink}" style="background-color:#4DBC60; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a>
+      </div>
+      <p>This password reset link will expire in 60 minutes.</p>
+      <p>If you did not request a password reset, no further action is required.</p>
+      <p>Regards,<br>DigitalToolsBD</p>
+    </div>
+    <p style="font-size: 12px; color: #666; margin-top: 10px;">If you're having trouble clicking the "Reset Password" button, copy and paste the URL into your web browser.</p>
+  </div>
+`;
+
+
   const receiver = {
     from: "info.arridevstudios@gmail.com",
     to: email,
-    subject: "Reset Password",
-    text: `Click on the link below to reset your password: ${process.env.url}/reset-password/${token}`,
+    subject: "Reset Password.",
+    html: emailContent,
   };
+
+  // const receiver = {
+  //   from: "info.arridevstudios@gmail.com",
+  //   to: email,
+  //   subject: "Reset Password",
+  //   text: `Click on the link below to reset your password: ${process.env.url}/reset-password/${token}`,
+  // };
 
   await transporter.sendMail(receiver);
 
