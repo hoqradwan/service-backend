@@ -19,6 +19,7 @@ import {
   getTotalDownloadForUserService,
 } from './download.service.js';
 import { cookieCredentials } from './download.utils.js';
+import { findUserById } from '../user/user.service.js';
 
 export const addDownload = catchAsync(async (req, res) => {
   const result = await addDownloadIntoDB(req.body, req.user);
@@ -42,12 +43,25 @@ export const getMyDownloads = catchAsync(async (req, res) => {
 
 // daily download count by user email
 export const getDailyDownloadForUser = catchAsync(async (req, res) => {
-  const email = req?.query?.email;
+  const role = req?.user?.role;
+  let email = null;
+  if (role === "admin") {
+    email = req?.query?.email
+  }
+  else if (role === "user") {
+    email = req?.user?.email;
+  }
+
   if (!email) {
-    throw new Error('User email is not provided!');
+    return sendResponse(res, {
+      success: false,
+      statusCode: httpStatus?.BAD_REQUEST,
+      message: 'User email is not provided',
+      data: null,
+    });
   }
   const result = await getDailyDownloadForUserService(email);
-  sendResponse(res, {
+  return sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
     message: 'Daily download  is retrieved successfully',
@@ -57,12 +71,24 @@ export const getDailyDownloadForUser = catchAsync(async (req, res) => {
 
 // Total download count by user email
 export const getTotalDownloadForUser = catchAsync(async (req, res) => {
-  const email = req?.query?.email;
+  const role = req?.user?.role;
+  let email = null;
+  if (role === "admin") {
+    email = req?.query?.email
+  }
+  else if (role === "user") {
+    email = req?.user?.email;
+  }
   if (!email) {
-    throw new Error('User email is not provided!');
+    return sendResponse(res, {
+      success: false,
+      statusCode: httpStatus?.BAD_REQUEST,
+      message: 'User email is not provided',
+      data: null,
+    });
   }
   const result = await getTotalDownloadForUserService(email);
-  sendResponse(res, {
+  return sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
     message: 'Total download  is retrieved successfully',
@@ -72,10 +98,33 @@ export const getTotalDownloadForUser = catchAsync(async (req, res) => {
 
 // daily download for license
 export const getDailyDownloadForLicense = catchAsync(async (req, res) => {
-  const licenseId = req?.query?.licenseId || req?.user?.currentLicense;
+  const role = req?.user?.role;
+  let licenseId = null;
+  if (role === "admin") {
+    licenseId = req?.query?.licenseId
+  }
+  else if (role === "user") {
+    const userId = req?.user?.id;
+    const user = await findUserById(userId);
+    if (!user) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: 400,
+        message: "Couldn't find the user",
+        data: null,
+      });
+    }
+    // current license of the user 
+    licenseId = user?.currentLicense;
+  }
 
   if (!licenseId) {
-    throw new Error('licenseId is not provided!');
+    return sendResponse(res, {
+      success: false,
+      statusCode: httpStatus?.BAD_REQUEST,
+      message: 'LicenseId is not provided',
+      data: null,
+    });
   }
   // Check if licenseId is a valid MongoDB ObjectId
   if (!mongoose?.Types?.ObjectId?.isValid(licenseId)) {
@@ -86,7 +135,7 @@ export const getDailyDownloadForLicense = catchAsync(async (req, res) => {
   const result = await getDailyDownloadForLicenseService(licenseId);
 
   // Send the response with both the total count and detailed data
-  sendResponse(res, {
+  return sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
     message: 'Daily download  for license retrieved successfully',
@@ -96,10 +145,33 @@ export const getDailyDownloadForLicense = catchAsync(async (req, res) => {
 
 // Total download count by user email
 export const getTotalDownloadForLicense = catchAsync(async (req, res) => {
-  const licenseId = req?.query?.licenseId || req?.user?.currentLicense;
+  const role = req?.user?.role;
+  let licenseId = null;
+  if (role === "admin") {
+    licenseId = req?.query?.licenseId
+  }
+  else if (role === "user") {
+    const userId = req?.user?.id;
+    const user = await findUserById(userId);
+    if (!user) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: 400,
+        message: "Couldn't find the user",
+        data: null,
+      });
+    }
+    // current license of the user 
+    licenseId = user?.currentLicense;
+  }
 
   if (!licenseId) {
-    throw new Error('licenseId is not provided!');
+    return sendResponse(res, {
+      success: false,
+      statusCode: httpStatus?.BAD_REQUEST,
+      message: 'LicenseId is not provided',
+      data: null,
+    });
   }
 
   // Check if licenseId is a valid MongoDB ObjectId
@@ -108,7 +180,7 @@ export const getTotalDownloadForLicense = catchAsync(async (req, res) => {
   }
 
   const result = await getTotalDownloadForLicenseService(licenseId);
-  sendResponse(res, {
+  return sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
     message: 'Total download for license is retrieved successfully',
@@ -121,7 +193,12 @@ export const getDailyDownloadForCookie = catchAsync(async (req, res) => {
   const serviceId = req?.query?.serviceId;
 
   if (!serviceId) {
-    throw new Error("serviceId is not provided!");
+    return sendResponse(res, {
+      success: false,
+      statusCode: httpStatus?.BAD_REQUEST,
+      message: 'Service id is not provided',
+      data: null,
+    });
   }
 
   // Check if serviceId is a valid MongoDB ObjectId
@@ -130,7 +207,7 @@ export const getDailyDownloadForCookie = catchAsync(async (req, res) => {
   }
 
   const result = await getDailyDownloadForCookieService(serviceId);
-  sendResponse(res, {
+  return sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
     message: 'Daily download for service retrieved successfully',
@@ -142,7 +219,12 @@ export const getDailyDownloadForCookie = catchAsync(async (req, res) => {
 export const getTotalDownloadForCookie = catchAsync(async (req, res) => {
   const serviceId = req?.query?.serviceId;
   if (!serviceId) {
-    throw new Error("serviceId is not provided!")
+    return sendResponse(res, {
+      success: false,
+      statusCode: httpStatus?.BAD_REQUEST,
+      message: 'Service Id is not provided',
+      data: null,
+    });
   }
   // Check if serviceId is a valid MongoDB ObjectId
   if (!mongoose?.Types?.ObjectId?.isValid(serviceId)) {
@@ -150,7 +232,7 @@ export const getTotalDownloadForCookie = catchAsync(async (req, res) => {
   }
 
   const result = await getTotalDownloadForCookieService(serviceId);
-  sendResponse(res, {
+  return sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
     message: 'Total download  for service is retrieved successfully',
@@ -161,8 +243,37 @@ export const getTotalDownloadForCookie = catchAsync(async (req, res) => {
 // download request to envato official website
 export const handleDownload = catchAsync(async (req, res) => {
   const { url } = req.body;
-  const licenseId = req?.user?.currentLicense;
+  const userId = req?.user?.id;
 
+
+  if (!userId) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: "Couldn't generate user id",
+      data: null,
+    });
+  }
+  // Check if userId is a valid MongoDB ObjectId
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: "Invalid user Id format",
+      data: null,
+    });
+  }
+  const user = await findUserById(userId);
+  if (!user) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: "Couldn't find the user",
+      data: null,
+    });
+  }
+  // current license of the user 
+  const licenseId = user?.currentLicense;
   if (!licenseId) {
     return sendResponse(res, {
       success: false,
@@ -204,10 +315,8 @@ export const handleDownload = catchAsync(async (req, res) => {
 
   // Getting random cookie details
   const cookieDetails = await generateRandomAccount();
-  const { payload, headers, mainURL } = await cookieCredentials(
-    cookieDetails,
-    url,
-  );
+
+  const { payload, headers, mainURL } = await cookieCredentials(cookieDetails, url);
 
   if (!payload) {
     return sendResponse(res, {
