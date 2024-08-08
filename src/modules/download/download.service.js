@@ -1,21 +1,24 @@
 import moment from 'moment';
 import { getTime } from '../../helpers/momentHelpers.js';
 import { Download } from './download.model.js';
+import mongoose from 'mongoose';
 
 export const addDownloadIntoDB = async (payload, requestedUser) => {
   payload['downloadedAt'] = moment();
   payload['downloadedBy'] = requestedUser.email;
-  const result = await Download.create(payload);
+  // console.log(payload, 'from dwonload service');
+  const result = await Download.create([payload]);
+  console.log(result);
   return result;
 };
 
 export const getMyDownloadsFromDB = async (requestedUser) => {
   const downloads = await Download.find({ downloadedBy: requestedUser.email }).sort("-downloadedAt");
 
-  const result = downloads.map(download => {
+  const result = downloads.map((download) => {
     return {
       ...download.toObject(),
-      time: getTime(new Date(download.downloadedAt))
+      time: getTime(new Date(download.downloadedAt)),
     };
   });
 
@@ -33,15 +36,15 @@ export const getDailyDownloadForUserService = async (userEmail) => {
     status: new RegExp('^accepted$', 'i'), // Case-insensitive match
     createdAt: {
       $gte: startOfDay,
-      $lte: endOfDay
-    }
+      $lte: endOfDay,
+    },
   });
 
   const dailyDownloadCount = downloads?.length;
 
   return {
     dailyDownloadCount,
-    dailyDownloads: downloads
+    dailyDownloads: downloads,
   };
 };
 
@@ -49,14 +52,14 @@ export const getDailyDownloadForUserService = async (userEmail) => {
 export const getTotalDownloadForUserService = async (userEmail) => {
   const downloads = await Download.find({
     downloadedBy: userEmail,
-    status: "accepted"
+    status: 'accepted',
   });
 
   const totalDownloadCount = downloads?.length;
   // Return both the count and the documents
   return {
     totalDownloadCount,
-    downloads
+    downloads,
   };
 };
 
@@ -73,47 +76,46 @@ export const getDailyDownloadForLicenseService = async (licenseId) => {
         status: new RegExp('^accepted$', 'i'),
         createdAt: {
           $gte: startOfDay,
-          $lte: endOfDay
-        }
-      }
+          $lte: endOfDay,
+        },
+      },
     },
     {
       $group: {
-        _id: "$licenseId",
-        downloads: { $push: "$$ROOT" },
-        count: { $sum: 1 }
-      }
-    }
+        _id: '$licenseId',
+        downloads: { $push: '$$ROOT' },
+        count: { $sum: 1 },
+      },
+    },
   ]);
 
   if (result.length > 0) {
     return {
       count: result[0].count,
-      licenseDailyDownload: result[0].downloads
+      licenseDailyDownload: result[0].downloads,
     };
   } else {
     return {
       count: 0,
-      licenseDailyDownload: []
+      licenseDailyDownload: [],
     };
   }
 };
 
-// Total download for license service 
+// Total download for license service
 export const getTotalDownloadForLicenseService = async (licenseId) => {
   const downloads = await Download.find({
     licenseId: licenseId,
-    status: "accepted"
+    status: 'accepted',
   });
 
   const count = downloads?.length;
 
   return {
     count,
-    licenseDownloads: downloads
+    licenseDownloads: downloads,
   };
 };
-
 
 // Daily download for cookie account by service Id
 export const getDailyDownloadForCookieService = async (serviceId) => {
@@ -126,15 +128,15 @@ export const getDailyDownloadForCookieService = async (serviceId) => {
     status: new RegExp('^accepted$', 'i'), // Case-insensitive match
     createdAt: {
       $gte: startOfDay,
-      $lte: endOfDay
-    }
+      $lte: endOfDay,
+    },
   });
 
   const dailyDownloadCount = downloads?.length;
 
   return {
     dailyDownloadCount,
-    dailyDownloads: downloads
+    dailyDownloads: downloads,
   };
 };
 
@@ -142,15 +144,13 @@ export const getDailyDownloadForCookieService = async (serviceId) => {
 export const getTotalDownloadForCookieService = async (serviceId) => {
   const downloads = await Download.find({
     serviceId: serviceId,
-    status: "accepted"
+    status: 'accepted',
   });
 
   const count = downloads?.length;
 
   return {
     count,
-    serviceDownloads: downloads
+    serviceDownloads: downloads,
   };
 };
-
-

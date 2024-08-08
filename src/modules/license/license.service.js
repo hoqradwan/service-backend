@@ -3,6 +3,7 @@ import { UserModel } from '../user/user.model.js';
 import { LicenseModel } from './license.model.js';
 
 export const createLicenseIntoDB = async (payload) => {
+  console.log(payload);
   const result = await LicenseModel.create(payload);
   return result;
 };

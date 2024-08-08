@@ -20,9 +20,16 @@ import {
 } from './download.service.js';
 import { cookieCredentials } from './download.utils.js';
 import { findUserById } from '../user/user.service.js';
+import { Download } from './download.model.js';
 
 export const addDownload = catchAsync(async (req, res) => {
-  const result = await addDownloadIntoDB(req.body, req.user);
+  const download = req.body;
+  const lastUser = await Download.findOne({}, {}, { sort: { createdAt: -1 } });
+  const nextSerial = lastUser ? lastUser.serial + 1 : 1;
+  const result = await addDownloadIntoDB(
+    { ...download, serial: nextSerial },
+    req.user,
+  );
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
@@ -45,10 +52,9 @@ export const getMyDownloads = catchAsync(async (req, res) => {
 export const getDailyDownloadForUser = catchAsync(async (req, res) => {
   const role = req?.user?.role;
   let email = null;
-  if (role === "admin") {
-    email = req?.query?.email
-  }
-  else if (role === "user") {
+  if (role === 'admin') {
+    email = req?.query?.email;
+  } else if (role === 'user') {
     email = req?.user?.email;
   }
 
@@ -73,10 +79,9 @@ export const getDailyDownloadForUser = catchAsync(async (req, res) => {
 export const getTotalDownloadForUser = catchAsync(async (req, res) => {
   const role = req?.user?.role;
   let email = null;
-  if (role === "admin") {
-    email = req?.query?.email
-  }
-  else if (role === "user") {
+  if (role === 'admin') {
+    email = req?.query?.email;
+  } else if (role === 'user') {
     email = req?.user?.email;
   }
   if (!email) {
@@ -100,10 +105,9 @@ export const getTotalDownloadForUser = catchAsync(async (req, res) => {
 export const getDailyDownloadForLicense = catchAsync(async (req, res) => {
   const role = req?.user?.role;
   let licenseId = null;
-  if (role === "admin") {
-    licenseId = req?.query?.licenseId
-  }
-  else if (role === "user") {
+  if (role === 'admin') {
+    licenseId = req?.query?.licenseId;
+  } else if (role === 'user') {
     const userId = req?.user?.id;
     const user = await findUserById(userId);
     if (!user) {
@@ -114,7 +118,7 @@ export const getDailyDownloadForLicense = catchAsync(async (req, res) => {
         data: null,
       });
     }
-    // current license of the user 
+    // current license of the user
     licenseId = user?.currentLicense;
   }
 
@@ -147,10 +151,9 @@ export const getDailyDownloadForLicense = catchAsync(async (req, res) => {
 export const getTotalDownloadForLicense = catchAsync(async (req, res) => {
   const role = req?.user?.role;
   let licenseId = null;
-  if (role === "admin") {
-    licenseId = req?.query?.licenseId
-  }
-  else if (role === "user") {
+  if (role === 'admin') {
+    licenseId = req?.query?.licenseId;
+  } else if (role === 'user') {
     const userId = req?.user?.id;
     const user = await findUserById(userId);
     if (!user) {
@@ -161,7 +164,7 @@ export const getTotalDownloadForLicense = catchAsync(async (req, res) => {
         data: null,
       });
     }
-    // current license of the user 
+    // current license of the user
     licenseId = user?.currentLicense;
   }
 
@@ -245,7 +248,6 @@ export const handleDownload = catchAsync(async (req, res) => {
   const { url } = req.body;
   const userId = req?.user?.id;
 
-
   if (!userId) {
     return sendResponse(res, {
       success: false,
@@ -259,7 +261,7 @@ export const handleDownload = catchAsync(async (req, res) => {
     return sendResponse(res, {
       success: false,
       statusCode: 400,
-      message: "Invalid user Id format",
+      message: 'Invalid user Id format',
       data: null,
     });
   }
@@ -272,7 +274,7 @@ export const handleDownload = catchAsync(async (req, res) => {
       data: null,
     });
   }
-  // current license of the user 
+  // current license of the user
   const licenseId = user?.currentLicense;
   if (!licenseId) {
     return sendResponse(res, {
@@ -316,7 +318,10 @@ export const handleDownload = catchAsync(async (req, res) => {
   // Getting random cookie details
   const cookieDetails = await generateRandomAccount();
 
-  const { payload, headers, mainURL } = await cookieCredentials(cookieDetails, url);
+  const { payload, headers, mainURL } = await cookieCredentials(
+    cookieDetails,
+    url,
+  );
 
   if (!payload) {
     return sendResponse(res, {
