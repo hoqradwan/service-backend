@@ -9,9 +9,18 @@ import {
   licenseByUserFromDB,
   activateLicenseIntoDB,
 } from './license.service.js';
+import { LicenseModel } from './license.model.js';
 
 export const createLicense = catchAsync(async (req, res) => {
-  const result = await createLicenseIntoDB(req.body);
+  const license = req.body;
+  console.log(license);
+  const lastUser = await LicenseModel.findOne(
+    {},
+    {},
+    { sort: { createdAt: -1 } },
+  );
+  const nextSerial = lastUser ? lastUser.serial + 1 : 1;
+  const result = await createLicenseIntoDB({ ...license, serial: nextSerial });
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.CREATED,
@@ -115,6 +124,21 @@ export const activateLicense = catchAsync(async (req, res) => {
 
 export const deleteLicense = catchAsync(async (req, res) => {
   const licenseId = req.params.id;
+  const license = await LicenseModel.findById(licenseId);
+  if (!license) {
+    return sendError(res, httpStatus.NOT_FOUND, {
+      message: 'license not found or maybe deleted.',
+    });
+  }
+  // Update the serial numbers of users with a higher serial
+  const licensesWithHigherSerial = await LicenseModel.find({
+    serial: { $gt: license.serial },
+  });
+  for (const licenseWithHigherSerial of licensesWithHigherSerial) {
+    await LicenseModel.findByIdAndUpdate(licenseWithHigherSerial._id, {
+      serial: licenseWithHigherSerial.serial - 1,
+    });
+  }
   const result = await deleteLicenseFromDB(licenseId);
   sendResponse(res, {
     success: true,

@@ -42,6 +42,7 @@ const licenseSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    serial: { type: Number, default: 0 },
   },
   { timestamps: true },
 );
