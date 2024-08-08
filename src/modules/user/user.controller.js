@@ -13,9 +13,6 @@ import {
   deleteUserById,
   findUserByEmail,
   findUserById,
-
-
-
   updateUserById
 } from './user.service.js';
 import { generateToken, hashPassword } from './user.utils.js';

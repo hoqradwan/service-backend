@@ -93,7 +93,18 @@ export const getDailyDownloadForLicense = catchAsync(async (req, res) => {
     licenseId = req?.query?.licenseId
   }
   else if (role === "user") {
-    licenseId = req?.user?.currentLicense;
+    const userId = req?.user?.id;
+    const user = await findUserById(userId);
+    if (!user) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: 400,
+        message: "Couldn't find the user",
+        data: null,
+      });
+    }
+    // current license of the user 
+    licenseId = user?.currentLicense;
   }
 
   if (!licenseId) {
@@ -134,7 +145,18 @@ export const getTotalDownloadForLicense = catchAsync(async (req, res) => {
     licenseId = req?.query?.licenseId
   }
   else if (role === "user") {
-    licenseId = req?.user?.currentLicense;
+    const userId = req?.user?.id;
+    const user = await findUserById(userId);
+    if (!user) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: 400,
+        message: "Couldn't find the user",
+        data: null,
+      });
+    }
+    // current license of the user 
+    licenseId = user?.currentLicense;
   }
 
   if (!licenseId) {
@@ -233,7 +255,6 @@ export const getTotalDownloadForCookie = catchAsync(async (req, res) => {
 export const handleDownload = catchAsync(async (req, res) => {
   const { url } = req.body;
   const userId = req?.user?.id;
-  console.log(req?.user);
 
 
   if (!userId) {
