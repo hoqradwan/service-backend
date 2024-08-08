@@ -8,16 +8,16 @@ export const findUserByEmail = async (email) => {
   return UserModel.findOne({ email });
 };
 
-export const createUser = async ({ name, email, hashedPassword,phone,adminPassword,image,role,currentLicense }) => {
+export const createUser = async ({ name, email, hashedPassword, phone, adminPassword, image, role, currentLicense, serial }) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
-    const newUser = { name, email, password: hashedPassword,phone,role,adminPassword,image,currentLicense };
+    const newUser = { name, email, password: hashedPassword, phone, role, adminPassword, image, currentLicense, serial };
     const createdUser = await UserModel.create([newUser], { session });
 
     await session.commitTransaction();
-    return createdUser[0];
+    return { createdUser: createdUser[0] };
   } catch (error) {
     await session.abortTransaction();
     throw error;

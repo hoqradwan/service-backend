@@ -86,10 +86,5 @@ export const updateUserValidationSchema = z.object({
     isActive: z
       .boolean({ invalid_type_error: 'isActive must be boolean' })
       .optional(),
-    currentLicense: z
-      .string({
-        invalid_type_error: 'currentLicense must be a string',
-      })
-      .optional(),
   }),
 });
