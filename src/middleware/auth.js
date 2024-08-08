@@ -14,15 +14,19 @@ export const adminMiddleware = (role) => {
       // console.log(decoded);
       req.user = decoded; // Attach user data to request object..
 
+      // Check if the user is admin
+      if (role && req?.user?.role === "admin") {
+        return next();
+      }
       // Check if the user has the required role
-      if (role && req.user.role !== role) {
+      if (role && req?.user.role !== role) {
         return res.status(403).json({
           success: false,
           message: 'You are not authorized',
         });
       }
-
       next();
+
     } catch (error) {
       res.status(400).json({ success: false, message: 'Invalid token...' });
     }

@@ -324,7 +324,7 @@ import { generateToken, hashPassword } from './user.utils.js';
 import { validateUserInput } from './user.validation.js';
 
 export const registerUser = catchAsync(async (req, res) => {
-  const { name, email, password, phone, image,currentLicense } = req.body;
+  const { name, email, password, phone, image } = req.body;
 
   const validationError = validateUserInput(name, email, password);
 
@@ -347,8 +347,7 @@ export const registerUser = catchAsync(async (req, res) => {
     hashedPassword,
     phone,
     adminPassword,
-    image,
-    currentLicense
+    image
   });
 
   const token = generateToken({ name, email });
@@ -393,7 +392,6 @@ export const loginUser = catchAsync(async (req, res) => {
     name: user.name,
     email: user.email,
     role: user.role,
-    currentLicense: user?.currentLicense
   });
 
   res.cookie('token', token, {
@@ -413,7 +411,6 @@ export const loginUser = catchAsync(async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        currentLicense: user?.currentLicense
       },
       token,
     },
