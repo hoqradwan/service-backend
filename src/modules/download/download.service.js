@@ -153,4 +153,8 @@ export const getTotalDownloadForCookieService = async (serviceId) => {
   };
 };
 
+// Total download for cookie account by service Id
+export const getDownloadById = async (downloadId) => {
+  return await Download?.findById(downloadId);
+};
 

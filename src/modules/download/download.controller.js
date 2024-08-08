@@ -3,11 +3,12 @@ import httpStatus from 'http-status';
 import mongoose from 'mongoose';
 import catchAsync from '../../utils/catchAsync.js';
 import sendResponse from '../../utils/sendResponse.js';
-import { getRandomAccountService, getTotalDocumentCountService } from '../cookie/cookie.service.js';
+import { getCookieByIdService, getRandomAccountService, getTotalDocumentCountService } from '../cookie/cookie.service.js';
 import { getLicenseByIdService } from '../license/license.service.js';
-import { addDownloadIntoDB, getDailyDownloadForCookieService, getDailyDownloadForLicenseService, getDailyDownloadForUserService, getMyDownloadsFromDB, getTotalDownloadForCookieService, getTotalDownloadForLicenseService, getTotalDownloadForUserService } from './download.service.js';
+import { addDownloadIntoDB, getDailyDownloadForCookieService, getDailyDownloadForLicenseService, getDailyDownloadForUserService, getDownloadById, getMyDownloadsFromDB, getTotalDownloadForCookieService, getTotalDownloadForLicenseService, getTotalDownloadForUserService } from './download.service.js';
 import { cookieCredentials } from './download.utils.js';
 import { findUserById } from '../user/user.service.js';
+import fetch from 'node-fetch';
 
 
 export const addDownload = catchAsync(async (req, res) => {
@@ -375,7 +376,7 @@ export const handleDownload = catchAsync(async (req, res) => {
       success: true,
       statusCode: 200,
       message: "Download request successful",
-      data: { downloadUrl, licenseUrl, serviceId: cookieDetails?._id },
+      data: { downloadUrl, licenseUrl, serviceId: cookieDetails?._id, licenseId },
     });
   } else {
     return sendResponse(res, {
@@ -432,3 +433,89 @@ export const isDailyLimitExceed = async (licenseId) => {
     return { isOk: false, message: "Internal server error" };
   }
 };
+
+
+// download request for license 
+export const handleLicenseDownload = catchAsync(async (req, res) => {
+  const downloadId = req?.params?.downloadId;
+
+  if (!downloadId) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: httpStatus.BAD_REQUEST,
+      message: 'Download Id is not provided',
+      data: null,
+    });
+  }
+
+  // Check if Download Id is a valid MongoDB ObjectId
+  if (!mongoose?.Types?.ObjectId?.isValid(downloadId)) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: httpStatus.BAD_REQUEST,
+      message: 'Invalid Download Id format',
+      data: null,
+    });
+  }
+
+  const { contentLicense, downloadedBy, serviceId } = await getDownloadById(downloadId);
+
+  if (!contentLicense || !downloadedBy || !serviceId) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: httpStatus.BAD_REQUEST,
+      message: 'This file does not exist',
+      data: null,
+    });
+  }
+
+  if ((req?.user?.role === "user") && (req?.user?.email !== downloadedBy)) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: httpStatus.FORBIDDEN,
+      message: 'You are not authorized for this license',
+      data: null,
+    });
+  }
+
+  const { cookie } = await getCookieByIdService(serviceId);
+
+  if (!cookie) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: httpStatus.BAD_REQUEST,
+      message: "Couldn't find cookie for this download",
+      data: null,
+    });
+  }
+
+  const response = await fetch(contentLicense, {
+    method: 'GET',
+    headers: {
+      'Cookie': `_elements_session_4=${cookie}`,
+    }
+  });
+
+  const body = await response?.text();
+
+  if (response?.ok) {
+    res.setHeader('Content-Type', 'text/plain');
+    res.setHeader('Content-Disposition', 'attachment; filename="license.txt"');
+    res.send(body);
+  } else {
+    return sendResponse(res, {
+      success: false,
+      statusCode: response.status,
+      message: 'Error fetching the license file.',
+      data: null,
+    });
+  }
+});
+
+
+
+
+
+
+
+
