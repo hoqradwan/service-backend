@@ -43,13 +43,15 @@ export const registerUserValidationSchema = z.object({
     image: z.string({
       required_error: 'image is required!',
       invalid_type_error: 'image must be a string',
-    }),
+    })
+    .optional(),
     phone: z
       .number({
         required_error: 'phone is required!',
         invalid_type_error: 'phone must be a number',
       })
-      .optional()
+      .optional(),
+   
   }),
 });
 

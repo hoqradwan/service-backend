@@ -2,7 +2,7 @@
 
 ### Live link of this server :
 
-### Documentation of this server : https://documenter.getpostman.com/view/23312687/2sA3rwLZbC
+### Documentation of this server : https://documenter.getpostman.com/view/27373681/2sA3rzLYMm#e6ae4e8b-1b66-4754-8d6c-2e1b3f78a01e
 
 ### Here are the steps to run the application in your local environment.
 

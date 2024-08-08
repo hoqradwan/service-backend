@@ -34,6 +34,10 @@ export const registerUser = catchAsync(async (req, res) => {
     });
   }
 
+  // Generate the next serial number
+  const lastUser = await UserModel.findOne({}, {}, { sort: { createdAt: -1 } });
+  const nextSerial = lastUser ? lastUser.serial + 1 : 1;
+
   const adminPassword = uuidv4().replace(/-/g, '').substring(0, 6);
   const hashedPassword = hashPassword(password);
   const { createdUser } = await createUser({
@@ -42,7 +46,8 @@ export const registerUser = catchAsync(async (req, res) => {
     hashedPassword,
     phone,
     adminPassword,
-    image
+    image,
+    serial: nextSerial,
   });
 
   const token = generateToken({ name, email });
@@ -111,10 +116,35 @@ export const loginUser = catchAsync(async (req, res) => {
     },
   });
 });
-
- export const updateUser = catchAsync(async (req, res) => {
+export const deleteUser = catchAsync(async (req, res) => {
   const { userId } = req.params;
-  const { name, email, password, phone, image, isActive,currentLicense } = req.body;
+
+  const user = await findUserById(userId);
+  if (!user) {
+    return sendError(res, httpStatus.NOT_FOUND, {
+      message: 'User not found or maybe deleted.',
+    });
+  }
+
+  // Update the serial numbers of users with a higher serial
+  const usersWithHigherSerial = await UserModel.find({ serial: { $gt: user.serial } });
+  for (const userWithHigherSerial of usersWithHigherSerial) {
+    await updateUserById(userWithHigherSerial._id, { serial: userWithHigherSerial.serial - 1 });
+  }
+
+  await deleteUserById(userId);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'User deleted successfully',
+    data: null,
+  });
+});
+
+export const updateUser = catchAsync(async (req, res) => {
+  const { userId } = req.params;
+  const { name, email, password, phone, image, isActive, currentLicense } = req.body;
 
   const user = await findUserById(userId);
   if (!user) {
@@ -132,6 +162,12 @@ export const loginUser = catchAsync(async (req, res) => {
   if (isActive) updateData.isActive = isActive;
   if (currentLicense) updateData.currentLicense = currentLicense;
 
+  // Update the serial number if the user's serial is not the same as the last user's serial
+  const lastUser = await UserModel.findOne({}, {}, { sort: { createdAt: -1 } });
+  if (lastUser && user.serial !== lastUser.serial) {
+    updateData.serial = lastUser.serial + 1;
+  }
+
   const updatedUser = await updateUserById(userId, updateData);
 
   sendResponse(res, {
@@ -141,27 +177,56 @@ export const loginUser = catchAsync(async (req, res) => {
     data: { user: updatedUser },
   });
 });
+//  export const updateUser = catchAsync(async (req, res) => {
+//   const { userId } = req.params;
+//   const { name, email, password, phone, image, isActive,currentLicense } = req.body;
+
+//   const user = await findUserById(userId);
+//   if (!user) {
+//     return sendError(res, httpStatus.NOT_FOUND, {
+//       message: 'User not found.',
+//     });
+//   }
+
+//   const updateData = {};
+//   if (name) updateData.name = name;
+//   if (email) updateData.email = email;
+//   if (password) updateData.password = hashPassword(password);
+//   if (phone) updateData.phone = phone;
+//   if (image) updateData.image = image;
+//   if (isActive) updateData.isActive = isActive;
+//   if (currentLicense) updateData.currentLicense = currentLicense;
+
+//   const updatedUser = await updateUserById(userId, updateData);
+
+//   sendResponse(res, {
+//     statusCode: httpStatus.OK,
+//     success: true,
+//     message: 'User updated successfully',
+//     data: { user: updatedUser },
+//   });
+// });
 
 
-export const deleteUser = catchAsync(async (req, res) => {
-  const { userId } = req.params;
+// export const deleteUser = catchAsync(async (req, res) => {
+//   const { userId } = req.params;
 
-  const user = await findUserById(userId);
-  if (!user) {
-    return sendError(res, httpStatus.NOT_FOUND, {
-      message: 'User not found or maybe deleted.',
-    });
-  }
+//   const user = await findUserById(userId);
+//   if (!user) {
+//     return sendError(res, httpStatus.NOT_FOUND, {
+//       message: 'User not found or maybe deleted.',
+//     });
+//   }
 
-  await deleteUserById(userId);
+//   await deleteUserById(userId);
 
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: 'User deleted successfully',
-    data: null,
-  });
-});
+//   sendResponse(res, {
+//     statusCode: httpStatus.OK,
+//     success: true,
+//     message: 'User deleted successfully',
+//     data: null,
+//   });
+// });
 
 export const getUserInfo = catchAsync(async (req, res) => {
   if (req.user.role !== 'admin') {
@@ -180,7 +245,7 @@ export const getUserInfo = catchAsync(async (req, res) => {
   )
     .skip(skip)
     .limit(limit);
-
+console.log(users,"users")
   const totalUsers = await UserModel.countDocuments({
     _id: { $ne: req.user.id },
     role: { $ne: 'admin' },
