@@ -25,7 +25,7 @@ export const getAllCookiesService = async () => {
       $project: {
         createdAt: 0, // Exclude createdAt field
         updatedAt: 0, // Exclude updatedAt field
-        __v: 0,       // Exclude __v field
+        __v: 0,       // Exclude __v field.
       }
     }
   ]);
