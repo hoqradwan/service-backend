@@ -13,20 +13,16 @@ import { LicenseModel } from './license.model.js';
 
 export const createLicense = catchAsync(async (req, res) => {
   const license = req.body;
-  console.log(license);
-  const lastUser = await LicenseModel.findOne(
-    {},
-    {},
-    { sort: { createdAt: -1 } },
-  );
-  const nextSerial = lastUser ? lastUser.serial + 1 : 1;
-  const result = await createLicenseIntoDB({ ...license, serial: nextSerial });
-  sendResponse(res, {
-    success: true,
-    statusCode: httpStatus.CREATED,
-    message: 'License created successfully',
-    data: result,
-  });
+  const result = await createLicenseIntoDB(license);
+  if (result) {
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.CREATED,
+      message: 'License created successfully',
+      data: null,
+    });
+  }
+
 });
 // export const allLicenses = catchAsync(async (req, res) => {
 //   const { page, limit, sortBy, sortOrder, status, serviceName, expiryDate } =
@@ -76,6 +72,7 @@ export const allLicenses = catchAsync(async (req, res) => {
     data: result,
   });
 });
+
 export const licenseByUser = catchAsync(async (req, res) => {
   const userId = req.params.id;
   const { page, limit, sortBy, sortOrder, status, serviceName, expiryDate } =
@@ -101,6 +98,7 @@ export const licenseByUser = catchAsync(async (req, res) => {
     data: result,
   });
 });
+
 export const updateLicense = catchAsync(async (req, res) => {
   const licenseId = req.params.id;
   const result = await updateLicenseIntoDB(licenseId, req.body);
@@ -118,7 +116,7 @@ export const activateLicense = catchAsync(async (req, res) => {
     success: true,
     statusCode: httpStatus.OK,
     message: 'License activated successfully',
-    data: result,
+    data: null,
   });
 });
 
@@ -144,6 +142,6 @@ export const deleteLicense = catchAsync(async (req, res) => {
     success: true,
     statusCode: httpStatus.OK,
     message: 'License deleted successfully',
-    data: result,
+    data: null,
   });
 });
