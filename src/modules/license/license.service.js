@@ -44,25 +44,26 @@ export const getLicensesFromDB = async (filters = {}, paginationOptions = {}) =>
 
   const query = { ...filters };
 
-  // Sort options handling
-  const sortOptions = {};
-  if (['dayLimit', 'dailyLimit', 'totalLimit', 'createdAt'].includes(sortBy)) {
-    sortOptions[sortBy] = sortOrder === 'asc' ? 1 : -1;
-  } else {
-    sortOptions['createdAt'] = 1; // Default sorting
-  }
+  const sortOptions = ['dayLimit', 'dailyLimit', 'totalLimit', 'createdAt'].includes(sortBy)
+    ? { [sortBy]: sortOrder === 'asc' ? 1 : -1 }
+    : { createdAt: 1 }; // Default sorting
+
+  const skip = (page - 1) * limit;
 
   const result = await LicenseModel.aggregate([
     { $match: query },
+    {
+      $sort: sortOptions // Sort before assigning serial numbers
+    },
     {
       $setWindowFields: {
         sortBy: sortOptions,
         output: {
           serial: {
-            $documentNumber: {}, // Generates a sequential number for each document
-          },
-        },
-      },
+            $documentNumber: {} // Generates a sequential number for each document
+          }
+        }
+      }
     },
     {
       $project: {
@@ -72,10 +73,7 @@ export const getLicensesFromDB = async (filters = {}, paginationOptions = {}) =>
       }
     },
     {
-      $sort: sortOptions
-    },
-    {
-      $skip: (page - 1) * limit
+      $skip: skip
     },
     {
       $limit: limit
@@ -109,6 +107,7 @@ export const getLicensesFromDB = async (filters = {}, paginationOptions = {}) =>
     data: result,
   };
 };
+
 
 
 export const licenseByUserFromDB = async (

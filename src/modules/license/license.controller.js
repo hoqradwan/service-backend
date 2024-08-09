@@ -88,8 +88,8 @@ export const licenseByUser = catchAsync(async (req, res) => {
   if (expiryDate) filters.expiryDate = { $gte: new Date(expiryDate) };
 
   const paginationOptions = {
-    page: parseInt(page, 10) || 1,
-    limit: parseInt(limit, 10) || 10,
+    page: parseInt(page) || 1,
+    limit: parseInt(limit) || 10,
     sortBy: sortBy || 'createdAt',
     sortOrder: sortOrder || 'asc',
   };
