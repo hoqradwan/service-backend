@@ -8,10 +8,29 @@ export const createCookieService = async (data) => {
   return await newCookie?.save();
 };
 
-// get all cookie service
+// Get all cookie service
 export const getAllCookiesService = async () => {
-  return await Cookie?.find();
+  return await Cookie.aggregate([
+    {
+      $setWindowFields: {
+        sortBy: { createdAt: 1 }, // Sort by time of creation
+        output: {
+          serial: {
+            $documentNumber: {}, // Generates a sequential number for each document
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        createdAt: 0, // Exclude createdAt field
+        updatedAt: 0, // Exclude updatedAt field
+        __v: 0,       // Exclude __v field
+      }
+    }
+  ]);
 };
+
 
 // find single cookie service with id
 export const getCookieByIdService = async (id) => {

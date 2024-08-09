@@ -1,7 +1,6 @@
 import moment from 'moment';
 import { getTime } from '../../helpers/momentHelpers.js';
 import { Download } from './download.model.js';
-import mongoose from 'mongoose';
 
 export const addDownloadIntoDB = async (payload, requestedUser) => {
   payload['downloadedAt'] = moment();

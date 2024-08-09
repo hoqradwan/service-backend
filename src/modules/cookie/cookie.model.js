@@ -32,7 +32,7 @@ const CookieSchema = new mongoose.Schema(
       required: true,
       enum: ['active', 'inactive'],
     },
-    serial: { type: Number, default: 0 },
+    // serial: { type: Number, default: 0 },
   },
   { timestamps: true },
 );
