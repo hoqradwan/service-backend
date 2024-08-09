@@ -10,6 +10,8 @@ import {
   updateCookieByIdService,
 } from './cookie.service.js';
 import mongoose from 'mongoose';
+import { cookieCredentials } from '../download/download.utils.js';
+import axios from 'axios';
 
 // create method for cookie
 export const createCookie = catchAsync(async (req, res) => {
@@ -188,4 +190,91 @@ export const deleteCookieById = catchAsync(async (req, res) => {
     message: 'Cookie deleted successfully!',
     data: deletedCookie,
   });
+});
+
+
+// Check if the cookie is expired or not 
+export const isCookieWorking = catchAsync(async (req, res) => {
+  const url = "https://elements.envato.com/pink-sunset-modern-retro-serif-PDNXXR2";
+  // Extract the id from the request parameters
+  const { id } = req?.params;
+  // Check if id is a valid MongoDB ObjectId
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: httpStatus.BAD_REQUEST,
+      message: 'Invalid Id format',
+      data: null,
+    });
+  }
+
+  // Getting cookie details
+  const cookieDetails = await getCookieByIdService(id);
+  if (!cookieDetails) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Cookie not found',
+      data: null,
+    });
+  }
+
+  const { payload, headers, mainURL } = await cookieCredentials(
+    cookieDetails,
+    url,
+  );
+
+  if (!payload) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Payload is required',
+      data: null,
+    });
+  }
+
+  if (!headers) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Headers are required',
+      data: null,
+    });
+  }
+
+  // Make the first HTTP request
+  const response = await axios({
+    method: 'POST',
+    url: mainURL,
+    headers: headers,
+    data: payload,
+  });
+
+  if (!response) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Download request unsuccessful',
+      data: null,
+    });
+  }
+
+  // Extract the download URL from the response
+  const downloadUrl = response?.data?.data?.attributes?.downloadUrl;
+
+  if (downloadUrl) {
+    return sendResponse(res, {
+      success: true,
+      statusCode: 200,
+      message: 'Cookie is working',
+      data: null,
+    });
+  } else {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Cookie has expired',
+      data: null,
+    });
+  }
 });
