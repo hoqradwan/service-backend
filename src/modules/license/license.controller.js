@@ -61,12 +61,16 @@ export const allLicenses = catchAsync(async (req, res) => {
   if (serviceName) filters.serviceName = serviceName;
   if (expiryDate) filters.expiryDate = { $gte: new Date(expiryDate) };
 
-  const paginationOptions = {
-    page: parseInt(page, 10) || 1,
-    limit: parseInt(limit, 10) || 10,
-    sortBy: sortBy || 'createdAt',
-    sortOrder: sortOrder || 'asc',
-  };
+  // Build pagination options only if page and limit are provided
+  let paginationOptions = {};
+  if (page && limit) {
+    paginationOptions = {
+      page: parseInt(page, 10),
+      limit: parseInt(limit, 10),
+      sortBy: sortBy || 'createdAt',
+      sortOrder: sortOrder || 'asc',
+    };
+  }
 
   const result = await getLicensesFromDB(filters, paginationOptions);
   sendResponse(res, {
