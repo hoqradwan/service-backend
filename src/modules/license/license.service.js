@@ -47,6 +47,7 @@ export const getLicensesFromDB = async (
 
   const query = { ...filters };
 
+  // Sort options handling
   const sortOptions = {};
   if (['dayLimit', 'dailyLimit', 'totalLimit', 'createdAt'].includes(sortBy)) {
     sortOptions[sortBy] = sortOrder === 'asc' ? 1 : -1;
@@ -54,20 +55,33 @@ export const getLicensesFromDB = async (
     sortOptions['createdAt'] = 1; // Default sorting
   }
 
-  const result = await LicenseModel.find(query)
-    .sort(sortOptions)
-    .skip((page - 1) * limit)
-    .limit(limit);
+  let result;
+  let total;
 
-  const total = await LicenseModel.countDocuments(query);
+  // Apply pagination only if page and limit are defined
+  if (page && limit) {
+    result = await LicenseModel.find(query)
+      .sort(sortOptions)
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    total = await LicenseModel.countDocuments(query);
+  } else {
+    // If no pagination is applied, return all data
+    result = await LicenseModel.find(query).sort(sortOptions);
+    total = result.length;
+  }
 
   return {
-    meta: {
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    },
+    meta:
+      page && limit
+        ? {
+            total,
+            page: parseInt(page, 10),
+            limit: parseInt(limit, 10),
+            totalPages: Math.ceil(total / limit),
+          }
+        : { total }, // Only return pagination meta if pagination is applied
     data: result,
   };
 };
