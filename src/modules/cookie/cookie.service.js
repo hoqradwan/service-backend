@@ -34,8 +34,7 @@ export const getAllCookiesService = async () => {
 
 // find single cookie service with id
 export const getCookieByIdService = async (id) => {
-  // Find the cookie by _id
-  return await Cookie?.findById(id);
+  return await Cookie.findById(id).select(' -createdAt -updatedAt -__v');
 };
 
 // Find single cookie service with account email
