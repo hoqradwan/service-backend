@@ -20,23 +20,20 @@ import {
 } from './download.service.js';
 import { cookieCredentials } from './download.utils.js';
 import { findUserById } from '../user/user.service.js';
-import { Download } from './download.model.js';import fetch from 'node-fetch';
+import fetch from 'node-fetch';
 
 
 export const addDownload = catchAsync(async (req, res) => {
   const download = req.body;
-  const lastUser = await Download.findOne({}, {}, { sort: { createdAt: -1 } });
-  const nextSerial = lastUser ? lastUser.serial + 1 : 1;
-  const result = await addDownloadIntoDB(
-    { ...download, serial: nextSerial },
-    req.user,
-  );
-  sendResponse(res, {
-    success: true,
-    statusCode: httpStatus.OK,
-    message: 'Item is downloaded successfully.',
-    data: result,
-  });
+  const result = await addDownloadIntoDB(download, req.user);
+  if (result) {
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: 'Item is downloaded successfully.',
+      data: null,
+    });
+  }
 });
 
 export const getMyDownloads = catchAsync(async (req, res) => {
@@ -110,6 +107,7 @@ export const getDailyDownloadForLicense = catchAsync(async (req, res) => {
     licenseId = req?.query?.licenseId;
   } else if (role === 'user') {
     const userId = req?.user?.id;
+    
     const user = await findUserById(userId);
     if (!user) {
       return sendResponse(res, {
@@ -121,6 +119,7 @@ export const getDailyDownloadForLicense = catchAsync(async (req, res) => {
     }
     // current license of the user
     licenseId = user?.currentLicense;
+    
   }
 
   if (!licenseId) {

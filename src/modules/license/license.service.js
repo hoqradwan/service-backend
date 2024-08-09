@@ -39,11 +39,8 @@ export const createLicenseIntoDB = async (payload) => {
 //     data: result,
 //   };
 // };
-export const getLicensesFromDB = async (
-  filters = {},
-  paginationOptions = {},
-) => {
-  const { page, limit, sortBy, sortOrder } = paginationOptions;
+export const getLicensesFromDB = async (filters = {}, paginationOptions = {}) => {
+  const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'asc' } = paginationOptions;
 
   const query = { ...filters };
 
@@ -54,10 +51,35 @@ export const getLicensesFromDB = async (
     sortOptions['createdAt'] = 1; // Default sorting
   }
 
-  const result = await LicenseModel.find(query)
-    .sort(sortOptions)
-    .skip((page - 1) * limit)
-    .limit(limit);
+  const result = await LicenseModel.aggregate([
+    { $match: query },
+    {
+      $setWindowFields: {
+        sortBy: sortOptions,
+        output: {
+          serial: {
+            $documentNumber: {}, // Generates a sequential number for each document
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        "createdAt": 0,  // Exclude these fields from each license document
+        "updatedAt": 0,
+        "__v": 0,
+      }
+    },
+    {
+      $sort: sortOptions
+    },
+    {
+      $skip: (page - 1) * limit
+    },
+    {
+      $limit: limit
+    }
+  ]);
 
   const total = await LicenseModel.countDocuments(query);
 
@@ -71,6 +93,8 @@ export const getLicensesFromDB = async (
     data: result,
   };
 };
+
+
 export const licenseByUserFromDB = async (
   userId,
   filters = {},
@@ -81,24 +105,34 @@ export const licenseByUserFromDB = async (
     user: userId,
   };
 
-  const { page, limit, sortBy, sortOrder } = paginationOptions;
+  const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'asc' } = paginationOptions;
 
+  // Define sorting options based on the request
   const sortOptions = {};
   if (['dayLimit', 'dailyLimit', 'totalLimit', 'createdAt'].includes(sortBy)) {
     sortOptions[sortBy] = sortOrder === 'asc' ? 1 : -1;
   } else {
-    sortOptions['createdAt'] = 1; // Default sorting
+    sortOptions['createdAt'] = 1; // Default sorting by createdAt
   }
 
+  // Fetch the data from the database with pagination
   const result = await LicenseModel.find(query)
     .sort(sortOptions)
     .skip((page - 1) * limit)
     .limit(limit);
 
+  // Add serial numbers to the results
+  const resultWithSerial = result.map((item, index) => ({
+    ...item.toObject(),
+    serial: (page - 1) * limit + index + 1, // Serial number based on the pagination
+  }));
+
+  // Calculate the total number of documents that match the query
   const total = await LicenseModel.countDocuments(query);
 
+  // Return the data with pagination information
   return {
-    data: result,
+    data: resultWithSerial,
     pagination: {
       total,
       page,
@@ -107,6 +141,10 @@ export const licenseByUserFromDB = async (
     },
   };
 };
+
+
+
+
 export const updateLicenseIntoDB = async (licenseid, data) => {
   const result = await LicenseModel.findByIdAndUpdate(licenseid, data);
   return result;
