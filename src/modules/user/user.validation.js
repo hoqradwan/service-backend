@@ -46,9 +46,9 @@ export const registerUserValidationSchema = z.object({
     })
     .optional(),
     phone: z
-      .number({
+      .string({
         required_error: 'phone is required!',
-        invalid_type_error: 'phone must be a number',
+        invalid_type_error: 'phone must be a string',
       })
       .optional(),
    
@@ -79,8 +79,8 @@ export const updateUserValidationSchema = z.object({
       })
       .optional(),
     phone: z
-      .number({
-        invalid_type_error: 'phone must be a number',
+      .string({
+        invalid_type_error: 'phone must be a string',
       })
       .optional(),
     isActive: z
