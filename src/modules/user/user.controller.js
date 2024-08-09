@@ -341,7 +341,7 @@ export const forgotPassword = catchAsync(async (req, res) => {
       pass: process.env.Nodemailer_GMAIL_PASSWORD,
     },
   });
-  const resetLink = `${process.env.url}/reset-password/${token}`;
+  const resetLink = `${process.env.url}/reset-password/${token}`; //frontend url
   const emailContent = `
   <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f0f0f0; padding: 20px;">
     <h1 style="text-align: center; color: #4DBC60; font-family: 'Times New Roman', Times, serif;">
