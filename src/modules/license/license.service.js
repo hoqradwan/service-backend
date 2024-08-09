@@ -80,33 +80,19 @@ export const getLicensesFromDB = async (filters = {}, paginationOptions = {}) =>
     }
   ]);
 
-  // Apply pagination only if page and limit are defined
-  if (page && limit) {
-    result = await LicenseModel.find(query)
-      .sort(sortOptions)
-      .skip((page - 1) * limit)
-      .limit(limit);
-
-    total = await LicenseModel.countDocuments(query);
-  } else {
-    // If no pagination is applied, return all data
-    result = await LicenseModel.find(query).sort(sortOptions);
-    total = result.length;
-  }
+  const total = await LicenseModel.countDocuments(query);
 
   return {
-    meta:
-      page && limit
-        ? {
-            total,
-            page: parseInt(page, 10),
-            limit: parseInt(limit, 10),
-            totalPages: Math.ceil(total / limit),
-          }
-        : { total }, // Only return pagination meta if pagination is applied
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    },
     data: result,
   };
 };
+
 
 
 
