@@ -9,38 +9,64 @@ export const createCookieService = async (data) => {
 };
 
 // Get all cookie service
+// export const getAllCookiesService = async (page, limit) => {
+//   // Calculate the number of documents to skip
+//   const skip = (page - 1) * limit;
+
+//   return await Cookie.aggregate([
+//     {
+//       $setWindowFields: {
+//         sortBy: { createdAt: 1 }, // Sort by time of creation
+//         output: {
+//           serial: {
+//             $documentNumber: {}, // Generates a sequential number for each document
+//           },
+//         },
+//       },
+//     },
+//     {
+//       $project: {
+//         createdAt: 0, // Exclude createdAt field
+//         updatedAt: 0, // Exclude updatedAt field
+//         __v: 0,       // Exclude __v field
+//       }
+//     },
+//     {
+//       $skip: skip, // Skip documents for pagination
+//     },
+//     {
+//       $limit: limit, // Limit the number of documents returned
+//     }
+//   ]);
+// };
+
 export const getAllCookiesService = async (page, limit) => {
-  // Calculate the number of documents to skip
   const skip = (page - 1) * limit;
 
   return await Cookie.aggregate([
     {
       $setWindowFields: {
-        sortBy: { createdAt: 1 }, // Sort by time of creation
+        sortBy: { createdAt: 1 },
         output: {
           serial: {
-            $documentNumber: {}, // Generates a sequential number for each document
+            $documentNumber: {},
           },
         },
       },
     },
     {
       $project: {
-        createdAt: 0, // Exclude createdAt field
-        updatedAt: 0, // Exclude updatedAt field
-        __v: 0,       // Exclude __v field
+        __v: 0, // Exclude __v field
       }
     },
     {
-      $skip: skip, // Skip documents for pagination
+      $skip: skip,
     },
     {
-      $limit: limit, // Limit the number of documents returned
+      $limit: limit,
     }
   ]);
 };
-
-
 
 // find single cookie service with id
 export const getCookieByIdService = async (id) => {
