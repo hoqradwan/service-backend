@@ -197,7 +197,7 @@ export const activateLicenseIntoDB = async (licenseKey, user) => {
     const activationDate = new Date();
     const expiryDate = new Date(activationDate);
 
-    // Find the license to get dayLimit for expiryDate calculation
+    // Find the license to get dayLimit for expiryDate calculation.
     const licenseToUpdate = await LicenseModel.findOne({
       licenseKey,
       status: 'new',
