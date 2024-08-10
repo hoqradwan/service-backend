@@ -7,22 +7,44 @@ export const addDownloadIntoDB = async (payload, requestedUser) => {
   payload['downloadedBy'] = requestedUser.email;
   // console.log(payload, 'from dwonload service');
   const result = await Download.create([payload]);
-  console.log(result);
   return result;
 };
 
 export const getMyDownloadsFromDB = async (requestedUser) => {
-  const downloads = await Download.find({ downloadedBy: requestedUser.email }).sort("-downloadedAt");
+  const result = await Download.aggregate([
+    {
+      $match: {
+        downloadedBy: requestedUser.email,
+      },
+    },
+    {
+      $setWindowFields: {
+        sortBy: { downloadedAt: -1 }, // Sort by downloadedAt in descending order
+        output: {
+          serial: {
+            $documentNumber: {}, // Generates a sequential number for each document
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        "createdAt": 0,  // Exclude these fields from each download document
+        "updatedAt": 0,
+        "__v": 0,
+        "status": 0,
+        "serviceId": 0,
+        "licenseId": 0,
+      }
+    }
+  ]);
 
-  const result = downloads.map((download) => {
-    return {
-      ...download.toObject(),
-      time: getTime(new Date(download.downloadedAt)),
-    };
-  });
-
-  return result;
+  return result.map((download) => ({
+    ...download,
+    time: getTime(new Date(download.downloadedAt)), // Format time using the imported getTime function
+  }));
 };
+
 
 // Daily download count service by user email
 export const getDailyDownloadForUserService = async (userEmail) => {
@@ -30,32 +52,80 @@ export const getDailyDownloadForUserService = async (userEmail) => {
   const startOfDay = new Date(today.setHours(0, 0, 0, 0));
   const endOfDay = new Date(today.setHours(23, 59, 59, 999));
 
-  const downloads = await Download.find({
-    downloadedBy: userEmail,
-    status: new RegExp('^accepted$', 'i'), // Case-insensitive match
-    createdAt: {
-      $gte: startOfDay,
-      $lte: endOfDay,
+  const downloads = await Download.aggregate([
+    {
+      $match: {
+        downloadedBy: userEmail,
+        status: new RegExp('^accepted$', 'i'), // Case-insensitive match
+        createdAt: {
+          $gte: startOfDay,
+          $lte: endOfDay,
+        },
+      },
     },
-  });
+    {
+      $setWindowFields: {
+        sortBy: { createdAt: 1 }, // Sort by time of creation
+        output: {
+          serial: {
+            $documentNumber: {}, // Generates a sequential number for each document
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        createdAt: 0, // Excluding unnecessary fields
+        updatedAt: 0,
+        __v: 0,
+        status: 0,
+        serviceId: 0,
+        licenseId: 0,
+      }
+    }
+  ]);
 
   const dailyDownloadCount = downloads?.length;
-
   return {
     dailyDownloadCount,
     dailyDownloads: downloads,
   };
 };
 
-// Total download count service by user email
+
 export const getTotalDownloadForUserService = async (userEmail) => {
-  const downloads = await Download.find({
-    downloadedBy: userEmail,
-    status: 'accepted',
-  });
+  const downloads = await Download.aggregate([
+    {
+      $match: {
+        downloadedBy: userEmail,
+        status: 'accepted',
+      },
+    },
+    {
+      $setWindowFields: {
+        sortBy: { createdAt: 1 }, // Sort by time of creation
+        output: {
+          serial: {
+            $documentNumber: {}, // Generates a sequential number for each document
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        createdAt: 0, // Excluding unnecessary fields
+        updatedAt: 0,
+        __v: 0,
+        status: 0,
+        serviceId: 0,
+        licenseId: 0,
+      }
+    }
+  ]);
 
   const totalDownloadCount = downloads?.length;
-  // Return both the count and the documents
+
+  // Return both the count and the documents with serial numbers
   return {
     totalDownloadCount,
     downloads,
@@ -80,11 +150,32 @@ export const getDailyDownloadForLicenseService = async (licenseId) => {
       },
     },
     {
+      $setWindowFields: {
+        partitionBy: "$licenseId",
+        sortBy: { createdAt: 1 }, // Sort by time of creation
+        output: {
+          serial: {
+            $documentNumber: {}, // Generates a sequential number for each document
+          },
+        },
+      },
+    },
+    {
       $group: {
         _id: '$licenseId',
         downloads: { $push: '$$ROOT' },
         count: { $sum: 1 },
       },
+    },
+    {
+      $project: {
+        "downloads.createdAt": 0,  // Exclude these fields from each download document
+        "downloads.updatedAt": 0,
+        "downloads.__v": 0,
+        "downloads.status": 0,
+        "downloads.serviceId": 0,
+        "downloads.licenseId": 0,
+      }
     },
   ]);
 
@@ -101,20 +192,47 @@ export const getDailyDownloadForLicenseService = async (licenseId) => {
   }
 };
 
+
 // Total download for license service
 export const getTotalDownloadForLicenseService = async (licenseId) => {
-  const downloads = await Download.find({
-    licenseId: licenseId,
-    status: 'accepted',
-  });
+  const result = await Download.aggregate([
+    {
+      $match: {
+        licenseId: licenseId,
+        status: 'accepted',
+      },
+    },
+    {
+      $setWindowFields: {
+        partitionBy: "$licenseId",
+        sortBy: { createdAt: 1 }, // Sort by time of creation
+        output: {
+          serial: {
+            $documentNumber: {}, // Generates a sequential number for each document
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        "createdAt": 0,  // Exclude these fields from each download document
+        "updatedAt": 0,
+        "__v": 0,
+        "status": 0,
+        "serviceId": 0,
+        "licenseId": 0,
+      }
+    }
+  ]);
 
-  const count = downloads?.length;
+  const count = result?.length;
 
   return {
     count,
-    licenseDownloads: downloads,
+    licenseDownloads: result,
   };
 };
+
 
 // Daily download for cookie account by service Id
 export const getDailyDownloadForCookieService = async (serviceId) => {
@@ -122,37 +240,89 @@ export const getDailyDownloadForCookieService = async (serviceId) => {
   const startOfDay = new Date(today.setHours(0, 0, 0, 0));
   const endOfDay = new Date(today.setHours(23, 59, 59, 999));
 
-  const downloads = await Download.find({
-    serviceId: serviceId,
-    status: new RegExp('^accepted$', 'i'), // Case-insensitive match
-    createdAt: {
-      $gte: startOfDay,
-      $lte: endOfDay,
+  const result = await Download.aggregate([
+    {
+      $match: {
+        serviceId: serviceId,
+        status: new RegExp('^accepted$', 'i'), // Case-insensitive match
+        createdAt: {
+          $gte: startOfDay,
+          $lte: endOfDay,
+        },
+      },
     },
-  });
+    {
+      $setWindowFields: {
+        partitionBy: "$serviceId",
+        sortBy: { createdAt: 1 }, // Sort by time of creation
+        output: {
+          serial: {
+            $documentNumber: {}, // Generates a sequential number for each document
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        "createdAt": 0,  // Exclude these fields from each download document
+        "updatedAt": 0,
+        "__v": 0,
+        "status": 0,
+        "serviceId": 0,
+        "licenseId": 0,
+      }
+    }
+  ]);
 
-  const dailyDownloadCount = downloads?.length;
+  const dailyDownloadCount = result?.length;
 
   return {
     dailyDownloadCount,
-    dailyDownloads: downloads,
+    dailyDownloads: result,
   };
 };
+
 
 // Total download for cookie account by service Id
 export const getTotalDownloadForCookieService = async (serviceId) => {
-  const downloads = await Download.find({
-    serviceId: serviceId,
-    status: 'accepted',
-  });
+  const result = await Download.aggregate([
+    {
+      $match: {
+        serviceId: serviceId,
+        status: 'accepted',
+      },
+    },
+    {
+      $setWindowFields: {
+        partitionBy: "$serviceId",
+        sortBy: { createdAt: 1 }, // Sort by time of creation
+        output: {
+          serial: {
+            $documentNumber: {}, // Generates a sequential number for each document
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        "createdAt": 0,  // Exclude these fields from each download document
+        "updatedAt": 0,
+        "__v": 0,
+        "status": 0,
+        "serviceId": 0,
+        "licenseId": 0,
+      }
+    }
+  ]);
 
-  const count = downloads?.length;
+  const count = result?.length;
 
   return {
     count,
-    serviceDownloads: downloads,
+    serviceDownloads: result,
   };
 };
+
 
 // Total download for cookie account by service Id
 export const getDownloadById = async (downloadId) => {

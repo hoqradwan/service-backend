@@ -14,7 +14,6 @@ const UserSchema = new Schema({
     ref: 'License',
     default: null,
   },
-  serial: { type: Number, default: 0 },
 }, { timestamps: true });
 
 export const UserModel = mongoose.models.User || mongoose.model('User', UserSchema);

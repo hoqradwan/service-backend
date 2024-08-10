@@ -49,7 +49,7 @@ export const createCookie = catchAsync(async (req, res) => {
       success: true,
       statusCode: httpStatus.CREATED,
       message: 'Cookie created successfully!',
-      data: savedCookie,
+      data: null,
     });
   }
 });
@@ -151,7 +151,7 @@ export const updateCookieById = catchAsync(async (req, res) => {
     success: true,
     statusCode: httpStatus.OK,
     message: 'Cookie updated successfully!',
-    data: updatedCookie,
+    data: null,
   });
 });
 
@@ -188,7 +188,7 @@ export const deleteCookieById = catchAsync(async (req, res) => {
     success: true,
     statusCode: httpStatus.OK,
     message: 'Cookie deleted successfully!',
-    data: deletedCookie,
+    data: null,
   });
 });
 

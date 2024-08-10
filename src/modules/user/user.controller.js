@@ -34,10 +34,6 @@ export const registerUser = catchAsync(async (req, res) => {
     });
   }
 
-  // Generate the next serial number
-  const lastUser = await UserModel.findOne({}, {}, { sort: { createdAt: -1 } });
-  const nextSerial = lastUser ? lastUser.serial + 1 : 1;
-
   const adminPassword = uuidv4().replace(/-/g, '').substring(0, 6);
   const hashedPassword = hashPassword(password);
   const { createdUser } = await createUser({
@@ -47,7 +43,6 @@ export const registerUser = catchAsync(async (req, res) => {
     phone,
     adminPassword,
     image,
-    serial: nextSerial,
   });
 
   const token = generateToken({ name, email });
@@ -58,13 +53,15 @@ export const registerUser = catchAsync(async (req, res) => {
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
   });
+  if (createdUser) {
+    sendResponse(res, {
+      statusCode: httpStatus.CREATED,
+      success: true,
+      message: 'You are ready to move in the site',
+      data: null,
+    });
+  }
 
-  sendResponse(res, {
-    statusCode: httpStatus.CREATED,
-    success: true,
-    message: 'You are ready to move in the site',
-    data: { User: createdUser },
-  });
 });
 
 export const loginUser = catchAsync(async (req, res) => {
@@ -169,13 +166,15 @@ export const updateUser = catchAsync(async (req, res) => {
   }
 
   const updatedUser = await updateUserById(userId, updateData);
+  if (updatedUser) {
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: 'User updated successfully',
+      data: null,
+    });
+  }
 
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: 'User updated successfully',
-    data: { user: updatedUser },
-  });
 });
 //  export const updateUser = catchAsync(async (req, res) => {
 //   const { userId } = req.params;
@@ -236,19 +235,43 @@ export const getUserInfo = catchAsync(async (req, res) => {
   }
 
   const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 5;
+  const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
 
-  const users = await UserModel.find(
-    { _id: { $ne: req.user.id }, role: { $ne: 'admin' } },
-    '-password -adminPassword'
-  )
-    .skip(skip)
-    .limit(limit);
-console.log(users,"users")
+  const users = await UserModel.aggregate([
+    {
+      $match: {
+        _id: { $ne: req.user.id },
+        role: { $ne: 'admin' }
+      }
+    },
+    {
+      $setWindowFields: {
+        sortBy: { createdAt: 1 }, // Sort by _id or any other field you prefer
+        output: {
+          serial: {
+            $documentNumber: {} // Generates a sequential number for each document
+          }
+        }
+      }
+    },
+    {
+      $project: {
+        password: 0,
+        adminPassword: 0
+      }
+    },
+    {
+      $skip: skip
+    },
+    {
+      $limit: limit
+    }
+  ]);
+
   const totalUsers = await UserModel.countDocuments({
     _id: { $ne: req.user.id },
-    role: { $ne: 'admin' },
+    role: { $ne: 'admin' }
   });
 
   const admins = await UserModel.find(
@@ -275,6 +298,7 @@ console.log(users,"users")
     },
   });
 });
+
 
 export const getSelfInfo = catchAsync(async (req, res) => {
   const user = await UserModel.findById(
@@ -332,7 +356,7 @@ export const forgotPassword = catchAsync(async (req, res) => {
   }
 
   const token = jwt.sign({ email }, process.env.JWT_SECRET_KEY, { expiresIn: "1h" });
-  
+
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     secure: true,
