@@ -177,7 +177,7 @@ export const updateLicenseIntoDB = async (licenseid, data) => {
       licenseid,
       { ...data, expiryDate: new Date(newExpiryDate) },
       {
-        new: true, // Return the updated document
+        new: true, // Return the updated document..
       },
     );
   } else {
