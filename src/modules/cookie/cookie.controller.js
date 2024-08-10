@@ -7,6 +7,7 @@ import {
   getAllCookiesService,
   getCookieByAccountEmailService,
   getCookieByIdService,
+  getTotalDocumentCountService,
   updateCookieByIdService,
 } from './cookie.service.js';
 import mongoose from 'mongoose';
@@ -56,8 +57,12 @@ export const createCookie = catchAsync(async (req, res) => {
 
 // Get method for cookie
 export const getAllCookies = catchAsync(async (req, res) => {
-  // Retrieve all cookies from the database
-  const cookies = await getAllCookiesService();
+  // Extract page and limit from query parameters, defaulting to 1 and 10 if not provided
+  const page = parseInt(req?.query?.page) || 1;
+  const limit = parseInt(req?.query?.limit) || 10;
+
+  // Retrieve paginated cookies from the database
+  const cookies = await getAllCookiesService(page, limit);
 
   // Check if cookies exist
   if (cookies.length === 0) {
@@ -68,15 +73,24 @@ export const getAllCookies = catchAsync(async (req, res) => {
       data: null,
     });
   }
-
+  const totalCookies = await getTotalDocumentCountService();
+  const totalPages = Math.ceil(totalCookies / limit);
+  const currentPageCookies = cookies?.length;
   // Send a success response with the cookies data
   return sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
     message: 'Cookies retrieved successfully!',
-    data: cookies,
+    data: {
+      cookies,
+      totalCookies,
+      currentPage: page,
+      totalPages,
+      currentPageCookies,
+    },
   });
 });
+
 
 // Get method for single cookie with _id
 export const getCookieById = catchAsync(async (req, res) => {

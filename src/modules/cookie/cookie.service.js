@@ -9,7 +9,10 @@ export const createCookieService = async (data) => {
 };
 
 // Get all cookie service
-export const getAllCookiesService = async () => {
+export const getAllCookiesService = async (page, limit) => {
+  // Calculate the number of documents to skip
+  const skip = (page - 1) * limit;
+
   return await Cookie.aggregate([
     {
       $setWindowFields: {
@@ -25,11 +28,18 @@ export const getAllCookiesService = async () => {
       $project: {
         createdAt: 0, // Exclude createdAt field
         updatedAt: 0, // Exclude updatedAt field
-        __v: 0,       // Exclude __v field.
+        __v: 0,       // Exclude __v field
       }
+    },
+    {
+      $skip: skip, // Skip documents for pagination
+    },
+    {
+      $limit: limit, // Limit the number of documents returned
     }
   ]);
 };
+
 
 
 // find single cookie service with id
