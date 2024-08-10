@@ -10,7 +10,9 @@ export const addDownloadIntoDB = async (payload, requestedUser) => {
   return result;
 };
 
-export const getMyDownloadsFromDB = async (requestedUser) => {
+export const getMyDownloadsFromDB = async (requestedUser, page, limit) => {
+  const skip = (page - 1) * limit;
+
   const result = await Download.aggregate([
     {
       $match: {
@@ -29,21 +31,28 @@ export const getMyDownloadsFromDB = async (requestedUser) => {
     },
     {
       $project: {
-        "createdAt": 0,  // Exclude these fields from each download document
-        "updatedAt": 0,
-        "__v": 0,
-        "status": 0,
-        "serviceId": 0,
-        "licenseId": 0,
+        createdAt: 0,  // Exclude these fields from each download document
+        updatedAt: 0,
+        __v: 0,
+        status: 0,
+        serviceId: 0,
+        licenseId: 0,
       }
+    },
+    {
+      $skip: skip,
+    },
+    {
+      $limit: limit,
     }
   ]);
 
   return result.map((download) => ({
     ...download,
-    time: getTime(new Date(download.downloadedAt)), // Format time using the imported getTime function
+    time: getTime(new Date(download.downloadedAt)),
   }));
 };
+
 
 
 // Daily download count service by user email
@@ -329,3 +338,9 @@ export const getDownloadById = async (downloadId) => {
   return await Download?.findById(downloadId);
 };
 
+// get the total number of download count service
+export const downloadCountService = async (email) => {
+  return Download.countDocuments({
+    downloadedBy: email,
+  });
+};

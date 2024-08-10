@@ -10,6 +10,7 @@ import {
 import { getLicenseByIdService } from '../license/license.service.js';
 import {
   addDownloadIntoDB,
+  downloadCountService,
   getDailyDownloadForCookieService,
   getDailyDownloadForLicenseService,
   getDailyDownloadForUserService,
@@ -30,19 +31,39 @@ export const addDownload = catchAsync(async (req, res) => {
     sendResponse(res, {
       success: true,
       statusCode: httpStatus.OK,
-      message: 'Item is downloaded successfully.',
+      message: 'Item is added successfully.',
       data: null,
     });
   }
 });
 
 export const getMyDownloads = catchAsync(async (req, res) => {
-  const result = await getMyDownloadsFromDB(req.user);
+  const page = parseInt(req?.query?.page) || 1;
+  const limit = parseInt(req?.query?.limit) || 10;
+  const result = await getMyDownloadsFromDB(req.user, page, limit);
+  if (result?.length === 0) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: httpStatus.NOT_FOUND,
+      message: 'No document found',
+      data: null,
+    });
+  }
+  const totalDownloads = await downloadCountService(req?.user?.email);
+  const totalPages = Math.ceil(totalDownloads / limit);
+  const currentPageDownloads = result?.length;
+
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
     message: 'My all downloads are retrieved successfully.',
-    data: result,
+    data: {
+      result,
+      totalDownloads,
+      currentPage: page,
+      totalPages,
+      currentPageDownloads,
+    },
   });
 });
 
@@ -107,7 +128,7 @@ export const getDailyDownloadForLicense = catchAsync(async (req, res) => {
     licenseId = req?.query?.licenseId;
   } else if (role === 'user') {
     const userId = req?.user?.id;
-    
+
     const user = await findUserById(userId);
     if (!user) {
       return sendResponse(res, {
@@ -119,7 +140,7 @@ export const getDailyDownloadForLicense = catchAsync(async (req, res) => {
     }
     // current license of the user
     licenseId = user?.currentLicense;
-    
+
   }
 
   if (!licenseId) {

@@ -17,7 +17,6 @@ const CookieSchema = new mongoose.Schema(
     },
     source: {
       type: String,
-      enum: ['envato'],
     },
     cookie: {
       type: String,
