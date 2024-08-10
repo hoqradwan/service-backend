@@ -149,10 +149,6 @@ export const updateLicenseIntoDB = async (licenseid, data) => {
       new: true, // Return the updated document
     });
   }
-
-  // Log the updated result
-  console.log(result);
-
   return result;
 };
 
