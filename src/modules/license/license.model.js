@@ -31,7 +31,7 @@ const licenseSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['new', 'used', 'expired'],
+      enum: ['new', 'used', 'expired','suspended'],
       default: 'new',
     },
     activationDate: {
