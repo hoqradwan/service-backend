@@ -66,6 +66,25 @@ export const getLicensesFromDB = async (
   const result = await LicenseModel.aggregate([
     { $match: query },
     {
+      $lookup: {
+        from: 'users', 
+        localField: 'user', 
+        foreignField: '_id', 
+        as: 'userDetails', 
+      },
+    },
+    {
+      $unwind: {
+        path: '$userDetails',
+        preserveNullAndEmptyArrays: true, // Keep licenses with no associated user
+      },
+    },
+    {
+      $addFields: {
+        userEmail: '$userDetails.email', // Add userEmail field
+      },
+    },
+    {
       $sort: sortOptions, // Sort before assigning serial numbers
     },
     {
@@ -83,6 +102,7 @@ export const getLicensesFromDB = async (
         createdAt: 0, // Exclude these fields from each license document
         updatedAt: 0,
         __v: 0,
+        userDetails: 0, 
       },
     },
     {
@@ -105,6 +125,7 @@ export const getLicensesFromDB = async (
     data: result,
   };
 };
+
 
 export const licenseByUserFromDB = async (
   userId,
@@ -148,7 +169,7 @@ export const licenseByUserFromDB = async (
 
   // Return the data with pagination information
   return {
-    data: result,
+    data: resultWithSerial,
     meta: {
       total,
       page,
