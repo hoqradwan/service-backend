@@ -108,6 +108,14 @@ export const licenseByUser = catchAsync(async (req, res) => {
 export const updateLicense = catchAsync(async (req, res) => {
   const licenseId = req.params.id;
   const result = await updateLicenseIntoDB(licenseId, req.body);
+  if (!result) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: httpStatus.NOT_FOUND,
+      message: 'License not found',
+      data: null,
+    });
+  }
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,

@@ -113,7 +113,7 @@ export const licenseByUserFromDB = async (
 
   return {
     data: result,
-    pagination: {
+    meta: {
       total,
       page,
       limit,
@@ -122,9 +122,40 @@ export const licenseByUserFromDB = async (
   };
 };
 export const updateLicenseIntoDB = async (licenseid, data) => {
-  const result = await LicenseModel.findByIdAndUpdate(licenseid, data);
+  // Fetch the license to update
+  const licenseToUpdate = await LicenseModel.findById(licenseid);
+
+  // Log the license fetched from the database
+  console.log(licenseToUpdate);
+
+  // Initialize result variable
+  let result;
+
+  // If dayLimit is being updated and expiryDate exists, update expiryDate
+  if (data.dayLimit && licenseToUpdate.expiryDate) {
+    const newExpiryDate = new Date(
+      licenseToUpdate.activationDate.getTime(),
+    ).setDate(licenseToUpdate.activationDate.getDate() + data.dayLimit);
+    result = await LicenseModel.findByIdAndUpdate(
+      licenseid,
+      { ...data, expiryDate: new Date(newExpiryDate) },
+      {
+        new: true, // Return the updated document
+      },
+    );
+  } else {
+    // If no specific logic for dayLimit, update with the provided data
+    result = await LicenseModel.findByIdAndUpdate(licenseid, data, {
+      new: true, // Return the updated document
+    });
+  }
+
+  // Log the updated result
+  console.log(result);
+
   return result;
 };
+
 export const activateLicenseIntoDB = async (licenseKey, user) => {
   const session = await mongoose.startSession();
   session.startTransaction();
