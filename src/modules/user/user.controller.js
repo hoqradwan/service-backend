@@ -423,7 +423,7 @@ export const forgotPassword = catchAsync(async (req, res) => {
   //   from: "info.arridevstudios@gmail.com",
   //   to: email,
   //   subject: "Reset Password",
-  //   text: `Click on the link below to reset your password: ${process.env.url}/reset-password/${token}`,
+  //   text: `Click on the link below to reset your password: ${process.env.url}/reset-password/${token}`,.
   // };
 
   await transporter.sendMail(receiver);
