@@ -11,6 +11,7 @@ import {
   getTotalDownloadForLicense,
   getTotalDownloadForUser,
   handleDownload, handleLicenseDownload,
+  updateDownloadById,
 } from './download.controller.js';
 import {
   downloadValidationSchema,
@@ -58,5 +59,6 @@ router.get(
 router.get('/my-downloads', adminMiddleware('user'), getMyDownloads);
 router.post('/envato-elements', adminMiddleware('user'), handleDownload);
 router.get('/envato-elements-license/:downloadId',adminMiddleware('user'), handleLicenseDownload);
+router.put('/:id',adminMiddleware('user'), updateDownloadById);
 
 export const downloadRoutes = router;

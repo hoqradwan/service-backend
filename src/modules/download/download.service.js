@@ -336,3 +336,13 @@ export const downloadCountService = async (email) => {
     downloadedBy: email,
   });
 };
+
+
+// update cookie service
+export const updateDownloadByIdService = async (id, updateData) => {
+  // update the cookie
+  return await Download?.findByIdAndUpdate(id, updateData, {
+    new: true,
+    runValidators: true // Ensure that the update data conforms to the schema
+  });
+};
