@@ -31,6 +31,7 @@ const CookieSchema = new mongoose.Schema(
       type: String,
       required: true,
       enum: ['active', 'inactive'],
+      default: 'active'
     },
   },
   { timestamps: true },
