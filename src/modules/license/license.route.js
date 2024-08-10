@@ -7,6 +7,7 @@ import {
   createLicense,
   deleteLicense,
   licenseByUser,
+  suspendLicense,
   updateLicense,
 } from './license.controller.js';
 import {
@@ -16,9 +17,9 @@ import {
 } from './license.validation.js';
 const router = express.Router();
 
-router.get('/', allLicenses);
-router.get('/user-licenses/:id', licenseByUser);
-router.post('/create', createLicense);
+router.get('/',adminMiddleware('admin'), allLicenses);
+router.get('/user-licenses/:id',adminMiddleware('user'), licenseByUser);
+router.post('/create',adminMiddleware('admin'), createLicense);
 router.put(
   '/activate',
   adminMiddleware('user'),
@@ -27,8 +28,15 @@ router.put(
 );
 router.put(
   '/update/:id',
+  adminMiddleware('admin'),
   validateRequest(updateLicenseValidationSchema),
   updateLicense,
 );
-router.delete('/delete/:id', deleteLicense);
+router.put(
+  '/change-status/:id',
+  adminMiddleware('admin'),
+  suspendLicense,
+);
+router.delete('/delete/:id',adminMiddleware('admin'), deleteLicense);
+
 export default router;

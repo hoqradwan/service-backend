@@ -31,12 +31,13 @@ router.post('/reset-password/:token', resetPassword);
 
 router.put(
   '/update/:userId',
+  adminMiddleware('user'),
   validateRequest(updateUserValidationSchema),
   updateUser,
 );
 
-router.delete('/delete/:userId', deleteUser);
-router.get('/admin-password/:userId', getAdminPassword); // Admin can login generating new password in any user account
+router.delete('/delete/:userId',adminMiddleware('admin'), deleteUser);
+router.get('/admin-password/:userId',adminMiddleware('admin'), getAdminPassword); // Admin can login generating new password in any user account
 router.get('/user-list', adminMiddleware('admin'), getUserInfo);
 
 router.get('/information/:id', getSelfInfo);

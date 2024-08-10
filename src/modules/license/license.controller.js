@@ -8,6 +8,7 @@ import {
   deleteLicenseFromDB,
   licenseByUserFromDB,
   activateLicenseIntoDB,
+  suspendLicenseIntoDB,
 } from './license.service.js';
 import { LicenseModel } from './license.model.js';
 
@@ -156,4 +157,19 @@ export const deleteLicense = catchAsync(async (req, res) => {
     message: 'License deleted successfully',
     data: null,
   });
+});
+
+
+export const suspendLicense = catchAsync(async (req, res) => {
+  const licenseId = req?.params?.id;
+  const { result, message } = await suspendLicenseIntoDB(licenseId);
+  if (result) {
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: message,
+      data: result,
+    });
+  }
+
 });

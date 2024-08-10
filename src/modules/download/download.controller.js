@@ -404,11 +404,14 @@ export const isDailyLimitExceed = async (licenseId) => {
       return { isOk: false, message: 'License not found' };
     }
 
-    if (license.status === 'new') {
+    if (license?.status === 'new') {
       return { isOk: false, message: 'License is not activated yet' };
     }
-    if (license.status === 'expired') {
+    if (license?.status === 'expired') {
       return { isOk: false, message: 'License is expired' };
+    }
+    if (license?.status === 'suspended') {
+      return { isOk: false, message: 'License is suspended' };
     }
 
     const { count } = await getDailyDownloadForLicenseService(licenseId);

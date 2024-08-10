@@ -234,8 +234,8 @@ export const getUserInfo = catchAsync(async (req, res) => {
     });
   }
 
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
+  const page = parseInt(req?.query?.page) || 1;
+  const limit = parseInt(req?.query?.limit) || 10;
   const skip = (page - 1) * limit;
 
   const users = await UserModel.aggregate([
@@ -247,7 +247,7 @@ export const getUserInfo = catchAsync(async (req, res) => {
     },
     {
       $setWindowFields: {
-        sortBy: { createdAt: 1 }, // Sort by _id or any other field you prefer
+        sortBy: { createdAt: 1 }, // Sort by createdAt or any other field you prefer
         output: {
           serial: {
             $documentNumber: {} // Generates a sequential number for each document
@@ -256,9 +256,34 @@ export const getUserInfo = catchAsync(async (req, res) => {
       }
     },
     {
+      $lookup: {
+        from: 'licenses', 
+        let: { userId: '$_id' },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $eq: ['$user', '$$userId']
+              }
+            }
+          },
+          {
+            $count: 'totalLicenses'
+          }
+        ],
+        as: 'licenses'
+      }
+    },
+    {
+      $addFields: {
+        totalLicenses: { $ifNull: [{ $arrayElemAt: ['$licenses.totalLicenses', 0] }, 0] }
+      }
+    },
+    {
       $project: {
         password: 0,
-        adminPassword: 0
+        adminPassword: 0,
+        licenses: 0 
       }
     },
     {
@@ -268,6 +293,7 @@ export const getUserInfo = catchAsync(async (req, res) => {
       $limit: limit
     }
   ]);
+
 
   const totalUsers = await UserModel.countDocuments({
     _id: { $ne: req.user.id },

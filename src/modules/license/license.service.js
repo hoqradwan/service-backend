@@ -171,8 +171,8 @@ export const updateLicenseIntoDB = async (licenseid, data) => {
   // If dayLimit is being updated and expiryDate exists, update expiryDate
   if (data.dayLimit && licenseToUpdate.expiryDate) {
     const newExpiryDate = new Date(
-      licenseToUpdate.activationDate.getTime(),
-    ).setDate(licenseToUpdate.activationDate.getDate() + data.dayLimit);
+      licenseToUpdate?.expiryDate?.getTime(),
+    ).setDate(licenseToUpdate?.expiryDate?.getDate() + data.dayLimit);
     result = await LicenseModel.findByIdAndUpdate(
       licenseid,
       { ...data, expiryDate: new Date(newExpiryDate) },
@@ -239,4 +239,25 @@ export const deleteLicenseFromDB = async (licenseid, data) => {
 // License with _id
 export const getLicenseByIdService = async (licenseId) => {
   return await LicenseModel.findById(licenseId);
+};
+
+
+export const suspendLicenseIntoDB = async (licenseId) => {
+  const license = await LicenseModel.findById(licenseId);
+  if (license.status === 'used') {
+    const result = await LicenseModel.findByIdAndUpdate(licenseId, {
+      status: 'suspended',
+    });
+    return {
+      result,
+      message : "License updated to suspended "
+    };
+  }
+  const result = await LicenseModel.findByIdAndUpdate(licenseId, {
+    status: 'used',
+  });
+  return {
+     result,
+      message : "License updated to Used"
+  };
 };
