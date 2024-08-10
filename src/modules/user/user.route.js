@@ -31,7 +31,7 @@ router.post('/reset-password/:token', resetPassword);
 
 router.put(
   '/update/:userId',
-  adminMiddleware('user'),
+  //adminMiddleware('user'),
   validateRequest(updateUserValidationSchema),
   updateUser,
 );
