@@ -148,7 +148,7 @@ export const licenseByUserFromDB = async (
 
   // Return the data with pagination information
   return {
-    data: result,
+    data: resultWithSerial,
     meta: {
       total,
       page,

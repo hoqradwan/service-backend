@@ -38,9 +38,7 @@ export const addDownload = catchAsync(async (req, res) => {
 });
 
 export const getMyDownloads = catchAsync(async (req, res) => {
-  const page = parseInt(req?.query?.page) || 1;
-  const limit = parseInt(req?.query?.limit) || 10;
-  const result = await getMyDownloadsFromDB(req.user, page, limit);
+  const result = await getMyDownloadsFromDB(req.user);
   if (result?.length === 0) {
     return sendResponse(res, {
       success: false,
@@ -50,8 +48,6 @@ export const getMyDownloads = catchAsync(async (req, res) => {
     });
   }
   const totalDownloads = await downloadCountService(req?.user?.email);
-  const totalPages = Math.ceil(totalDownloads / limit);
-  const currentPageDownloads = result?.length;
 
   sendResponse(res, {
     success: true,
@@ -60,9 +56,6 @@ export const getMyDownloads = catchAsync(async (req, res) => {
     data: {
       result,
       totalDownloads,
-      currentPage: page,
-      totalPages,
-      currentPageDownloads,
     },
   });
 });
