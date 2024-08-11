@@ -66,19 +66,29 @@ export const getDailyDownloadForUser = catchAsync(async (req, res) => {
   const role = req?.user?.role;
   let email = null;
   if (role === 'admin') {
-    email = req?.query?.email;
+    const id = req?.params?.id;
+    const user = await findUserById(id);
+    if (!user) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: httpStatus?.BAD_REQUEST,
+        message: 'No user found with this id',
+        data: null,
+      });
+    }
+    email = user?.email;
   } else if (role === 'user') {
     email = req?.user?.email;
+    if (!email) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: httpStatus?.BAD_REQUEST,
+        message: 'Could not find user',
+        data: null,
+      });
+    }
   }
 
-  if (!email) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: httpStatus?.BAD_REQUEST,
-      message: 'User email is not provided',
-      data: null,
-    });
-  }
   const result = await getDailyDownloadForUserService(email);
   return sendResponse(res, {
     success: true,
@@ -93,17 +103,27 @@ export const getTotalDownloadForUser = catchAsync(async (req, res) => {
   const role = req?.user?.role;
   let email = null;
   if (role === 'admin') {
-    email = req?.query?.email;
+    const id = req?.params?.id;
+    const user = await findUserById(id);
+    if (!user) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: httpStatus?.BAD_REQUEST,
+        message: 'No user found with this id',
+        data: null,
+      });
+    }
+    email = user?.email;
   } else if (role === 'user') {
     email = req?.user?.email;
-  }
-  if (!email) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: httpStatus?.BAD_REQUEST,
-      message: 'User email is not provided',
-      data: null,
-    });
+    if (!email) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: httpStatus?.BAD_REQUEST,
+        message: 'Could not find user',
+        data: null,
+      });
+    }
   }
   const result = await getTotalDownloadForUserService(email);
   return sendResponse(res, {

@@ -27,12 +27,12 @@ router.post(
   addDownload,
 );
 router.get(
-  '/user-daily-download',
+  '/user-daily-download/:id',
   adminMiddleware('user'),
   getDailyDownloadForUser,
 );
 router.get(
-  '/user-total-download',
+  '/user-total-download/:id',
   adminMiddleware('user'),
   getTotalDownloadForUser,
 );
