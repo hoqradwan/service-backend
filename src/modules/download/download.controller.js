@@ -345,7 +345,7 @@ export const handleDownload = catchAsync(async (req, res) => {
     return sendResponse(res, {
       success: false,
       statusCode: 400,
-      message: 'Daily download limit is exceeded',
+      message: 'Download limit is exceeded',
       data: null,
     });
   }
@@ -463,8 +463,9 @@ export const isDailyLimitExceed = async (licenseId) => {
     }
 
     const { count } = await getDailyDownloadForLicenseService(licenseId);
+    const { count: totalCount } = await getTotalDownloadForLicenseService(licenseId);
 
-    if (license.dailyLimit > count) {
+    if ((license?.dailyLimit > count) && (license?.totalLimit > totalCount)) {
       return { isOk: true, exceeded: false };
     } else {
       return { isOk: true, exceeded: true };
