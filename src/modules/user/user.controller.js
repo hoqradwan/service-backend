@@ -13,6 +13,7 @@ import {
   deleteUserById,
   findUserByEmail,
   findUserById,
+  getUserStatisticsService,
   updateUserById
 } from './user.service.js';
 import { generateToken, hashPassword } from './user.utils.js';
@@ -257,7 +258,7 @@ export const getUserInfo = catchAsync(async (req, res) => {
     },
     {
       $lookup: {
-        from: 'licenses', 
+        from: 'licenses',
         let: { userId: '$_id' },
         pipeline: [
           {
@@ -283,7 +284,7 @@ export const getUserInfo = catchAsync(async (req, res) => {
       $project: {
         password: 0,
         adminPassword: 0,
-        licenses: 0 
+        licenses: 0
       }
     },
     {
@@ -436,6 +437,7 @@ export const forgotPassword = catchAsync(async (req, res) => {
   });
 });
 
+
 export const resetPassword = catchAsync(async (req, res) => {
   const { token } = req.params;
   const { password } = req.body;
@@ -467,3 +469,15 @@ export const resetPassword = catchAsync(async (req, res) => {
   });
 });
 
+
+export const getUserStatistics = catchAsync(async (req, res) => {
+
+  const result = await getUserStatisticsService();
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Retrieved user stats successfully",
+    data: result
+  });
+
+});

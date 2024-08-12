@@ -67,10 +67,10 @@ export const getLicensesFromDB = async (
     { $match: query },
     {
       $lookup: {
-        from: 'users', 
-        localField: 'user', 
-        foreignField: '_id', 
-        as: 'userDetails', 
+        from: 'users',
+        localField: 'user',
+        foreignField: '_id',
+        as: 'userDetails',
       },
     },
     {
@@ -102,7 +102,7 @@ export const getLicensesFromDB = async (
         createdAt: 0, // Exclude these fields from each license document
         updatedAt: 0,
         __v: 0,
-        userDetails: 0, 
+        userDetails: 0,
       },
     },
     {
@@ -271,14 +271,30 @@ export const suspendLicenseIntoDB = async (licenseId) => {
     });
     return {
       result,
-      message : "License updated to suspended "
+      message: "License updated to suspended "
     };
   }
   const result = await LicenseModel.findByIdAndUpdate(licenseId, {
     status: 'used',
   });
   return {
-     result,
-      message : "License updated to Used"
+    result,
+    message: "License updated to Used"
   };
+};
+
+export const getDailyStatisticsForUsedLicensesService = async () => {
+  const result = await LicenseModel.aggregate([
+    {
+      $match: { status: 'used' } 
+    },
+    {
+      $group: {
+        _id: null, 
+        totalDailyLimit: { $sum: '$dailyLimit' } // Sum the dailyLimit field
+      }
+    }
+  ]);
+
+  return result[0]?.totalDailyLimit || 0;
 };

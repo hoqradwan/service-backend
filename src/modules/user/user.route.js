@@ -7,6 +7,7 @@ import {
   getAdminPassword,
   getSelfInfo,
   getUserInfo,
+  getUserStatistics,
   loginUser,
   registerUser,
   resetPassword,
@@ -31,7 +32,7 @@ router.post('/reset-password/:token', resetPassword);
 
 router.put(
   '/update/:userId',
-  //adminMiddleware('user'),
+  //adminMiddleware('user'),.
   validateRequest(updateUserValidationSchema),
   updateUser,
 );
@@ -41,5 +42,6 @@ router.get('/admin-password/:userId',adminMiddleware('admin'), getAdminPassword)
 router.get('/user-list', adminMiddleware('admin'), getUserInfo);
 
 router.get('/information/:id', getSelfInfo);
+router.get('/user-stats',adminMiddleware('admin'), getUserStatistics);
 
 export default router;
