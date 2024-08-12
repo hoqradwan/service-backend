@@ -6,6 +6,7 @@ import {
   allLicenses,
   createLicense,
   deleteLicense,
+  getDailyStatisticsForUsedLicenses,
   licenseByUser,
   suspendLicense,
   updateLicense,
@@ -19,6 +20,7 @@ const router = express.Router();
 
 router.get('/',adminMiddleware('admin'), allLicenses);
 router.get('/user-licenses/:id',adminMiddleware('user'), licenseByUser);
+router.get('/daily-stats',adminMiddleware('admin'), getDailyStatisticsForUsedLicenses);
 router.post('/create',adminMiddleware('admin'), createLicense);
 router.put(
   '/activate',

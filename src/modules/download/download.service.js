@@ -346,3 +346,27 @@ export const updateDownloadByIdService = async (id, updateData) => {
     runValidators: true // Ensure that the update data conforms to the schema
   });
 };
+
+// service for getting the total number of daily download 
+export const getTotalDailyAcceptedDownloadsService = async () => {
+  const today = new Date();
+  const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+  const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+  
+  const result = await Download.aggregate([
+    {
+      $match: {
+        status: 'accepted',
+        createdAt: {
+          $gte: startOfDay,
+          $lte: endOfDay,
+        },
+      },
+    },
+    {
+      $count: 'dailyDownloads', // Count the number of documents
+    },
+  ]);
+
+  return result[0]?.dailyDownloads || 0;
+};
