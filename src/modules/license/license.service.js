@@ -283,21 +283,6 @@ export const suspendLicenseIntoDB = async (licenseId) => {
   };
 };
 
-// export const getDailyStatisticsForUsedLicensesService = async () => {
-//   const result = await LicenseModel.aggregate([
-//     {
-//       $match: { status: 'used' } 
-//     },
-//     {
-//       $group: {
-//         _id: null, 
-//         totalDailyLimit: { $sum: '$dailyLimit' } // Sum the dailyLimit field
-//       }
-//     }
-//   ]);
-
-//   return result[0]?.totalDailyLimit || 0;
-// };
 export const getDailyStatisticsForUsedLicensesService = async () => {
   const result = await LicenseModel.aggregate([
     {
