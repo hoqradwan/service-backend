@@ -12,7 +12,7 @@ import {
   getDailyStatisticsForUsedLicensesService,
 } from './license.service.js';
 import { LicenseModel } from './license.model.js';
-import { getTotalDailyAcceptedDownloadsService } from '../download/download.service.js';
+import { getTotalAndDailyDownloadsService } from '../download/download.service.js';
 
 export const createLicense = catchAsync(async (req, res) => {
   const license = req.body;
@@ -178,14 +178,15 @@ export const suspendLicense = catchAsync(async (req, res) => {
 
 export const getDailyStatisticsForUsedLicenses = catchAsync(async (req, res) => {
   const totalLimit = await getDailyStatisticsForUsedLicensesService();
-  const dailyDownloads = await getTotalDailyAcceptedDownloadsService();
+  const { dailyDownloads, totalDownloads } = await getTotalAndDailyDownloadsService();
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
     message: "Retrieved daily stats successfully",
     data: {
       totalLimit,
-      dailyDownloads
+      dailyDownloads,
+      totalDownloads
     },
   });
 

@@ -348,25 +348,51 @@ export const updateDownloadByIdService = async (id, updateData) => {
 };
 
 // service for getting the total number of daily download 
-export const getTotalDailyAcceptedDownloadsService = async () => {
+export const getTotalAndDailyDownloadsService = async () => {
   const today = new Date();
   const startOfDay = new Date(today.setHours(0, 0, 0, 0));
   const endOfDay = new Date(today.setHours(23, 59, 59, 999));
-  
+
   const result = await Download.aggregate([
     {
-      $match: {
-        status: 'accepted',
-        createdAt: {
-          $gte: startOfDay,
-          $lte: endOfDay,
-        },
+      $facet: {
+        dailyDownloads: [
+          {
+            $match: {
+              status: 'accepted',
+              createdAt: {
+                $gte: startOfDay,
+                $lte: endOfDay,
+              },
+            },
+          },
+          {
+            $count: 'count',
+          },
+        ],
+        totalDownloads: [
+          {
+            $match: {
+              status: 'accepted',
+            },
+          },
+          {
+            $count: 'count',
+          },
+        ],
       },
     },
     {
-      $count: 'dailyDownloads', // Count the number of documents
+      $project: {
+        dailyDownloads: { $arrayElemAt: ['$dailyDownloads.count', 0] },
+        totalDownloads: { $arrayElemAt: ['$totalDownloads.count', 0] },
+      },
     },
   ]);
 
-  return result[0]?.dailyDownloads || 0;
+  const counts = result[0] || {};
+  return {
+    dailyDownloads: counts.dailyDownloads || 0,
+    totalDownloads: counts.totalDownloads || 0,
+  };
 };
