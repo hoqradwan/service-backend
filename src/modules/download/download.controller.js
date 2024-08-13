@@ -332,6 +332,7 @@ export const handleDownload = catchAsync(async (req, res) => {
 
   // checking if daily limit has been exceeded or not
   const limitCheck = await isDailyLimitExceed(licenseId);
+  
   if (!limitCheck.isOk) {
     return sendResponse(res, {
       success: false,
@@ -459,7 +460,7 @@ export const isDailyLimitExceed = async (licenseId) => {
       return { isOk: false, message: 'License is expired' };
     }
     if (license?.status === 'suspended') {
-      return { isOk: false, message: 'License is suspended' };
+      return { isOk: false, message: 'your account is suspended ' };
     }
 
     const { count } = await getDailyDownloadForLicenseService(licenseId);
