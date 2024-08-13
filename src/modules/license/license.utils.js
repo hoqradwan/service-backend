@@ -25,14 +25,14 @@ export const updateLicenseStatus = async () => {
   const now = new Date();
   const formattedDate = formatDateWithOffset(now);
 
-  console.log(`Running updateLicenseStatus at ${formattedDate}`);
+
 
   try {
     const result = await LicenseModel.updateMany(
       { expiryDate: { $lte: formattedDate }, status: { $ne: 'expired' } },
       { $set: { status: 'expired' } },
     );
-    console.log('Update result:', result);
+    
   } catch (error) {
     console.error('Error updating license status:', error);
   }

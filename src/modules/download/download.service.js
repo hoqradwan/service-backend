@@ -5,7 +5,7 @@ import { Download } from './download.model.js';
 export const addDownloadIntoDB = async (payload, requestedUser) => {
   payload['downloadedAt'] = moment();
   payload['downloadedBy'] = requestedUser.email;
-  // console.log(payload, 'from download service');
+  
   const result = await Download.create([payload]);
   return result;
 };

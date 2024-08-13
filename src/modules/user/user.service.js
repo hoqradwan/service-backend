@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import nodemailer from "nodemailer";
 import httpStatus from 'http-status';
 export const findUserByEmail = async (email) => {
-  //console.log(email,"email")
+  
   return UserModel.findOne({ email });
 };
 

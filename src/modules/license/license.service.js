@@ -3,42 +3,11 @@ import { UserModel } from '../user/user.model.js';
 import { LicenseModel } from './license.model.js';
 
 export const createLicenseIntoDB = async (payload) => {
-  console.log(payload);
+  
   const result = await LicenseModel.create(payload);
   return result;
 };
-// export const getLicensesFromDB = async (
-//   filters = {},
-//   paginationOptions = {},
-// ) => {
-//   const { page, limit, sortBy, sortOrder } = paginationOptions;
 
-//   const query = { ...filters };
-
-//   const sortOptions = {};
-//   if (['dayLimit', 'dailyLimit', 'totalLimit', 'createdAt'].includes(sortBy)) {
-//     sortOptions[sortBy] = sortOrder === 'asc' ? 1 : -1;
-//   } else {
-//     sortOptions['createdAt'] = 1; // Default sorting
-//   }
-
-//   const result = await LicenseModel.find(query)
-//     .sort(sortOptions)
-//     .skip((page - 1) * limit)
-//     .limit(limit);
-
-//   const total = await LicenseModel.countDocuments(query);
-
-//   return {
-//     meta: {
-//       total,
-//       page,
-//       limit,
-//       totalPages: Math.ceil(total / limit),
-//     },
-//     data: result,
-//   };
-// };
 export const getLicensesFromDB = async (
   filters = {},
   paginationOptions = {},
@@ -184,7 +153,7 @@ export const updateLicenseIntoDB = async (licenseid, data) => {
   const licenseToUpdate = await LicenseModel.findById(licenseid);
 
   // Log the license fetched from the database
-  console.log(licenseToUpdate);
+
 
   // Initialize result variable
   let result;
