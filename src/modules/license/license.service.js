@@ -28,7 +28,7 @@ export const getLicensesFromDB = async (
     'createdAt',
   ].includes(sortBy)
     ? { [sortBy]: sortOrder === 'asc' ? 1 : -1 }
-    : { createdAt: 1 }; // Default sorting
+    : { createdAt: -1 }; // Default sorting
 
   const skip = (page - 1) * limit;
 
@@ -118,7 +118,7 @@ export const licenseByUserFromDB = async (
   if (['dayLimit', 'dailyLimit', 'totalLimit', 'createdAt'].includes(sortBy)) {
     sortOptions[sortBy] = sortOrder === 'asc' ? 1 : -1;
   } else {
-    sortOptions['createdAt'] = 1; // Default sorting by createdAt
+    sortOptions['createdAt'] = -1; // Default sorting by createdAt
   }
 
   // Fetch the data from the database with pagination

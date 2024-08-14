@@ -15,7 +15,7 @@ export const getAllCookiesService = async (page, limit) => {
   return await Cookie.aggregate([
     {
       $setWindowFields: {
-        sortBy: { createdAt: 1 },
+        sortBy: { createdAt: -1 },
         output: {
           serial: {
             $documentNumber: {},

@@ -202,7 +202,7 @@ export const getUserInfo = catchAsync(async (req, res) => {
     },
     {
       $setWindowFields: {
-        sortBy: { createdAt: 1 }, // Sort by createdAt or any other field you prefer
+        sortBy: { createdAt: -1 }, // Sort by createdAt or any other field you prefer
         output: {
           serial: {
             $documentNumber: {} // Generates a sequential number for each document
