@@ -177,56 +177,10 @@ export const updateUser = catchAsync(async (req, res) => {
   }
 
 });
-//  export const updateUser = catchAsync(async (req, res) => {
-//   const { userId } = req.params;
-//   const { name, email, password, phone, image, isActive,currentLicense } = req.body;
-
-//   const user = await findUserById(userId);
-//   if (!user) {
-//     return sendError(res, httpStatus.NOT_FOUND, {
-//       message: 'User not found.',
-//     });
-//   }
-
-//   const updateData = {};
-//   if (name) updateData.name = name;
-//   if (email) updateData.email = email;
-//   if (password) updateData.password = hashPassword(password);
-//   if (phone) updateData.phone = phone;
-//   if (image) updateData.image = image;
-//   if (isActive) updateData.isActive = isActive;
-//   if (currentLicense) updateData.currentLicense = currentLicense;
-
-//   const updatedUser = await updateUserById(userId, updateData);
-
-//   sendResponse(res, {
-//     statusCode: httpStatus.OK,
-//     success: true,
-//     message: 'User updated successfully',
-//     data: { user: updatedUser },
-//   });
-// });
 
 
-// export const deleteUser = catchAsync(async (req, res) => {
-//   const { userId } = req.params;
 
-//   const user = await findUserById(userId);
-//   if (!user) {
-//     return sendError(res, httpStatus.NOT_FOUND, {
-//       message: 'User not found or maybe deleted.',
-//     });
-//   }
 
-//   await deleteUserById(userId);
-
-//   sendResponse(res, {
-//     statusCode: httpStatus.OK,
-//     success: true,
-//     message: 'User deleted successfully',
-//     data: null,
-//   });
-// });
 
 export const getUserInfo = catchAsync(async (req, res) => {
   if (req.user.role !== 'admin') {
@@ -420,12 +374,7 @@ export const forgotPassword = catchAsync(async (req, res) => {
     html: emailContent,
   };
 
-  // const receiver = {
-  //   from: "info.arridevstudios@gmail.com",
-  //   to: email,
-  //   subject: "Reset Password",
-  //   text: `Click on the link below to reset your password: ${process.env.url}/reset-password/${token}`,.
-  // };
+
 
   await transporter.sendMail(receiver);
 
