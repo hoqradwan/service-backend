@@ -27,7 +27,7 @@ export const getLicensesFromDB = async (
     'totalLimit',
     'createdAt',
   ].includes(sortBy)
-    ? { [sortBy]: sortOrder === 'asc' ? 1 : -1 }
+    ? { [sortBy]: sortOrder === 'asc' ? -1 : 1 }
     : { createdAt: -1 }; // Default sorting
 
   const skip = (page - 1) * limit;
