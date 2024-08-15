@@ -42,6 +42,11 @@ const licenseSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    localTime: {
+      type: Date,
+      default: new Date()?.toLocaleString()
+    },
+    
   },
   { timestamps: true },
 );
