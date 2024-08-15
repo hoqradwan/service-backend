@@ -41,12 +41,7 @@ const licenseSchema = new mongoose.Schema(
     expiryDate: {
       type: Date,
       default: null,
-    },
-    localTime: {
-      type: Date,
-      default: new Date()?.toLocaleString()
-    },
-    
+    }
   },
   { timestamps: true },
 );
