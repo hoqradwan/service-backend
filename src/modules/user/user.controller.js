@@ -368,7 +368,7 @@ export const forgotPassword = catchAsync(async (req, res) => {
 
 
   const receiver = {
-    from: "info.arridevstudios@gmail.com",
+    from: "digitaltoolsbd@gmail.com",
     to: email,
     subject: "Reset Password.",
     html: emailContent,
