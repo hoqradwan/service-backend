@@ -1,9 +1,10 @@
 export const cookieCredentials = async (cookieDetails, url) => {
+  const last = url?.split("/")?.length - 1;
+  const itemName = (url?.split("/")[last]);
+  const itemCode = itemName?.split("/")[0]?.split("-")[(itemName?.split("/")[0]?.split("-").length)-1];
 
-  const lastIndex = (url?.split("/")[3]?.split("-")?.length) - 1;
-  const itemCode = url?.split("/")[3]?.split("-")[lastIndex];
 
-  if ((((url?.split("/").length)) !== 4) || !itemCode) {
+  if (!itemCode) {
     return res.status(400).json({ isOk: false, message: 'Invalid url' });
   }
 
