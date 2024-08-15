@@ -330,7 +330,7 @@ export const handleDownload = catchAsync(async (req, res) => {
     });
   }
 
-  // checking if daily limit has been exceeded or not
+  // checking if daily limit has been exceeded or not..
   const limitCheck = await isDailyLimitExceed(licenseId);
   
   if (!limitCheck.isOk) {
