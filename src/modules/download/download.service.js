@@ -50,27 +50,27 @@ export const getMyDownloadsFromDB = async (requestedUser, page, limit) => {
 // Daily download count service by user email
 export const getDailyDownloadForUserService = async (userEmail) => {
   // Define start and end of the day in Dhaka time
-  const startOfDayDhaka = customMoment?.tz('Asia/Dhaka')?.startOf('day')?.toDate();
-  const endOfDayDhaka = customMoment?.tz('Asia/Dhaka')?.endOf('day')?.toDate();
+  const startOfDayDhaka = customMoment.tz('Asia/Dhaka').startOf('day').toDate();
+  const endOfDayDhaka = customMoment.tz('Asia/Dhaka').endOf('day').toDate();
 
   const downloads = await Download.aggregate([
-    // Step 1: Adjust `createdAt` to Dhaka time by adding 6 hours
+    // Step 1: Convert `createdAt` to Dhaka time
     {
       $addFields: {
         localCreatedAt: {
-          $dateAdd: {
-            startDate: "$createdAt",
-            unit: "hour",
-            amount: 6, // Convert UTC to Dhaka time (+6 hours)
-          },
-        },
-      },
+          $dateToString: {
+            format: "%Y-%m-%dT%H:%M:%S.%LZ", // ISO format
+            date: { $dateAdd: { startDate: "$createdAt", unit: "hour", amount: 6 } }, // Adding 6 hours to convert to Dhaka time
+            timezone: "Asia/Dhaka"
+          }
+        }
+      }
     },
     // Step 2: Match documents that fall within today's date range in Dhaka time
     {
       $match: {
         downloadedBy: userEmail,
-        status: new RegExp('^accepted$', 'i'), 
+        status: new RegExp('^accepted$', 'i'),
         localCreatedAt: {
           $gte: startOfDayDhaka,
           $lte: endOfDayDhaka,
@@ -80,10 +80,10 @@ export const getDailyDownloadForUserService = async (userEmail) => {
     // Step 3: Use `$setWindowFields` to generate a sequential number for each document
     {
       $setWindowFields: {
-        sortBy: { createdAt: -1 }, // Sort by adjusted local time
+        sortBy: { createdAt: -1 },
         output: {
           serial: {
-            $documentNumber: {}, 
+            $documentNumber: {},
           },
         },
       },
@@ -91,7 +91,7 @@ export const getDailyDownloadForUserService = async (userEmail) => {
     // Step 4: Project the final output
     {
       $project: {
-        createdAt: 0, // Exclude unnecessary fields
+        createdAt: 0,
         updatedAt: 0,
         __v: 0,
         serviceId: 0,
@@ -106,6 +106,7 @@ export const getDailyDownloadForUserService = async (userEmail) => {
     dailyDownloads: downloads,
   };
 };
+
 
 
 
@@ -150,9 +151,8 @@ export const getTotalDownloadForUserService = async (userEmail) => {
   };
 };
 
+
 // Daily download count service for license
-
-
 export const getDailyDownloadForLicenseService = async (licenseId) => {
   // Get start and end of the day in Dhaka time (UTC+6)
   const startOfDayDhaka = customMoment?.tz('Asia/Dhaka')?.startOf('day')?.toDate();

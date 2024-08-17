@@ -23,6 +23,7 @@ import {
 import { cookieCredentials } from './download.utils.js';
 import { findUserById } from '../user/user.service.js';
 import fetch from 'node-fetch';
+import { isCookieValid } from '../cookie/cookie.controller.js';
 
 
 export const addDownload = catchAsync(async (req, res) => {
@@ -279,6 +280,157 @@ export const getTotalDownloadForCookie = catchAsync(async (req, res) => {
 });
 
 // download request to envato official website
+// export const handleDownload = catchAsync(async (req, res) => {
+//   const { url } = req.body;
+//   const userId = req?.user?.id;
+
+//   if (!userId) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: "Couldn't generate user id",
+//       data: null,
+//     });
+//   }
+//   // Check if userId is a valid MongoDB ObjectId
+//   if (!mongoose.Types.ObjectId.isValid(userId)) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: 'Invalid user Id format',
+//       data: null,
+//     });
+//   }
+//   const user = await findUserById(userId);
+//   if (!user) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: "Couldn't find the user",
+//       data: null,
+//     });
+//   }
+//   // current license of the user
+//   const licenseId = user?.currentLicense;
+//   if (!licenseId) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: 'You do not have a license activated',
+//       data: null,
+//     });
+//   }
+
+//   // Check if licenseId is a valid MongoDB ObjectId
+//   if (!mongoose.Types.ObjectId.isValid(licenseId)) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: 'Invalid License Id format',
+//       data: null,
+//     });
+//   }
+
+//   // checking if daily limit has been exceeded or not
+//   const limitCheck = await isDailyLimitExceed(licenseId);
+
+//   if (!limitCheck.isOk) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: limitCheck.message,
+//       data: null,
+//     });
+//   }
+
+//   if (limitCheck.exceeded) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: 'Download limit is exceeded',
+//       data: null,
+//     });
+//   }
+
+//   // Getting random cookie details
+//   const cookieDetails = await generateRandomAccount();
+
+//   const { payload, headers, mainURL } = await cookieCredentials(
+//     cookieDetails,
+//     url,
+//   );
+
+//   if (!payload) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: 'Payload is required',
+//       data: null,
+//     });
+//   }
+
+//   if (!headers) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: 'Headers are required',
+//       data: null,
+//     });
+//   }
+
+//   // Make the first HTTP request
+//   const response = await axios({
+//     method: 'POST',
+//     url: mainURL,
+//     headers: headers,
+//     data: payload,
+//   });
+
+//   if (!response) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: 'Item code is not valid',
+//       data: null,
+//     });
+//   }
+
+//   // Extract the download URL from the response
+//   const downloadUrl = response?.data?.data?.attributes?.downloadUrl;
+//   const textDownloadUrl = response?.data?.data?.attributes?.textDownloadUrl;
+//   const licenseUrl = `https://elements.envato.com${textDownloadUrl}`;
+
+//   if (downloadUrl) {
+//     const download = {
+//       service: "Envato Elements",
+//       content: url,
+//       contentLicense: licenseUrl,
+//       serviceId: cookieDetails?._id,
+//       licenseId: licenseId,
+//       status: "pending"
+//     }
+//     const result = await addDownloadIntoDB(download, req.user);
+
+//     if (result) {
+//       return sendResponse(res, {
+//         success: true,
+//         statusCode: 200,
+//         message: 'Download request successful',
+//         data: { downloadUrl, downloadId: result[0]?._id },
+//       });
+//     }
+
+//   } else {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: 'Download request is unsuccessful',
+//       data: null,
+//     });
+//   }
+// });
+
+// download request to envato official website
 export const handleDownload = catchAsync(async (req, res) => {
   const { url } = req.body;
   const userId = req?.user?.id;
@@ -332,7 +484,7 @@ export const handleDownload = catchAsync(async (req, res) => {
 
   // checking if daily limit has been exceeded or not
   const limitCheck = await isDailyLimitExceed(licenseId);
-  
+
   if (!limitCheck.isOk) {
     return sendResponse(res, {
       success: false,
@@ -351,8 +503,30 @@ export const handleDownload = catchAsync(async (req, res) => {
     });
   }
 
+  let cookieDetails = null;
   // Getting random cookie details
-  const cookieDetails = await generateRandomAccount();
+  for (let i = 0; i < 3; i++) {
+    const cookie = await generateRandomAccount();
+    if (!cookie) {
+      break;
+    }
+    const isCookieWorking = await isCookieValid(cookie);
+    
+    if (isCookieWorking) {
+      cookieDetails = cookie;
+      break;
+    }
+  }
+
+  if (!cookieDetails) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'No working cookie found',
+      data: null,
+    });
+  }
+
 
   const { payload, headers, mainURL } = await cookieCredentials(
     cookieDetails,
@@ -433,6 +607,10 @@ export const handleDownload = catchAsync(async (req, res) => {
 export const generateRandomAccount = async () => {
   try {
     const count = await getTotalDocumentCountService();
+    // Ensure there's at least one active cookie
+    if (count === 0) {
+      return null;
+    }
     // Generating a random number
     const randomIndex = Math?.floor(Math?.random() * count);
 
@@ -595,3 +773,4 @@ export const updateDownloadById = catchAsync(async (req, res) => {
     data: null,
   });
 });
+

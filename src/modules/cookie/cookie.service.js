@@ -64,10 +64,10 @@ export const deleteCookieByIdService = async (id) => {
 
 // get the total number of cookies service
 export const getTotalDocumentCountService = async () => {
-  return Cookie?.countDocuments();
+  return Cookie.countDocuments({ status: 'active' });
 };
 
 // get the total number of cookies service
 export const getRandomAccountService = async (randomIndex) => {
-  return Cookie?.findOne()?.skip(randomIndex);
+  return Cookie?.findOne({ status: 'active' })?.skip(randomIndex);
 };
