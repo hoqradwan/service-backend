@@ -91,6 +91,7 @@ export const getDailyDownloadForUser = catchAsync(async (req, res) => {
   }
 
   const result = await getDailyDownloadForUserService(email);
+ 
   return sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
@@ -98,6 +99,8 @@ export const getDailyDownloadForUser = catchAsync(async (req, res) => {
     data: result,
   });
 });
+
+
 
 // Total download count by user email
 export const getTotalDownloadForUser = catchAsync(async (req, res) => {
@@ -482,7 +485,7 @@ export const handleDownload = catchAsync(async (req, res) => {
     });
   }
 
-  // checking if daily limit has been exceeded or not
+  // checking if daily limit has been exceeded or not..
   const limitCheck = await isDailyLimitExceed(licenseId);
 
   if (!limitCheck.isOk) {
