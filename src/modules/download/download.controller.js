@@ -90,6 +90,7 @@ export const getDailyDownloadForUser = catchAsync(async (req, res) => {
   }
 
   const result = await getDailyDownloadForUserService(email);
+ 
   return sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
@@ -97,6 +98,8 @@ export const getDailyDownloadForUser = catchAsync(async (req, res) => {
     data: result,
   });
 });
+
+
 
 // Total download count by user email
 export const getTotalDownloadForUser = catchAsync(async (req, res) => {
