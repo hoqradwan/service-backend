@@ -27,30 +27,7 @@ export const createLicense = catchAsync(async (req, res) => {
   }
 
 });
-// export const allLicenses = catchAsync(async (req, res) => {
-//   const { page, limit, sortBy, sortOrder, status, serviceName, expiryDate } =
-//     req.query;
 
-//   const filters = {};
-//   if (status) filters.status = status;
-//   if (serviceName) filters.serviceName = serviceName;
-//   if (expiryDate) filters.expiryDate = { $gte: new Date(expiryDate) };
-
-//   const paginationOptions = {
-//     page: parseInt(page, 10) || 1,
-//     limit: parseInt(limit, 10) || 10,
-//     sortBy: sortBy || 'createdAt',
-//     sortOrder: sortOrder || 'asc',
-//   };
-
-//   const result = await getLicensesFromDB(filters, paginationOptions);
-//   sendResponse(res, {
-//     success: true,
-//     statusCode: httpStatus.OK,
-//     message: 'Licenses retrieved successfully',
-//     data: result,
-//   });
-// });
 export const allLicenses = catchAsync(async (req, res) => {
   const { page, limit, sortBy, sortOrder, status, serviceName, expiryDate } =
     req.query;
