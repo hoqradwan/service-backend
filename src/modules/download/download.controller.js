@@ -377,7 +377,7 @@ export const handleDownload = catchAsync(async (req, res) => {
     return sendResponse(res, {
       success: false,
       statusCode: 400,
-      message: 'No working cookie found',
+      message: 'No working account found',
       data: null,
     });
   }
