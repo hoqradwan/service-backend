@@ -95,7 +95,6 @@ export const loginUser = catchAsync(async (req, res) => {
 
   // Generate a new session ID for this login
   const sessionId = generateSessionId();
-  console.log(sessionId);
   // Check if the user has reached the maximum number of allowed devices
   const maxDevices = user.maxDevices || 1; // Set default to 1 if not defined
   if (user.sessions && user.sessions.length >= maxDevices) {
