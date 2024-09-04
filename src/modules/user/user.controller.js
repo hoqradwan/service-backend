@@ -147,6 +147,7 @@ export const loginUser = catchAsync(async (req, res) => {
     },
   });
 });
+// device limit
 export const logout = catchAsync(async (req, res) => {
   const { logoutAll } = req.body;
   const userId = req.user.id;
