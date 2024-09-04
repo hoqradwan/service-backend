@@ -23,6 +23,7 @@ import {
 import { cookieCredentials } from './download.utils.js';
 import { findUserById } from '../user/user.service.js';
 import fetch from 'node-fetch';
+import { isCookieValid } from '../cookie/cookie.controller.js';
 
 
 export const addDownload = catchAsync(async (req, res) => {
@@ -90,6 +91,7 @@ export const getDailyDownloadForUser = catchAsync(async (req, res) => {
   }
 
   const result = await getDailyDownloadForUserService(email);
+ 
   return sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
@@ -97,6 +99,8 @@ export const getDailyDownloadForUser = catchAsync(async (req, res) => {
     data: result,
   });
 });
+
+
 
 // Total download count by user email
 export const getTotalDownloadForUser = catchAsync(async (req, res) => {
@@ -278,6 +282,9 @@ export const getTotalDownloadForCookie = catchAsync(async (req, res) => {
   });
 });
 
+
+
+
 // download request to envato official website
 export const handleDownload = catchAsync(async (req, res) => {
   const { url } = req.body;
@@ -332,7 +339,7 @@ export const handleDownload = catchAsync(async (req, res) => {
 
   // checking if daily limit has been exceeded or not..
   const limitCheck = await isDailyLimitExceed(licenseId);
-  
+
   if (!limitCheck.isOk) {
     return sendResponse(res, {
       success: false,
@@ -351,8 +358,30 @@ export const handleDownload = catchAsync(async (req, res) => {
     });
   }
 
+  let cookieDetails = null;
   // Getting random cookie details
-  const cookieDetails = await generateRandomAccount();
+  for (let i = 0; i < 3; i++) {
+    const cookie = await generateRandomAccount();
+    if (!cookie) {
+      break;
+    }
+    const isCookieWorking = await isCookieValid(cookie);
+    
+    if (isCookieWorking) {
+      cookieDetails = cookie;
+      break;
+    }
+  }
+
+  if (!cookieDetails) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'No working account found',
+      data: null,
+    });
+  }
+
 
   const { payload, headers, mainURL } = await cookieCredentials(
     cookieDetails,
@@ -433,6 +462,10 @@ export const handleDownload = catchAsync(async (req, res) => {
 export const generateRandomAccount = async () => {
   try {
     const count = await getTotalDocumentCountService();
+    // Ensure there's at least one active cookie
+    if (count === 0) {
+      return null;
+    }
     // Generating a random number
     const randomIndex = Math?.floor(Math?.random() * count);
 
@@ -595,3 +628,4 @@ export const updateDownloadById = catchAsync(async (req, res) => {
     data: null,
   });
 });
+

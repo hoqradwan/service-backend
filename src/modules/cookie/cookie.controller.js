@@ -289,3 +289,34 @@ export const isCookieWorking = catchAsync(async (req, res) => {
     });
   }
 });
+
+
+// Check if the cookie is expired or not 
+export const isCookieValid = async (cookieDetails) => {
+  try {
+    const url = "https://elements.envato.com/pink-sunset-modern-retro-serif-PDNXXR2";
+    const { payload, headers, mainURL } = await cookieCredentials(
+      cookieDetails,
+      url,
+    );
+
+    // Make the HTTP request
+    const response = await axios({
+      method: 'POST',
+      url: mainURL,
+      headers: headers,
+      data: payload,
+    });
+    if (response) {
+      return true;
+    }
+    else {
+      return false;
+    };
+  } catch (error) {
+    // if cookie is not valid then make it inactive
+    await updateCookieByIdService(cookieDetails?._id, { "status": "inactive" })
+    return false;
+  }
+
+};
