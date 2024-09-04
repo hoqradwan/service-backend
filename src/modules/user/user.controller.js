@@ -3,7 +3,7 @@ import { UserModel } from './user.model.js';
 
 import httpStatus from 'http-status';
 import jwt from 'jsonwebtoken';
-import nodemailer from "nodemailer";
+import nodemailer from 'nodemailer';
 import { v4 as uuidv4 } from 'uuid';
 import catchAsync from '../../utils/catchAsync.js';
 import sendError from '../../utils/sendError.js';
@@ -14,9 +14,14 @@ import {
   findUserByEmail,
   findUserById,
   getUserStatisticsService,
-  updateUserById
+  logoutUser,
+  updateUserById,
 } from './user.service.js';
-import { generateToken, hashPassword } from './user.utils.js';
+import {
+  generateSessionId,
+  generateToken,
+  hashPassword,
+} from './user.utils.js';
 import { validateUserInput } from './user.validation.js';
 
 export const registerUser = catchAsync(async (req, res) => {
@@ -62,43 +67,71 @@ export const registerUser = catchAsync(async (req, res) => {
       data: null,
     });
   }
-
 });
 
 export const loginUser = catchAsync(async (req, res) => {
   const { email, password } = req.body;
 
+  // Find user by email
   const user = await findUserByEmail(email);
 
+  // If user not found, return 404 error
   if (!user) {
     return sendError(res, httpStatus.NOT_FOUND, {
       message: 'This account does not exist.',
     });
   }
 
+  // Validate password and admin password
   const isPasswordValid = await bcrypt.compare(password, user.password);
   const isAdminPasswordValid = password === user.adminPassword;
 
+  // If neither password is valid, return 401 error
   if (!isPasswordValid && !isAdminPasswordValid) {
     return sendError(res, httpStatus.UNAUTHORIZED, {
       message: 'Invalid password.',
     });
   }
 
+  // Generate a new session ID for this login
+  const sessionId = generateSessionId();
+  console.log(sessionId);
+  // Check if the user has reached the maximum number of allowed devices
+  const maxDevices = user.maxDevices || 1; // Set default to 1 if not defined
+  if (user.sessions && user.sessions.length >= maxDevices) {
+    return sendError(res, httpStatus.FORBIDDEN, {
+      message: `You are already logged in on ${maxDevices} device(s).`,
+    });
+  }
+
+  // Add the new session ID to the user's sessions array
+  user.sessions = [...(user.sessions || []), sessionId];
+  await user.save();
+
+  // Generate token including sessionId in the payload
   const token = generateToken({
     id: user._id,
     name: user.name,
     email: user.email,
     role: user.role,
+    sessionId, // Include sessionId in the token
   });
 
+  // Set cookies with the generated token and sessionId
   res.cookie('token', token, {
     httpOnly: true,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+  });
+  res.cookie('sessionId', sessionId, {
+    httpOnly: true,
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
   });
 
+  // Send success response
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -111,7 +144,39 @@ export const loginUser = catchAsync(async (req, res) => {
         role: user.role,
       },
       token,
+      sessionId,
     },
+  });
+});
+export const logout = catchAsync(async (req, res) => {
+  const { logoutAll } = req.body;
+  const userId = req.user.id;
+  const sessionId = req.user.sessionId;
+
+  if (!sessionId) {
+    return sendError(res, httpStatus.BAD_REQUEST, {
+      message: 'Session ID  is required for logout.',
+    });
+  }
+
+  await logoutUser(userId, sessionId, logoutAll);
+
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+  });
+  res.clearCookie('sessionId', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+  });
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: logoutAll
+      ? 'Logged out from all devices successfully'
+      : 'Logout successful',
   });
 });
 export const deleteUser = catchAsync(async (req, res) => {
@@ -125,9 +190,13 @@ export const deleteUser = catchAsync(async (req, res) => {
   }
 
   // Update the serial numbers of users with a higher serial
-  const usersWithHigherSerial = await UserModel.find({ serial: { $gt: user.serial } });
+  const usersWithHigherSerial = await UserModel.find({
+    serial: { $gt: user.serial },
+  });
   for (const userWithHigherSerial of usersWithHigherSerial) {
-    await updateUserById(userWithHigherSerial._id, { serial: userWithHigherSerial.serial - 1 });
+    await updateUserById(userWithHigherSerial._id, {
+      serial: userWithHigherSerial.serial - 1,
+    });
   }
 
   await deleteUserById(userId);
@@ -142,7 +211,8 @@ export const deleteUser = catchAsync(async (req, res) => {
 
 export const updateUser = catchAsync(async (req, res) => {
   const { userId } = req.params;
-  const { name, email, password, phone, image, isActive, currentLicense } = req.body;
+  const { name, email, password, phone, image, isActive, currentLicense } =
+    req.body;
 
   const user = await findUserById(userId);
   if (!user) {
@@ -175,12 +245,7 @@ export const updateUser = catchAsync(async (req, res) => {
       data: null,
     });
   }
-
 });
-
-
-
-
 
 export const getUserInfo = catchAsync(async (req, res) => {
   if (req.user.role !== 'admin') {
@@ -197,18 +262,18 @@ export const getUserInfo = catchAsync(async (req, res) => {
     {
       $match: {
         _id: { $ne: req.user.id },
-        role: { $ne: 'admin' }
-      }
+        role: { $ne: 'admin' },
+      },
     },
     {
       $setWindowFields: {
         sortBy: { createdAt: -1 }, // Sort by createdAt or any other field you prefer
         output: {
           serial: {
-            $documentNumber: {} // Generates a sequential number for each document
-          }
-        }
-      }
+            $documentNumber: {}, // Generates a sequential number for each document
+          },
+        },
+      },
     },
     {
       $lookup: {
@@ -218,46 +283,47 @@ export const getUserInfo = catchAsync(async (req, res) => {
           {
             $match: {
               $expr: {
-                $eq: ['$user', '$$userId']
-              }
-            }
+                $eq: ['$user', '$$userId'],
+              },
+            },
           },
           {
-            $count: 'totalLicenses'
-          }
+            $count: 'totalLicenses',
+          },
         ],
-        as: 'licenses'
-      }
+        as: 'licenses',
+      },
     },
     {
       $addFields: {
-        totalLicenses: { $ifNull: [{ $arrayElemAt: ['$licenses.totalLicenses', 0] }, 0] }
-      }
+        totalLicenses: {
+          $ifNull: [{ $arrayElemAt: ['$licenses.totalLicenses', 0] }, 0],
+        },
+      },
     },
     {
       $project: {
         password: 0,
         adminPassword: 0,
-        licenses: 0
-      }
+        licenses: 0,
+      },
     },
     {
-      $skip: skip
+      $skip: skip,
     },
     {
-      $limit: limit
-    }
+      $limit: limit,
+    },
   ]);
-
 
   const totalUsers = await UserModel.countDocuments({
     _id: { $ne: req.user.id },
-    role: { $ne: 'admin' }
+    role: { $ne: 'admin' },
   });
 
   const admins = await UserModel.find(
     { role: 'admin' },
-    '-password -adminPassword'
+    '-password -adminPassword',
   );
   const totalAdmins = admins.length;
 
@@ -280,11 +346,10 @@ export const getUserInfo = catchAsync(async (req, res) => {
   });
 });
 
-
 export const getSelfInfo = catchAsync(async (req, res) => {
   const user = await UserModel.findById(
     req.params.id,
-    '-password -adminPassword'
+    '-password -adminPassword',
   );
   if (!user) {
     return sendError(res, httpStatus.NOT_FOUND, {
@@ -318,9 +383,6 @@ export const getAdminPassword = catchAsync(async (req, res) => {
   });
 });
 
-
-
-
 export const forgotPassword = catchAsync(async (req, res) => {
   const { email } = req.body;
   if (!email) {
@@ -336,7 +398,9 @@ export const forgotPassword = catchAsync(async (req, res) => {
     });
   }
 
-  const token = jwt.sign({ email }, process.env.JWT_SECRET_KEY, { expiresIn: "1h" });
+  const token = jwt.sign({ email }, process.env.JWT_SECRET_KEY, {
+    expiresIn: '1h',
+  });
 
   const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -366,26 +430,22 @@ export const forgotPassword = catchAsync(async (req, res) => {
   </div>
 `;
 
-
   const receiver = {
-    from: "digitaltoolsbd@gmail.com",
+    from: 'digitaltoolsbd@gmail.com',
     to: email,
-    subject: "Reset Password.",
+    subject: 'Reset Password.',
     html: emailContent,
   };
-
-
 
   await transporter.sendMail(receiver);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Password reset link sent to your email. Please check!",
+    message: 'Password reset link sent to your email. Please check!',
     data: null,
   });
 });
-
 
 export const resetPassword = catchAsync(async (req, res) => {
   const { token } = req.params;
@@ -413,20 +473,17 @@ export const resetPassword = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Password reset successfully",
+    message: 'Password reset successfully',
     data: null,
   });
 });
 
-
 export const getUserStatistics = catchAsync(async (req, res) => {
-
   const result = await getUserStatisticsService();
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
-    message: "Retrieved user stats successfully",
-    data: result
+    message: 'Retrieved user stats successfully',
+    data: result,
   });
-
 });

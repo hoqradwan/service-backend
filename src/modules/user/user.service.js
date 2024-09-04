@@ -1,19 +1,38 @@
 import mongoose from 'mongoose';
 import { UserModel } from './user.model.js';
 import jwt from 'jsonwebtoken';
-import nodemailer from "nodemailer";
+import nodemailer from 'nodemailer';
 import httpStatus from 'http-status';
 export const findUserByEmail = async (email) => {
-  
   return UserModel.findOne({ email });
 };
 
-export const createUser = async ({ name, email, hashedPassword, phone, adminPassword, image, role, currentLicense, serial }) => {
+export const createUser = async ({
+  name,
+  email,
+  hashedPassword,
+  phone,
+  adminPassword,
+  image,
+  role,
+  currentLicense,
+  serial,
+}) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
-    const newUser = { name, email, password: hashedPassword, phone, role, adminPassword, image, currentLicense, serial };
+    const newUser = {
+      name,
+      email,
+      password: hashedPassword,
+      phone,
+      role,
+      adminPassword,
+      image,
+      currentLicense,
+      serial,
+    };
     const createdUser = await UserModel.create([newUser], { session });
 
     await session.commitTransaction();
@@ -27,7 +46,6 @@ export const createUser = async ({ name, email, hashedPassword, phone, adminPass
 };
 
 export const findUserById = async (id) => {
-
   return UserModel.findById(id);
 };
 
@@ -35,12 +53,9 @@ export const updateUserById = async (id, updateData) => {
   return UserModel.findByIdAndUpdate(id, updateData, { new: true });
 };
 
-
-
 export const deleteUserById = async (id) => {
   return UserModel.findByIdAndDelete(id);
 };
-
 
 export const getUserStatisticsService = async () => {
   const today = new Date();
@@ -54,23 +69,23 @@ export const getUserStatisticsService = async () => {
           { $count: 'count' }, // Count all users
         ],
         totalActiveUsers: [
-          { $match: { isActive: true } }, 
+          { $match: { isActive: true } },
           { $count: 'count' }, // Count active users
         ],
         todayJoinedUsers: [
           {
             $match: {
-              createdAt: { $gte: startOfDay, $lte: endOfDay }
-            }
-          }, 
+              createdAt: { $gte: startOfDay, $lte: endOfDay },
+            },
+          },
           { $count: 'count' }, // Count today's joined users
         ],
       },
     },
     {
       $project: {
-        totalUsers: { $arrayElemAt: ['$totalUsers.count', 0] }, 
-        totalActiveUsers: { $arrayElemAt: ['$totalActiveUsers.count', 0] }, 
+        totalUsers: { $arrayElemAt: ['$totalUsers.count', 0] },
+        totalActiveUsers: { $arrayElemAt: ['$totalActiveUsers.count', 0] },
         todayJoinedUsers: { $arrayElemAt: ['$todayJoinedUsers.count', 0] },
       },
     },
@@ -81,4 +96,27 @@ export const getUserStatisticsService = async () => {
     totalActiveUsers: result[0]?.totalActiveUsers || 0,
     todayJoinedUsers: result[0]?.todayJoinedUsers || 0,
   };
+};
+
+export const logoutUser = async (
+  userId,
+  sessionId = null,
+  logoutAll = false,
+) => {
+  const user = await UserModel.findById(userId);
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  if (logoutAll) {
+    // Clear all session IDs
+    user.sessions = [];
+  } else {
+    // Remove the specific session ID
+    user.sessions = user.sessions.filter((session) => session !== sessionId);
+  }
+
+  await user.save();
+
+  return user;
 };

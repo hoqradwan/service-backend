@@ -9,6 +9,7 @@ import {
   getUserInfo,
   getUserStatistics,
   loginUser,
+  logout,
   registerUser,
   resetPassword,
   updateUser,
@@ -29,6 +30,7 @@ router.post(
 router.post('/login', validateRequest(loginValidationSchema), loginUser);
 router.post('/forget-password', forgotPassword);
 router.post('/reset-password/:token', resetPassword);
+router.post('/logout', adminMiddleware('user', 'admin'), logout);
 
 router.put(
   '/update/:userId',
@@ -37,11 +39,15 @@ router.put(
   updateUser,
 );
 
-router.delete('/delete/:userId',adminMiddleware('admin'), deleteUser);
-router.get('/admin-password/:userId',adminMiddleware('admin'), getAdminPassword); // Admin can login generating new password in any user account
+router.delete('/delete/:userId', adminMiddleware('admin'), deleteUser);
+router.get(
+  '/admin-password/:userId',
+  adminMiddleware('admin'),
+  getAdminPassword,
+); // Admin can login generating new password in any user account
 router.get('/user-list', adminMiddleware('admin'), getUserInfo);
 
 router.get('/information/:id', getSelfInfo);
-router.get('/user-stats',adminMiddleware('admin'), getUserStatistics);
+router.get('/user-stats', adminMiddleware('admin'), getUserStatistics);
 
 export default router;
