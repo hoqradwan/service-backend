@@ -294,7 +294,17 @@ export const isCookieWorking = catchAsync(async (req, res) => {
 // Check if the cookie is expired or not 
 export const isCookieValid = async (cookieDetails) => {
   try {
-    const url = "https://elements.envato.com/pink-sunset-modern-retro-serif-PDNXXR2";
+    const urls = [
+      "https://elements.envato.com/t-shirt-mockup-QJVQW8K",
+      "https://elements.envato.com/essential-geometry-grid-backgrounds-ERYKJ6R",
+      "https://elements.envato.com/business-card-mockups-v1-ARHLTBB",
+      "https://elements.envato.com/woosh-DB6WKRP",
+      "https://elements.envato.com/logo-reveal-DQQ955M"
+    ]
+
+    // Get a random URL
+    const url = urls[Math?.floor(Math?.random() * urls?.length)];
+
     const { payload, headers, mainURL } = await cookieCredentials(
       cookieDetails,
       url,
@@ -314,8 +324,6 @@ export const isCookieValid = async (cookieDetails) => {
       return false;
     };
   } catch (error) {
-    // if cookie is not valid then make it inactive
-    await updateCookieByIdService(cookieDetails?._id, { "status": "inactive" })
     return false;
   }
 
