@@ -9,7 +9,7 @@ import {
   getUserInfo,
   getUserStatistics,
   loginUser,
-  logout,
+  // logout,
   registerUser,
   resetPassword,
   updateUser,
@@ -30,7 +30,7 @@ router.post(
 router.post('/login', validateRequest(loginValidationSchema), loginUser);
 router.post('/forget-password', forgotPassword);
 router.post('/reset-password/:token', resetPassword);
-router.post('/logout', adminMiddleware('user', 'admin'), logout);
+// router.post('/logout', adminMiddleware('user', 'admin'), logout);
 
 router.put(
   '/update/:userId',
