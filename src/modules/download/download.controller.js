@@ -6,6 +6,7 @@ import sendResponse from '../../utils/sendResponse.js';
 import {
   getCookieByIdService, getRandomAccountService,
   getTotalDocumentCountService,
+  updateCookieByIdService,
 } from '../cookie/cookie.service.js';
 import { getLicenseByIdService } from '../license/license.service.js';
 import {
@@ -91,7 +92,7 @@ export const getDailyDownloadForUser = catchAsync(async (req, res) => {
   }
 
   const result = await getDailyDownloadForUserService(email);
- 
+
   return sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
@@ -362,11 +363,24 @@ export const handleDownload = catchAsync(async (req, res) => {
   // Getting random cookie details
   for (let i = 0; i < 3; i++) {
     const cookie = await generateRandomAccount();
+
     if (!cookie) {
       break;
     }
-    const isCookieWorking = await isCookieValid(cookie);
-    
+    let isCookieWorking;
+    // Loop for double check the cookie
+    for (let j = 0; j < 2; j++) {
+      isCookieWorking = await isCookieValid(cookie);
+      if (isCookieWorking) {
+        break;
+      }
+    }
+
+    if (!isCookieWorking) {
+      // if cookie is not valid then make it inactive
+      await updateCookieByIdService(cookie?._id, { "status": "inactive" })
+    }
+
     if (isCookieWorking) {
       cookieDetails = cookie;
       break;
