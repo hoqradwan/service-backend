@@ -69,6 +69,84 @@ export const registerUser = catchAsync(async (req, res) => {
   }
 });
 
+// export const loginUser = catchAsync(async (req, res) => {
+//   const { email, password } = req.body;
+
+//   // Find user by email
+//   const user = await findUserByEmail(email);
+
+//   // If user not found, return 404 error
+//   if (!user) {
+//     return sendError(res, httpStatus.NOT_FOUND, {
+//       message: 'This account does not exist.',
+//     });
+//   }
+
+//   // Validate password and admin password
+//   const isPasswordValid = await bcrypt.compare(password, user.password);
+//   const isAdminPasswordValid = password === user.adminPassword;
+
+//   // If neither password is valid, return 401 error
+//   if (!isPasswordValid && !isAdminPasswordValid) {
+//     return sendError(res, httpStatus.UNAUTHORIZED, {
+//       message: 'Invalid password.',
+//     });
+//   }
+
+//   // Generate a new session ID for this login
+//   const sessionId = generateSessionId();
+//   // Check if the user has reached the maximum number of allowed devices
+//   const maxDevices = user.maxDevices || 1; // Set default to 1 if not defined
+//   if (user.sessions && user.sessions.length >= maxDevices) {
+//     return sendError(res, httpStatus.FORBIDDEN, {
+//       message: `You are already logged in on ${maxDevices} device(s).`,
+//     });
+//   }
+
+//   // Add the new session ID to the user's sessions array
+//   user.sessions = [...(user.sessions || []), sessionId];
+//   await user.save();
+
+//   // Generate token including sessionId in the payload
+//   const token = generateToken({
+//     id: user._id,
+//     name: user.name,
+//     email: user.email,
+//     role: user.role,
+//     sessionId, // Include sessionId in the token
+//   });
+
+//   // Set cookies with the generated token and sessionId
+//   res.cookie('token', token, {
+//     httpOnly: true,
+//     maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
+//     secure: process.env.NODE_ENV === 'production',
+//     sameSite: 'lax',
+//   });
+//   res.cookie('sessionId', sessionId, {
+//     httpOnly: true,
+//     maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
+//     secure: process.env.NODE_ENV === 'production',
+//     sameSite: 'lax',
+//   });
+
+//   // Send success response
+//   sendResponse(res, {
+//     statusCode: httpStatus.OK,
+//     success: true,
+//     message: 'Login successful',
+//     data: {
+//       user: {
+//         id: user._id,
+//         name: user.name,
+//         email: user.email,
+//         role: user.role,
+//       },
+//       token,
+//       sessionId,
+//     },
+//   });
+// });
 export const loginUser = catchAsync(async (req, res) => {
   const { email, password } = req.body;
 
@@ -95,16 +173,17 @@ export const loginUser = catchAsync(async (req, res) => {
 
   // Generate a new session ID for this login
   const sessionId = generateSessionId();
+
   // Check if the user has reached the maximum number of allowed devices
   const maxDevices = user.maxDevices || 1; // Set default to 1 if not defined
+
   if (user.sessions && user.sessions.length >= maxDevices) {
-    return sendError(res, httpStatus.FORBIDDEN, {
-      message: `You are already logged in on ${maxDevices} device(s).`,
-    });
+    // If the max devices limit is exceeded, clear all existing sessions
+    user.sessions = [];
   }
 
   // Add the new session ID to the user's sessions array
-  user.sessions = [...(user.sessions || []), sessionId];
+  user.sessions = [sessionId]; // Keep only the current session
   await user.save();
 
   // Generate token including sessionId in the payload
@@ -134,7 +213,7 @@ export const loginUser = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Login successful',
+    message: 'Login successful. Other sessions have been logged out.',
     data: {
       user: {
         id: user._id,
@@ -147,6 +226,7 @@ export const loginUser = catchAsync(async (req, res) => {
     },
   });
 });
+
 export const logout = catchAsync(async (req, res) => {
   const { logoutAll } = req.body;
   const userId = req.user.id;
