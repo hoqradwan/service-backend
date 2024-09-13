@@ -4,7 +4,8 @@ import mongoose from 'mongoose';
 import catchAsync from '../../utils/catchAsync.js';
 import sendResponse from '../../utils/sendResponse.js';
 import {
-  getCookieByIdService, getRandomAccountService,
+  getCookieByIdService,
+  getRandomAccountService,
   getTotalDocumentCountService,
   updateCookieByIdService,
 } from '../cookie/cookie.service.js';
@@ -15,7 +16,8 @@ import {
   getDailyDownloadForCookieService,
   getDailyDownloadForLicenseService,
   getDailyDownloadForUserService,
-  getDownloadById, getMyDownloadsFromDB,
+  getDownloadById,
+  getMyDownloadsFromDB,
   getTotalDownloadForCookieService,
   getTotalDownloadForLicenseService,
   getTotalDownloadForUserService,
@@ -25,7 +27,7 @@ import { cookieCredentials } from './download.utils.js';
 import { findUserById } from '../user/user.service.js';
 import fetch from 'node-fetch';
 import { isCookieValid } from '../cookie/cookie.controller.js';
-
+import sendError from '../../utils/sendError.js';
 
 export const addDownload = catchAsync(async (req, res) => {
   const download = req.body;
@@ -101,8 +103,6 @@ export const getDailyDownloadForUser = catchAsync(async (req, res) => {
   });
 });
 
-
-
 // Total download count by user email
 export const getTotalDownloadForUser = catchAsync(async (req, res) => {
   const role = req?.user?.role;
@@ -159,7 +159,6 @@ export const getDailyDownloadForLicense = catchAsync(async (req, res) => {
     }
     // current license of the user
     licenseId = user?.currentLicense;
-
   }
 
   if (!licenseId) {
@@ -172,7 +171,7 @@ export const getDailyDownloadForLicense = catchAsync(async (req, res) => {
   }
   // Check if licenseId is a valid MongoDB ObjectId
   if (!mongoose?.Types?.ObjectId?.isValid(licenseId)) {
-    throw new Error("Invalid licenseId format! expected ObjectId");
+    throw new Error('Invalid licenseId format! expected ObjectId');
   }
 
   // Get the detailed data from the service
@@ -219,7 +218,7 @@ export const getTotalDownloadForLicense = catchAsync(async (req, res) => {
 
   // Check if licenseId is a valid MongoDB ObjectId
   if (!mongoose?.Types?.ObjectId?.isValid(licenseId)) {
-    throw new Error("Invalid licenseId format! expected ObjectId");
+    throw new Error('Invalid licenseId format! expected ObjectId');
   }
 
   const result = await getTotalDownloadForLicenseService(licenseId);
@@ -246,7 +245,7 @@ export const getDailyDownloadForCookie = catchAsync(async (req, res) => {
 
   // Check if serviceId is a valid MongoDB ObjectId
   if (!mongoose?.Types?.ObjectId?.isValid(serviceId)) {
-    throw new Error("invalid serviceId format! expected ObjectId");
+    throw new Error('invalid serviceId format! expected ObjectId');
   }
 
   const result = await getDailyDownloadForCookieService(serviceId);
@@ -271,7 +270,7 @@ export const getTotalDownloadForCookie = catchAsync(async (req, res) => {
   }
   // Check if serviceId is a valid MongoDB ObjectId
   if (!mongoose?.Types?.ObjectId?.isValid(serviceId)) {
-    throw new Error("invalid serviceId format! expected ObjectId")
+    throw new Error('invalid serviceId format! expected ObjectId');
   }
 
   const result = await getTotalDownloadForCookieService(serviceId);
@@ -283,9 +282,6 @@ export const getTotalDownloadForCookie = catchAsync(async (req, res) => {
   });
 });
 
-
-
-
 // download request to envato official website
 export const handleDownload = catchAsync(async (req, res) => {
   const { url } = req.body;
@@ -295,19 +291,20 @@ export const handleDownload = catchAsync(async (req, res) => {
     return sendResponse(res, {
       success: false,
       statusCode: 400,
-      message: "Couldn't generate user id",
+      message: "Couldn't generate user ID",
       data: null,
     });
   }
-  // Check if userId is a valid MongoDB ObjectId
+
   if (!mongoose.Types.ObjectId.isValid(userId)) {
     return sendResponse(res, {
       success: false,
       statusCode: 400,
-      message: 'Invalid user Id format',
+      message: 'Invalid user ID format',
       data: null,
     });
   }
+
   const user = await findUserById(userId);
   if (!user) {
     return sendResponse(res, {
@@ -317,71 +314,50 @@ export const handleDownload = catchAsync(async (req, res) => {
       data: null,
     });
   }
-  // current license of the user
+
   const licenseId = user?.currentLicense;
   if (!licenseId) {
     return sendResponse(res, {
       success: false,
       statusCode: 400,
-      message: 'You do not have a license activated',
+      message: 'No license activated',
       data: null,
     });
   }
 
-  // Check if licenseId is a valid MongoDB ObjectId
   if (!mongoose.Types.ObjectId.isValid(licenseId)) {
     return sendResponse(res, {
       success: false,
       statusCode: 400,
-      message: 'Invalid License Id format',
+      message: 'Invalid license ID format',
       data: null,
     });
   }
 
-  // checking if daily limit has been exceeded or not..
   const limitCheck = await isDailyLimitExceed(licenseId);
-
-  if (!limitCheck.isOk) {
+  if (!limitCheck.isOk || limitCheck.exceeded) {
     return sendResponse(res, {
       success: false,
       statusCode: 400,
-      message: limitCheck.message,
-      data: null,
-    });
-  }
-
-  if (limitCheck.exceeded) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: 'Download limit is exceeded',
+      message: limitCheck.message || 'Download limit exceeded',
       data: null,
     });
   }
 
   let cookieDetails = null;
-  // Getting random cookie details
   for (let i = 0; i < 3; i++) {
     const cookie = await generateRandomAccount();
+    if (!cookie) break;
 
-    if (!cookie) {
-      break;
-    }
     let isCookieWorking;
-    // Loop for double check the cookie
     for (let j = 0; j < 2; j++) {
       isCookieWorking = await isCookieValid(cookie);
-      if (isCookieWorking) {
-        break;
-      }
+      if (isCookieWorking) break;
     }
 
     if (!isCookieWorking) {
-      // if cookie is not valid then make it inactive
-      await updateCookieByIdService(cookie?._id, { "status": "inactive" })
-    }
-
-    if (isCookieWorking) {
+      await updateCookieByIdService(cookie?._id, { status: 'inactive' });
+    } else {
       cookieDetails = cookie;
       break;
     }
@@ -396,81 +372,244 @@ export const handleDownload = catchAsync(async (req, res) => {
     });
   }
 
-
   const { payload, headers, mainURL } = await cookieCredentials(
     cookieDetails,
     url,
   );
 
-  if (!payload) {
+  if (!payload || !headers) {
     return sendResponse(res, {
       success: false,
       statusCode: 400,
-      message: 'Payload is required',
+      message: 'Invalid payload or headers',
       data: null,
     });
   }
 
-  if (!headers) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: 'Headers are required',
-      data: null,
-    });
-  }
+  try {
+    const response = await axios.post(mainURL, payload, { headers });
+    const downloadUrl = response?.data?.data?.attributes?.downloadUrl;
+    const textDownloadUrl = response?.data?.data?.attributes?.textDownloadUrl;
+    const licenseUrl = `https://elements.envato.com${textDownloadUrl}`;
 
-  // Make the first HTTP request
-  const response = await axios({
-    method: 'POST',
-    url: mainURL,
-    headers: headers,
-    data: payload,
-  });
+    if (downloadUrl) {
+      const download = {
+        service: 'Envato Elements',
+        content: url,
+        contentLicense: licenseUrl,
+        serviceId: cookieDetails?._id,
+        licenseId: licenseId,
+        status: 'pending',
+      };
 
-  if (!response) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: 'Item code is not valid',
-      data: null,
-    });
-  }
+      const result = await addDownloadIntoDB(download, req.user);
 
-  // Extract the download URL from the response
-  const downloadUrl = response?.data?.data?.attributes?.downloadUrl;
-  const textDownloadUrl = response?.data?.data?.attributes?.textDownloadUrl;
-  const licenseUrl = `https://elements.envato.com${textDownloadUrl}`;
-
-  if (downloadUrl) {
-    const download = {
-      service: "Envato Elements",
-      content: url,
-      contentLicense: licenseUrl,
-      serviceId: cookieDetails?._id,
-      licenseId: licenseId,
-      status: "pending"
-    }
-    const result = await addDownloadIntoDB(download, req.user);
-
-    if (result) {
       return sendResponse(res, {
         success: true,
         statusCode: 200,
         message: 'Download request successful',
         data: { downloadUrl, downloadId: result[0]?._id },
       });
+    } else {
+      // return sendError(res, {
+      //   success: false,
+      //   statusCode: 400,
+      //   message: 'Invalid download URL',
+      // });
     }
-
-  } else {
+  } catch (error) {
     return sendResponse(res, {
       success: false,
-      statusCode: 400,
-      message: 'Download request is unsuccessful',
+      statusCode: 500,
+      message: 'Failed! Wrong URL',
       data: null,
     });
   }
 });
+
+// export const handleDownload = catchAsync(async (req, res) => {
+//   const { url } = req.body;
+//   const userId = req?.user?.id;
+
+//   if (!userId) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: "Couldn't generate user id",
+//       data: null,
+//     });
+//   }
+//   // Check if userId is a valid MongoDB ObjectId
+//   if (!mongoose.Types.ObjectId.isValid(userId)) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: 'Invalid user Id format',
+//       data: null,
+//     });
+//   }
+//   const user = await findUserById(userId);
+//   if (!user) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: "Couldn't find the user",
+//       data: null,
+//     });
+//   }
+//   // current license of the user
+//   const licenseId = user?.currentLicense;
+//   if (!licenseId) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: 'You do not have a license activated',
+//       data: null,
+//     });
+//   }
+
+//   // Check if licenseId is a valid MongoDB ObjectId
+//   if (!mongoose.Types.ObjectId.isValid(licenseId)) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: 'Invalid License Id format',
+//       data: null,
+//     });
+//   }
+
+//   // checking if daily limit has been exceeded or not..
+//   const limitCheck = await isDailyLimitExceed(licenseId);
+
+//   if (!limitCheck.isOk) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: limitCheck.message,
+//       data: null,
+//     });
+//   }
+
+//   if (limitCheck.exceeded) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: 'Download limit is exceeded',
+//       data: null,
+//     });
+//   }
+
+//   let cookieDetails = null;
+//   // Getting random cookie details
+//   for (let i = 0; i < 3; i++) {
+//     const cookie = await generateRandomAccount();
+
+//     if (!cookie) {
+//       break;
+//     }
+//     let isCookieWorking;
+//     // Loop for double check the cookie
+//     for (let j = 0; j < 2; j++) {
+//       isCookieWorking = await isCookieValid(cookie);
+//       if (isCookieWorking) {
+//         break;
+//       }
+//     }
+
+//     if (!isCookieWorking) {
+//       // if cookie is not valid then make it inactive
+//       await updateCookieByIdService(cookie?._id, { "status": "inactive" })
+//     }
+
+//     if (isCookieWorking) {
+//       cookieDetails = cookie;
+//       break;
+//     }
+//   }
+
+//   if (!cookieDetails) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: 'No working account found',
+//       data: null,
+//     });
+//   }
+
+//   const { payload, headers, mainURL } = await cookieCredentials(
+//     cookieDetails,
+//     url,
+//   );
+
+//   if (!payload) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: 'Payload is required',
+//       data: null,
+//     });
+//   }
+
+//   if (!headers) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: 'Headers are required',
+//       data: null,
+//     });
+//   }
+
+//   // Make the first HTTP request
+//   const response = await axios({
+//     method: 'POST',
+//     url: mainURL,
+//     headers: headers,
+//     data: payload,
+//   });
+
+//   if (!response) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: 'Item code is not valid',
+//       data: null,
+//     });
+//   }
+
+//   // Extract the download URL from the response
+//   const downloadUrl = response?.data?.data?.attributes?.downloadUrl;
+//   const textDownloadUrl = response?.data?.data?.attributes?.textDownloadUrl;
+//   const licenseUrl = `https://elements.envato.com${textDownloadUrl}`;
+
+//   if (downloadUrl) {
+//     const download = {
+//       service: "Envato Elements",
+//       content: url,
+//       contentLicense: licenseUrl,
+//       serviceId: cookieDetails?._id,
+//       licenseId: licenseId,
+//       status: "pending"
+//     }
+//     const result = await addDownloadIntoDB(download, req.user);
+
+//     if (result) {
+//       return sendResponse(res, {
+//         success: true,
+//         statusCode: 200,
+//         message: 'Download request successful',
+//         data: { downloadUrl, downloadId: result[0]?._id },
+//       });
+//     }
+
+//   } else {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: 'Download request is unsuccessful',
+//       data: null,
+//     });
+//   }
+// });
 
 // Random account generator
 export const generateRandomAccount = async () => {
@@ -511,21 +650,21 @@ export const isDailyLimitExceed = async (licenseId) => {
     }
 
     const { count } = await getDailyDownloadForLicenseService(licenseId);
-    const { count: totalCount } = await getTotalDownloadForLicenseService(licenseId);
+    const { count: totalCount } =
+      await getTotalDownloadForLicenseService(licenseId);
 
-    if ((license?.dailyLimit > count) && (license?.totalLimit > totalCount)) {
+    if (license?.dailyLimit > count && license?.totalLimit > totalCount) {
       return { isOk: true, exceeded: false };
     } else {
       return { isOk: true, exceeded: true };
     }
   } catch (error) {
     console.error('Error checking daily limit:', error);
-    return { isOk: false, message: "Internal server error" };
+    return { isOk: false, message: 'Internal server error' };
   }
 };
 
-
-// download request for license 
+// download request for license
 export const handleLicenseDownload = catchAsync(async (req, res) => {
   const downloadId = req?.params?.downloadId;
 
@@ -548,7 +687,8 @@ export const handleLicenseDownload = catchAsync(async (req, res) => {
     });
   }
 
-  const { contentLicense, downloadedBy, serviceId } = await getDownloadById(downloadId);
+  const { contentLicense, downloadedBy, serviceId } =
+    await getDownloadById(downloadId);
 
   if (!contentLicense || !downloadedBy || !serviceId) {
     return sendResponse(res, {
@@ -559,7 +699,7 @@ export const handleLicenseDownload = catchAsync(async (req, res) => {
     });
   }
 
-  if ((req?.user?.role === "user") && (req?.user?.email !== downloadedBy)) {
+  if (req?.user?.role === 'user' && req?.user?.email !== downloadedBy) {
     return sendResponse(res, {
       success: false,
       statusCode: httpStatus.FORBIDDEN,
@@ -582,8 +722,8 @@ export const handleLicenseDownload = catchAsync(async (req, res) => {
   const response = await fetch(contentLicense, {
     method: 'GET',
     headers: {
-      'Cookie': `_elements_session_4=${cookie}`,
-    }
+      Cookie: `_elements_session_4=${cookie}`,
+    },
   });
 
   const body = await response?.text();
@@ -601,7 +741,6 @@ export const handleLicenseDownload = catchAsync(async (req, res) => {
     });
   }
 });
-
 
 // Update method for download with _id
 export const updateDownloadById = catchAsync(async (req, res) => {
@@ -642,4 +781,3 @@ export const updateDownloadById = catchAsync(async (req, res) => {
     data: null,
   });
 });
-
