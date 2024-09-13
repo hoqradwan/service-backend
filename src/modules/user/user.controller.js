@@ -93,13 +93,19 @@ export const loginUser = catchAsync(async (req, res) => {
   // Get IP address from request
   const userIp = req.headers['x-forwarded-for']?.split(',').shift() || req.ip;
 
-  // Check if the user is logging in from a different IP address
-  const isIpDifferent = !user.loggedInIps.includes(userIp);
+  // Check if IP is already logged in
+  // const isIpAlreadyLoggedIn = user.loggedInIps.includes(userIp);
 
-  // Enforce single device login by allowing only one IP
-  if (isIpDifferent) {
-    // Clear all other logged-in IPs and allow only the current IP
-    user.loggedInIps = [userIp];
+  // If not already logged in, check the device limit
+  if (user.loggedInIps.length > 0) {
+    if (user.loggedInIps.length >= user.deviceLimit) {
+      return sendError(res, httpStatus.FORBIDDEN, {
+        message: `Device limit of ${user.deviceLimit} reached. Please log out from another device.`,
+      });
+    }
+
+    // Add the current IP to the loggedInIps array
+    user.loggedInIps.push(userIp);
     await user.save();
   }
 
