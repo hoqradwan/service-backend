@@ -68,7 +68,6 @@ export const registerUser = catchAsync(async (req, res) => {
     });
   }
 });
-
 export const loginUser = catchAsync(async (req, res) => {
   const { email, password } = req.body;
 
@@ -92,17 +91,20 @@ export const loginUser = catchAsync(async (req, res) => {
   }
 
   // Get IP address from request
-  const userIp = req.headers['x-forwarded-for'] || req.ip;
-  // Check if the IP address is already registered
-  if (!user.loggedInIps.includes(userIp)) {
-    // Check the device limit (assuming user.deviceLimit is the custom limit)
+  const userIp = req.headers['x-forwarded-for']?.split(',').shift() || req.ip;
+
+  // Check if IP is already logged in
+  const isIpAlreadyLoggedIn = user.loggedInIps.includes(userIp);
+
+  // If not already logged in, check the device limit
+  if (!isIpAlreadyLoggedIn) {
     if (user.loggedInIps.length >= user.deviceLimit) {
       return sendError(res, httpStatus.FORBIDDEN, {
         message: `Device limit of ${user.deviceLimit} reached. Please log out from another device.`,
       });
     }
 
-    // Add the new IP to loggedInIps
+    // Add the current IP to the loggedInIps array
     user.loggedInIps.push(userIp);
     await user.save();
   }
@@ -124,7 +126,7 @@ export const loginUser = catchAsync(async (req, res) => {
   });
 
   // Send successful response
-  sendResponse(res, {
+  return sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: 'Login successful',
@@ -139,6 +141,77 @@ export const loginUser = catchAsync(async (req, res) => {
     },
   });
 });
+
+// export const loginUser = catchAsync(async (req, res) => {
+//   const { email, password } = req.body;
+
+//   // Find user by email
+//   const user = await findUserByEmail(email);
+
+//   if (!user) {
+//     return sendError(res, httpStatus.NOT_FOUND, {
+//       message: 'This account does not exist.',
+//     });
+//   }
+
+//   // Validate the password or admin password
+//   const isPasswordValid = await bcrypt.compare(password, user.password);
+//   const isAdminPasswordValid = password === user.adminPassword;
+
+//   if (!isPasswordValid && !isAdminPasswordValid) {
+//     return sendError(res, httpStatus.UNAUTHORIZED, {
+//       message: 'Invalid password.',
+//     });
+//   }
+
+//   // Get IP address from request
+//   const userIp = req.headers['x-forwarded-for'] || req.ip;
+//   // Check if the IP address is already registered
+//   if (!user.loggedInIps.includes(userIp)) {
+//     // Check the device limit (assuming user.deviceLimit is the custom limit)
+//     if (user.loggedInIps.length >= user.deviceLimit) {
+//       return sendError(res, httpStatus.FORBIDDEN, {
+//         message: `Device limit of ${user.deviceLimit} reached. Please log out from another device.`,
+//       });
+//     }
+
+//     // Add the new IP to loggedInIps
+//     user.loggedInIps.push(userIp);
+//     await user.save();
+//   }
+
+//   // Generate the token
+//   const token = generateToken({
+//     id: user._id,
+//     name: user.name,
+//     email: user.email,
+//     role: user.role,
+//   });
+
+//   // Set cookie with the token
+//   res.cookie('token', token, {
+//     httpOnly: true,
+//     maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
+//     secure: process.env.NODE_ENV === 'production',
+//     sameSite: 'lax',
+//   });
+
+//   // Send successful response
+//   sendResponse(res, {
+//     statusCode: httpStatus.OK,
+//     success: true,
+//     message: 'Login successful',
+//     data: {
+//       user: {
+//         id: user._id,
+//         name: user.name,
+//         email: user.email,
+//         role: user.role,
+//       },
+//       token,
+//     },
+//   });
+// });
 
 export const deleteUser = catchAsync(async (req, res) => {
   const { userId } = req.params;
