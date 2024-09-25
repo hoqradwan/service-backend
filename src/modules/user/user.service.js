@@ -98,25 +98,25 @@ export const getUserStatisticsService = async () => {
   };
 };
 
-export const logoutUser = async (
-  userId,
-  sessionId = null,
-  logoutAll = false,
-) => {
-  const user = await UserModel.findById(userId);
-  if (!user) {
-    throw new Error('User not found');
-  }
+// export const logoutUser = async (
+//   userId,
+//   sessionId = null,
+//   logoutAll = false,
+// ) => {
+//   const user = await UserModel.findById(userId);
+//   if (!user) {
+//     throw new Error('User not found');
+//   }
 
-  if (logoutAll) {
-    // Clear all session IDs
-    user.sessions = [];
-  } else {
-    // Remove the specific session ID
-    user.sessions = user.sessions.filter((session) => session !== sessionId);
-  }
+//   if (logoutAll) {
+//     // Clear all session IDs
+//     user.sessions = [];
+//   } else {
+//     // Remove the specific session ID
+//     user.sessions = user.sessions.filter((session) => session !== sessionId);
+//   }
 
-  await user.save();
+//   await user.save();
 
-  return user;
-};
+//   return user;
+// };

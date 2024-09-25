@@ -4,7 +4,8 @@ import mongoose from 'mongoose';
 import catchAsync from '../../utils/catchAsync.js';
 import sendResponse from '../../utils/sendResponse.js';
 import {
-  getCookieByIdService, getRandomAccountService,
+  getCookieByIdService,
+  getRandomAccountService,
   getTotalDocumentCountService,
   updateCookieByIdService,
 } from '../cookie/cookie.service.js';
@@ -15,7 +16,8 @@ import {
   getDailyDownloadForCookieService,
   getDailyDownloadForLicenseService,
   getDailyDownloadForUserService,
-  getDownloadById, getMyDownloadsFromDB,
+  getDownloadById,
+  getMyDownloadsFromDB,
   getTotalDownloadForCookieService,
   getTotalDownloadForLicenseService,
   getTotalDownloadForUserService,
@@ -102,8 +104,6 @@ export const getDailyDownloadForUser = catchAsync(async (req, res) => {
   });
 });
 
-
-
 // Total download count by user email
 export const getTotalDownloadForUser = catchAsync(async (req, res) => {
   const role = req?.user?.role;
@@ -160,7 +160,6 @@ export const getDailyDownloadForLicense = catchAsync(async (req, res) => {
     }
     // current license of the user
     licenseId = user?.currentLicense;
-
   }
 
   if (!licenseId) {
@@ -173,7 +172,7 @@ export const getDailyDownloadForLicense = catchAsync(async (req, res) => {
   }
   // Check if licenseId is a valid MongoDB ObjectId
   if (!mongoose?.Types?.ObjectId?.isValid(licenseId)) {
-    throw new Error("Invalid licenseId format! expected ObjectId");
+    throw new Error('Invalid licenseId format! expected ObjectId');
   }
 
   // Get the detailed data from the service
@@ -220,7 +219,7 @@ export const getTotalDownloadForLicense = catchAsync(async (req, res) => {
 
   // Check if licenseId is a valid MongoDB ObjectId
   if (!mongoose?.Types?.ObjectId?.isValid(licenseId)) {
-    throw new Error("Invalid licenseId format! expected ObjectId");
+    throw new Error('Invalid licenseId format! expected ObjectId');
   }
 
   const result = await getTotalDownloadForLicenseService(licenseId);
@@ -247,7 +246,7 @@ export const getDailyDownloadForCookie = catchAsync(async (req, res) => {
 
   // Check if serviceId is a valid MongoDB ObjectId
   if (!mongoose?.Types?.ObjectId?.isValid(serviceId)) {
-    throw new Error("invalid serviceId format! expected ObjectId");
+    throw new Error('invalid serviceId format! expected ObjectId');
   }
 
   const result = await getDailyDownloadForCookieService(serviceId);
@@ -272,7 +271,7 @@ export const getTotalDownloadForCookie = catchAsync(async (req, res) => {
   }
   // Check if serviceId is a valid MongoDB ObjectId
   if (!mongoose?.Types?.ObjectId?.isValid(serviceId)) {
-    throw new Error("invalid serviceId format! expected ObjectId")
+    throw new Error('invalid serviceId format! expected ObjectId');
   }
 
   const result = await getTotalDownloadForCookieService(serviceId);
@@ -326,21 +325,21 @@ export const isDailyLimitExceed = async (licenseId) => {
     }
 
     const { count } = await getDailyDownloadForLicenseService(licenseId);
-    const { count: totalCount } = await getTotalDownloadForLicenseService(licenseId);
+    const { count: totalCount } =
+      await getTotalDownloadForLicenseService(licenseId);
 
-    if ((license?.dailyLimit > count) && (license?.totalLimit > totalCount)) {
+    if (license?.dailyLimit > count && license?.totalLimit > totalCount) {
       return { isOk: true, exceeded: false };
     } else {
       return { isOk: true, exceeded: true };
     }
   } catch (error) {
     console.error('Error checking daily limit:', error);
-    return { isOk: false, message: "Internal server error" };
+    return { isOk: false, message: 'Internal server error' };
   }
 };
 
-
-// download request for license 
+// download request for license
 export const handleLicenseDownload = catchAsync(async (req, res) => {
   const downloadId = req?.params?.downloadId;
 
@@ -363,7 +362,8 @@ export const handleLicenseDownload = catchAsync(async (req, res) => {
     });
   }
 
-  const { contentLicense, downloadedBy, serviceId } = await getDownloadById(downloadId);
+  const { contentLicense, downloadedBy, serviceId } =
+    await getDownloadById(downloadId);
 
   if (!contentLicense || !downloadedBy || !serviceId) {
     return sendResponse(res, {
@@ -374,7 +374,7 @@ export const handleLicenseDownload = catchAsync(async (req, res) => {
     });
   }
 
-  if ((req?.user?.role === "user") && (req?.user?.email !== downloadedBy)) {
+  if (req?.user?.role === 'user' && req?.user?.email !== downloadedBy) {
     return sendResponse(res, {
       success: false,
       statusCode: httpStatus.FORBIDDEN,
@@ -397,8 +397,8 @@ export const handleLicenseDownload = catchAsync(async (req, res) => {
   const response = await fetch(contentLicense, {
     method: 'GET',
     headers: {
-      'Cookie': `_elements_session_4=${cookie}`,
-    }
+      Cookie: `_elements_session_4=${cookie}`,
+    },
   });
 
   const body = await response?.text();
@@ -416,7 +416,6 @@ export const handleLicenseDownload = catchAsync(async (req, res) => {
     });
   }
 });
-
 
 // Update method for download with _id
 export const updateDownloadById = catchAsync(async (req, res) => {
