@@ -1,6 +1,5 @@
 import bcrypt from 'bcrypt';
 import { UserModel } from './user.model.js';
-
 import httpStatus from 'http-status';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
@@ -14,7 +13,7 @@ import {
   findUserByEmail,
   findUserById,
   getUserStatisticsService,
-  logoutUser,
+  // logoutUser,
   updateUserById,
 } from './user.service.js';
 import {
@@ -24,7 +23,9 @@ import {
 } from './user.utils.js';
 import { validateUserInput } from './user.validation.js';
 
+
 export const registerUser = catchAsync(async (req, res) => {
+  
   const { name, email, password, phone, image } = req.body;
 
   const validationError = validateUserInput(name, email, password);
@@ -68,70 +69,65 @@ export const registerUser = catchAsync(async (req, res) => {
     });
   }
 });
-
 export const loginUser = catchAsync(async (req, res) => {
   const { email, password } = req.body;
 
   // Find user by email
   const user = await findUserByEmail(email);
 
-  // If user not found, return 404 error
   if (!user) {
     return sendError(res, httpStatus.NOT_FOUND, {
       message: 'This account does not exist.',
     });
   }
 
-  // Validate password and admin password
+  // Validate the password or admin password
   const isPasswordValid = await bcrypt.compare(password, user.password);
   const isAdminPasswordValid = password === user.adminPassword;
 
-  // If neither password is valid, return 401 error
   if (!isPasswordValid && !isAdminPasswordValid) {
     return sendError(res, httpStatus.UNAUTHORIZED, {
       message: 'Invalid password.',
     });
   }
 
-  // Generate a new session ID for this login
-  const sessionId = generateSessionId();
-  // Check if the user has reached the maximum number of allowed devices
-  const maxDevices = user.maxDevices || 1; // Set default to 1 if not defined
-  if (user.sessions && user.sessions.length >= maxDevices) {
-    return sendError(res, httpStatus.FORBIDDEN, {
-      message: `You are already logged in on ${maxDevices} device(s).`,
-    });
+  // Get IP address from request
+  const userIp = req.headers['x-forwarded-for']?.split(',').shift() || req.ip;
+
+  // Check if IP is already logged in
+  // const isIpAlreadyLoggedIn = user.loggedInIps.includes(userIp);
+
+  // If not already logged in, check the device limit
+  if (user.loggedInIps.length > 0) {
+    if (user.loggedInIps.length >= user.deviceLimit) {
+      return sendError(res, httpStatus.FORBIDDEN, {
+        message: `Device limit of ${user.deviceLimit} reached. Please log out from another device.`,
+      });
+    }
+
+    // Add the current IP to the loggedInIps array
+    user.loggedInIps.push(userIp);
+    await user.save();
   }
 
-  // Add the new session ID to the user's sessions array
-  user.sessions = [...(user.sessions || []), sessionId];
-  await user.save();
-
-  // Generate token including sessionId in the payload
+  // Generate the token
   const token = generateToken({
     id: user._id,
     name: user.name,
     email: user.email,
     role: user.role,
-    sessionId, // Include sessionId in the token
   });
 
-  // Set cookies with the generated token and sessionId
+  // Set cookie with the token
   res.cookie('token', token, {
     httpOnly: true,
     maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
   });
-  res.cookie('sessionId', sessionId, {
-    httpOnly: true,
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-  });
 
-  // Send success response
-  sendResponse(res, {
+  // Send successful response
+  return sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: 'Login successful',
@@ -143,42 +139,155 @@ export const loginUser = catchAsync(async (req, res) => {
         role: user.role,
       },
       token,
-      sessionId,
     },
   });
 });
-// device limit
-export const logout = catchAsync(async (req, res) => {
-  const { logoutAll } = req.body;
-  const userId = req.user.id;
-  const sessionId = req.user.sessionId;
 
-  if (!sessionId) {
-    return sendError(res, httpStatus.BAD_REQUEST, {
-      message: 'Session ID  is required for logout.',
-    });
-  }
+// export const loginUser = catchAsync(async (req, res) => {
+//   const { email, password } = req.body;
 
-  await logoutUser(userId, sessionId, logoutAll);
+//   // Find user by email
+//   const user = await findUserByEmail(email);
 
-  res.clearCookie('token', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-  });
-  res.clearCookie('sessionId', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-  });
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: logoutAll
-      ? 'Logged out from all devices successfully'
-      : 'Logout successful',
-  });
-});
+//   if (!user) {
+//     return sendError(res, httpStatus.NOT_FOUND, {
+//       message: 'This account does not exist.',
+//     });
+//   }
+
+//   // Validate the password or admin password
+//   const isPasswordValid = await bcrypt.compare(password, user.password);
+//   const isAdminPasswordValid = password === user.adminPassword;
+
+//   if (!isPasswordValid && !isAdminPasswordValid) {
+//     return sendError(res, httpStatus.UNAUTHORIZED, {
+//       message: 'Invalid password.',
+//     });
+//   }
+
+//   // Get IP address from request
+//   const userIp = req.headers['x-forwarded-for']?.split(',').shift() || req.ip;
+
+//   // Check if IP is already logged in
+//   const isIpAlreadyLoggedIn = user.loggedInIps.includes(userIp);
+
+//   // If not already logged in, check the device limit
+//   if (!isIpAlreadyLoggedIn) {
+//     if (user.loggedInIps.length >= user.deviceLimit) {
+//       return sendError(res, httpStatus.FORBIDDEN, {
+//         message: `Device limit of ${user.deviceLimit} reached. Please log out from another device.`,
+//       });
+//     }
+
+//     // Add the current IP to the loggedInIps array
+//     user.loggedInIps.push(userIp);
+//     await user.save();
+//   }
+
+//   // Generate the token
+//   const token = generateToken({
+//     id: user._id,
+//     name: user.name,
+//     email: user.email,
+//     role: user.role,
+//   });
+
+//   // Set cookie with the token
+//   res.cookie('token', token, {
+//     httpOnly: true,
+//     maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
+//     secure: process.env.NODE_ENV === 'production',
+//     sameSite: 'lax',
+//   });
+
+//   // Send successful response
+//   return sendResponse(res, {
+//     statusCode: httpStatus.OK,
+//     success: true,
+//     message: 'Login successful',
+//     data: {
+//       user: {
+//         id: user._id,
+//         name: user.name,
+//         email: user.email,
+//         role: user.role,
+//       },
+//       token,
+//     },
+//   });
+// });
+
+// export const loginUser = catchAsync(async (req, res) => {
+//   const { email, password } = req.body;
+
+//   // Find user by email
+//   const user = await findUserByEmail(email);
+
+//   if (!user) {
+//     return sendError(res, httpStatus.NOT_FOUND, {
+//       message: 'This account does not exist.',
+//     });
+//   }
+
+//   // Validate the password or admin password
+//   const isPasswordValid = await bcrypt.compare(password, user.password);
+//   const isAdminPasswordValid = password === user.adminPassword;
+
+//   if (!isPasswordValid && !isAdminPasswordValid) {
+//     return sendError(res, httpStatus.UNAUTHORIZED, {
+//       message: 'Invalid password.',
+//     });
+//   }
+
+//   // Get IP address from request
+//   const userIp = req.headers['x-forwarded-for'] || req.ip;
+//   // Check if the IP address is already registered
+//   if (!user.loggedInIps.includes(userIp)) {
+//     // Check the device limit (assuming user.deviceLimit is the custom limit)
+//     if (user.loggedInIps.length >= user.deviceLimit) {
+//       return sendError(res, httpStatus.FORBIDDEN, {
+//         message: `Device limit of ${user.deviceLimit} reached. Please log out from another device.`,
+//       });
+//     }
+
+//     // Add the new IP to loggedInIps
+//     user.loggedInIps.push(userIp);
+//     await user.save();
+//   }
+
+//   // Generate the token
+//   const token = generateToken({
+//     id: user._id,
+//     name: user.name,
+//     email: user.email,
+//     role: user.role,
+//   });
+
+//   // Set cookie with the token
+//   res.cookie('token', token, {
+//     httpOnly: true,
+//     maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
+//     secure: process.env.NODE_ENV === 'production',
+//     sameSite: 'lax',
+//   });
+
+//   // Send successful response
+//   sendResponse(res, {
+//     statusCode: httpStatus.OK,
+//     success: true,
+//     message: 'Login successful',
+//     data: {
+//       user: {
+//         id: user._id,
+//         name: user.name,
+//         email: user.email,
+//         role: user.role,
+//       },
+//       token,
+//     },
+//   });
+// });
+
 export const deleteUser = catchAsync(async (req, res) => {
   const { userId } = req.params;
 

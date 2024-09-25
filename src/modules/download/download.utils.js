@@ -1,7 +1,9 @@
-export const cookieCredentials = async (cookieDetails, url) => {
+
+// Envato cookie details
+export const envatoCookieCredentials = async (cookieDetails, url) => {
   const last = url?.split("/")?.length - 1;
   const itemName = (url?.split("/")[last]);
-  const itemCode = itemName?.split("/")[0]?.split("-")[(itemName?.split("/")[0]?.split("-").length)-1];
+  const itemCode = itemName?.split("/")[0]?.split("-")[(itemName?.split("/")[0]?.split("-").length) - 1];
 
 
   if (!itemCode) {
@@ -41,5 +43,28 @@ export const cookieCredentials = async (cookieDetails, url) => {
   }
 
   return { payload, headers, mainURL };
+}
+
+
+
+
+// Story-blocks cookie details
+export const StoryBlocksCookieCredentials = async ( cookieDetails,contentClass, itemCode, type) => {
+
+  if (contentClass === "image") {
+    contentClass = "images"
+  }
+
+  // Main URL for download request
+  const mainURL = `https://www.storyblocks.com/${contentClass}/download-ajax/${itemCode}/${type}`
+
+  const cookie = cookieDetails?.cookie;
+
+  // headers for download request
+  const headers = {
+    'Cookie': `login_session=${cookie}`
+  }
+
+  return { headers, mainURL };
 }
 

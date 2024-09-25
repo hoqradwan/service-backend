@@ -15,8 +15,18 @@ const UserSchema = new Schema(
       ref: 'License',
       default: null,
     },
-    sessions: { type: [String], default: [] },
-    maxDevices: { type: Number, default: 1 },
+    currentStoryBlocksLicense: {
+      type: Schema.Types.ObjectId,
+      ref: 'License',
+      default: null,
+    },
+    currentMotionArrayLicense: {
+      type: Schema.Types.ObjectId,
+      ref: 'License',
+      default: null,
+    },
+    loggedInIps: { type: [String], default: [] }, // Store allowed IP addresses
+    deviceLimit: { type: Number, default: 1 }, // Custom device limit for each user
   },
   { timestamps: true },
 );
