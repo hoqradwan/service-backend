@@ -298,8 +298,8 @@ export const generateRandomAccount = async (serviceName) => {
     const randomIndex = Math?.floor(Math?.random() * count);
 
     // Getting the random account
-    const randomAccount = await getRandomAccountService(serviceName,randomIndex);
-    
+    const randomAccount = await getRandomAccountService(serviceName, randomIndex);
+
     return randomAccount;
   } catch (error) {
     console.error('Error fetching random account:', error);
@@ -678,46 +678,46 @@ export const handleStoryBlocksDownload = catchAsync(async (req, res) => {
     });
   }
   // current license of the user
-  const licenseId = user?.currentStoryBlocksLicense;
-  if (!licenseId) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: 'You do not have a license activated',
-      data: null,
-    });
-  }
+  // const licenseId = user?.currentStoryBlocksLicense;
+  // if (!licenseId) {
+  //   return sendResponse(res, {
+  //     success: false,
+  //     statusCode: 400,
+  //     message: 'You do not have a license activated',
+  //     data: null,
+  //   });
+  // }
 
-  // Check if licenseId is a valid MongoDB ObjectId
-  if (!mongoose.Types.ObjectId.isValid(licenseId)) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: 'Invalid License Id format',
-      data: null,
-    });
-  }
+  // // Check if licenseId is a valid MongoDB ObjectId
+  // if (!mongoose.Types.ObjectId.isValid(licenseId)) {
+  //   return sendResponse(res, {
+  //     success: false,
+  //     statusCode: 400,
+  //     message: 'Invalid License Id format',
+  //     data: null,
+  //   });
+  // }
 
-  // checking if daily limit has been exceeded or not..
-  const limitCheck = await isDailyLimitExceed(licenseId);
+  // // checking if daily limit has been exceeded or not..
+  // const limitCheck = await isDailyLimitExceed(licenseId);
 
-  if (!limitCheck?.isOk) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: limitCheck?.message,
-      data: null,
-    });
-  }
+  // if (!limitCheck?.isOk) {
+  //   return sendResponse(res, {
+  //     success: false,
+  //     statusCode: 400,
+  //     message: limitCheck?.message,
+  //     data: null,
+  //   });
+  // }
 
-  if (limitCheck?.exceeded) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: 'Download limit is exceeded',
-      data: null,
-    });
-  }
+  // if (limitCheck?.exceeded) {
+  //   return sendResponse(res, {
+  //     success: false,
+  //     statusCode: 400,
+  //     message: 'Download limit is exceeded',
+  //     data: null,
+  //   });
+  // }
 
   let cookieDetails = null;
   // Getting random cookie details
@@ -731,7 +731,7 @@ export const handleStoryBlocksDownload = catchAsync(async (req, res) => {
     // Loop for double check the cookie
     for (let j = 0; j < 2; j++) {
       isCookieWorking = await isStoryBlocksCookieValid(cookie);
-      
+
       if (isCookieWorking) {
         break;
       }
@@ -817,15 +817,14 @@ export const handleStoryBlocksDownload = catchAsync(async (req, res) => {
     success: true,
     statusCode: 200,
     message: 'Download request successful',
-    data: downloadUrl
+    data: downloadUrl,
   });
-
 
   // if (downloadUrl) {
   //   const download = {
-  //     service: "Envato Elements",
+  //     service: "Story Blocks",
   //     content: url,
-  //     contentLicense: licenseUrl,
+  //     contentLicense: null,
   //     serviceId: cookieDetails?._id,
   //     licenseId: licenseId,
   //     status: "pending"
