@@ -15,6 +15,16 @@ const UserSchema = new Schema(
       ref: 'License',
       default: null,
     },
+    currentStoryBlocksLicense: {
+      type: Schema.Types.ObjectId,
+      ref: 'License',
+      default: null,
+    },
+    currentMotionArrayLicense: {
+      type: Schema.Types.ObjectId,
+      ref: 'License',
+      default: null,
+    },
     sessions: { type: [String], default: [] },
     maxDevices: { type: Number, default: 1 },
   },

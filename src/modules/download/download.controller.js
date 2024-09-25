@@ -678,46 +678,46 @@ export const handleStoryBlocksDownload = catchAsync(async (req, res) => {
     });
   }
   // current license of the user
-  // const licenseId = user?.currentLicense;
-  // if (!licenseId) {
-  //   return sendResponse(res, {
-  //     success: false,
-  //     statusCode: 400,
-  //     message: 'You do not have a license activated',
-  //     data: null,
-  //   });
-  // }
+  const licenseId = user?.currentStoryBlocksLicense;
+  if (!licenseId) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'You do not have a license activated',
+      data: null,
+    });
+  }
 
   // Check if licenseId is a valid MongoDB ObjectId
-  // if (!mongoose.Types.ObjectId.isValid(licenseId)) {
-  //   return sendResponse(res, {
-  //     success: false,
-  //     statusCode: 400,
-  //     message: 'Invalid License Id format',
-  //     data: null,
-  //   });
-  // }
+  if (!mongoose.Types.ObjectId.isValid(licenseId)) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Invalid License Id format',
+      data: null,
+    });
+  }
 
   // checking if daily limit has been exceeded or not..
-  // const limitCheck = await isDailyLimitExceed(licenseId);
+  const limitCheck = await isDailyLimitExceed(licenseId);
 
-  // if (!limitCheck?.isOk) {
-  //   return sendResponse(res, {
-  //     success: false,
-  //     statusCode: 400,
-  //     message: limitCheck?.message,
-  //     data: null,
-  //   });
-  // }
+  if (!limitCheck?.isOk) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: limitCheck?.message,
+      data: null,
+    });
+  }
 
-  // if (limitCheck?.exceeded) {
-  //   return sendResponse(res, {
-  //     success: false,
-  //     statusCode: 400,
-  //     message: 'Download limit is exceeded',
-  //     data: null,
-  //   });
-  // }
+  if (limitCheck?.exceeded) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Download limit is exceeded',
+      data: null,
+    });
+  }
 
   let cookieDetails = null;
   // Getting random cookie details
