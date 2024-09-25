@@ -34,7 +34,7 @@ export const createCookie = catchAsync(async (req, res) => {
     });
   }
   // Checking if the account with same email already exists or not
-  const isAccountExist = await getCookieByAccountEmailService(data.account);
+  const isAccountExist = await getCookieByAccountEmailService(data?.account, data?.serviceName);
   if (isAccountExist) {
     return sendResponse(res, {
       success: false,

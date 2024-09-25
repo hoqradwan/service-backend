@@ -6,7 +6,8 @@ import { adminMiddleware } from '../../middleware/auth.js';
 
 const router = express.Router();
 
-router.get('/all-cookies',adminMiddleware('admin'), getAllCookies);
+// router.get('/all-cookies',adminMiddleware('admin'), getAllCookies);
+router.get('/all-cookies', getAllCookies);
 router.get('/:id', adminMiddleware('admin'), getCookieById);
 
 router.post('/', createCookie);

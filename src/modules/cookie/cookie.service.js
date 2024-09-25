@@ -43,8 +43,8 @@ export const getCookieByIdService = async (id) => {
 };
 
 // Find single cookie service with account email
-export const getCookieByAccountEmailService = async (email) => {
-  return await Cookie?.findOne({ account: email });
+export const getCookieByAccountEmailService = async (account,serviceName) => {
+  return await Cookie?.findOne({ account, serviceName });
 };
 
 // update cookie service

@@ -5,7 +5,7 @@ const CookieSchema = new mongoose.Schema(
     serviceName: {
       type: String,
       required: true,
-      enum: ['envato'],
+      enum: ['envato', 'story-blocks', 'motion-array'],
     },
     account: {
       type: String,
@@ -23,9 +23,9 @@ const CookieSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    csrfToken: {
+    csrfToken: {   // csrf token or login session token
       type: String,
-      required: true,
+      required: true, 
     },
     status: {
       type: String,
