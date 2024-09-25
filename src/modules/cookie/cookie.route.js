@@ -9,7 +9,8 @@ const router = express.Router();
 router.get('/all-cookies',adminMiddleware('admin'), getAllCookies);
 router.get('/:id', adminMiddleware('admin'), getCookieById);
 
-router.post('/', adminMiddleware('admin'), validateRequest(createCookieValidationSchema), createCookie);
+router.post('/', createCookie);
+// router.post('/', adminMiddleware('admin'), validateRequest(createCookieValidationSchema), createCookie);
 router.put('/:id', adminMiddleware('admin'), validateRequest(updateCookieValidationSchema), updateCookieById);
 router.delete('/:id', adminMiddleware('admin'), deleteCookieById);
 router.get('/cookie-check/:id', adminMiddleware('admin'), isCookieWorking);//test cookie

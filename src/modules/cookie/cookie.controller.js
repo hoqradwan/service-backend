@@ -11,7 +11,7 @@ import {
   updateCookieByIdService,
 } from './cookie.service.js';
 import mongoose from 'mongoose';
-import { cookieCredentials } from '../download/download.utils.js';
+import { envatoCookieCredentials } from '../download/download.utils.js';
 import axios from 'axios';
 
 // create method for cookie
@@ -230,7 +230,7 @@ export const isCookieWorking = catchAsync(async (req, res) => {
     });
   }
 
-  const { payload, headers, mainURL } = await cookieCredentials(
+  const { payload, headers, mainURL } = await envatoCookieCredentials(
     cookieDetails,
     url,
   );
@@ -305,7 +305,7 @@ export const isCookieValid = async (cookieDetails) => {
     // Get a random URL
     const url = urls[Math?.floor(Math?.random() * urls?.length)];
 
-    const { payload, headers, mainURL } = await cookieCredentials(
+    const { payload, headers, mainURL } = await envatoCookieCredentials(
       cookieDetails,
       url,
     );

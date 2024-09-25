@@ -1,6 +1,5 @@
 import bcrypt from 'bcrypt';
 import { UserModel } from './user.model.js';
-
 import httpStatus from 'http-status';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
@@ -24,7 +23,9 @@ import {
 } from './user.utils.js';
 import { validateUserInput } from './user.validation.js';
 
+
 export const registerUser = catchAsync(async (req, res) => {
+  
   const { name, email, password, phone, image } = req.body;
 
   const validationError = validateUserInput(name, email, password);
