@@ -24,7 +24,7 @@ import {
 import { envatoCookieCredentials, StoryBlocksCookieCredentials } from './download.utils.js';
 import { findUserById } from '../user/user.service.js';
 import fetch from 'node-fetch';
-import { isCookieValid } from '../cookie/cookie.controller.js';
+import { isCookieValid, isStoryBlocksCookieValid } from '../cookie/cookie.controller.js';
 const cheerio = await import('cheerio');
 
 
@@ -287,9 +287,9 @@ export const getTotalDownloadForCookie = catchAsync(async (req, res) => {
 
 
 // Random account generator
-export const generateRandomAccount = async () => {
+export const generateRandomAccount = async (serviceName) => {
   try {
-    const count = await getTotalDocumentCountService();
+    const count = await getTotalDocumentCountService(serviceName);
     // Ensure there's at least one active cookie
     if (count === 0) {
       return null;
@@ -298,7 +298,8 @@ export const generateRandomAccount = async () => {
     const randomIndex = Math?.floor(Math?.random() * count);
 
     // Getting the random account
-    const randomAccount = await getRandomAccountService(randomIndex);
+    const randomAccount = await getRandomAccountService(serviceName,randomIndex);
+    
     return randomAccount;
   } catch (error) {
     console.error('Error fetching random account:', error);
@@ -533,7 +534,7 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
   let cookieDetails = null;
   // Getting random cookie details
   for (let i = 0; i < 3; i++) {
-    const cookie = await generateRandomAccount();
+    const cookie = await generateRandomAccount("envato");
 
     if (!cookie) {
       break;
@@ -718,42 +719,43 @@ export const handleStoryBlocksDownload = catchAsync(async (req, res) => {
   //   });
   // }
 
-  // let cookieDetails = null;
-  // // Getting random cookie details
-  // for (let i = 0; i < 3; i++) {
-  //   const cookie = await generateRandomAccount();
+  let cookieDetails = null;
+  // Getting random cookie details
+  for (let i = 0; i < 3; i++) {
+    const cookie = await generateRandomAccount("story-blocks");
 
-  //   if (!cookie) {
-  //     break;
-  //   }
-  //   let isCookieWorking;
-  //   // Loop for double check the cookie
-  //   for (let j = 0; j < 2; j++) {
-  //     isCookieWorking = await isCookieValid(cookie);
-  //     if (isCookieWorking) {
-  //       break;
-  //     }
-  //   }
+    if (!cookie) {
+      break;
+    }
+    let isCookieWorking;
+    // Loop for double check the cookie
+    for (let j = 0; j < 2; j++) {
+      isCookieWorking = await isStoryBlocksCookieValid(cookie);
+      
+      if (isCookieWorking) {
+        break;
+      }
+    }
 
-  //   if (!isCookieWorking) {
-  //     // if cookie is not valid then make it inactive
-  //     await updateCookieByIdService(cookie?._id, { "status": "inactive" })
-  //   }
+    if (!isCookieWorking) {
+      // if cookie is not valid then make it inactive
+      await updateCookieByIdService(cookie?._id, { "status": "inactive" })
+    }
 
-  //   if (isCookieWorking) {
-  //     cookieDetails = cookie;
-  //     break;
-  //   }
-  // }
+    if (isCookieWorking) {
+      cookieDetails = cookie;
+      break;
+    }
+  }
 
-  // if (!cookieDetails) {
-  //   return sendResponse(res, {
-  //     success: false,
-  //     statusCode: 400,
-  //     message: 'No working account found',
-  //     data: null,
-  //   });
-  // }
+  if (!cookieDetails) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'No working account found',
+      data: null,
+    });
+  }
 
 
   const { itemCode, contentClass } = await getStoryBlockItemCode(url);
@@ -768,7 +770,7 @@ export const handleStoryBlocksDownload = catchAsync(async (req, res) => {
   }
 
   const { headers, mainURL } = await StoryBlocksCookieCredentials(
-    // cookieDetails,
+    cookieDetails,
     contentClass.toLowerCase(),
     itemCode,
     type.toUpperCase()

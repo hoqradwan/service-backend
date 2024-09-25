@@ -18,10 +18,6 @@ export const storeDownloadValidationSchema = z.object({
       required_error: 'serviceId is required!',
       invalid_type_error: 'serviceId must be a string!',
     }),
-    licenseId: z.string({
-      required_error: 'licenseId is required!',
-      invalid_type_error: 'licenseId must be a string!',
-    }),
     status: z.enum(['pending', 'accepted']),
   }),
 });

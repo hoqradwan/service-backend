@@ -13,7 +13,7 @@ const DownloadSchema = new Schema(
     licenseId: {
       type: Schema.Types.ObjectId,
       ref: 'License',
-      required: true
+      default: null
     }, // License Id
     status: { type: String, enum: ['pending', 'accepted'], required: true },
     downloadedAt: { type: String, required: true },

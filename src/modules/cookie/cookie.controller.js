@@ -11,7 +11,7 @@ import {
   updateCookieByIdService,
 } from './cookie.service.js';
 import mongoose from 'mongoose';
-import { envatoCookieCredentials } from '../download/download.utils.js';
+import { envatoCookieCredentials, StoryBlocksCookieCredentials } from '../download/download.utils.js';
 import axios from 'axios';
 
 // create method for cookie
@@ -291,7 +291,7 @@ export const isCookieWorking = catchAsync(async (req, res) => {
 });
 
 
-// Check if the cookie is expired or not 
+// Check if the envato cookie is expired or not 
 export const isCookieValid = async (cookieDetails) => {
   try {
     const urls = [
@@ -318,6 +318,44 @@ export const isCookieValid = async (cookieDetails) => {
       data: payload,
     });
     if (response) {
+      return true;
+    }
+    else {
+      return false;
+    };
+  } catch (error) {
+    return false;
+  }
+
+};
+
+// Check if the story-blocks cookie is expired or not 
+export const isStoryBlocksCookieValid = async (cookieDetails) => {
+  try {
+    const cookie = cookieDetails?.cookie;
+    
+
+    const urls = [
+      "https://www.storyblocks.com/video/download-ajax/3541468/HDMOV",
+      "https://www.storyblocks.com/video/download-ajax/3541464/4KMOV",
+    ]
+
+    // Get a random URL
+    const mainURL = urls[Math?.floor(Math?.random() * urls?.length)];
+
+    // headers for download request
+    const headers = {
+      'Cookie': `login_session=${cookie}`
+    }
+
+    // Make the HTTP request
+    const response = await axios({
+      method: 'GET',
+      url: mainURL,
+      headers: headers,
+    });
+
+    if (response?.data?.data?.downloadUrl) {
       return true;
     }
     else {
