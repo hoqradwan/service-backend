@@ -4,7 +4,7 @@ const DownloadSchema = new Schema(
   {
     service: { type: String, required: true },
     content: { type: String, required: true }, // envato content url link
-    contentLicense: { type: String, required: true }, // envato content download license url
+    contentLicense: { type: String, default: null}, // envato content download license url
     serviceId: {
       type: Schema.Types.ObjectId,
       ref: 'Cookie',
