@@ -677,46 +677,46 @@ export const handleStoryBlocksDownload = catchAsync(async (req, res) => {
     });
   }
   // current license of the user
-  // const licenseId = user?.currentStoryBlocksLicense;
-  // if (!licenseId) {
-  //   return sendResponse(res, {
-  //     success: false,
-  //     statusCode: 400,
-  //     message: 'You do not have a license activated',
-  //     data: null,
-  //   });
-  // }
+  const licenseId = user?.currentStoryBlocksLicense;
+  if (!licenseId) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'You do not have a license activated',
+      data: null,
+    });
+  }
 
   // // Check if licenseId is a valid MongoDB ObjectId
-  // if (!mongoose.Types.ObjectId.isValid(licenseId)) {
-  //   return sendResponse(res, {
-  //     success: false,
-  //     statusCode: 400,
-  //     message: 'Invalid License Id format',
-  //     data: null,
-  //   });
-  // }
+  if (!mongoose.Types.ObjectId.isValid(licenseId)) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Invalid License Id format',
+      data: null,
+    });
+  }
 
   // // checking if daily limit has been exceeded or not..
-  // const limitCheck = await isDailyLimitExceed(licenseId);
+  const limitCheck = await isDailyLimitExceed(licenseId);
 
-  // if (!limitCheck?.isOk) {
-  //   return sendResponse(res, {
-  //     success: false,
-  //     statusCode: 400,
-  //     message: limitCheck?.message,
-  //     data: null,
-  //   });
-  // }
+  if (!limitCheck?.isOk) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: limitCheck?.message,
+      data: null,
+    });
+  }
 
-  // if (limitCheck?.exceeded) {
-  //   return sendResponse(res, {
-  //     success: false,
-  //     statusCode: 400,
-  //     message: 'Download limit is exceeded',
-  //     data: null,
-  //   });
-  // }
+  if (limitCheck?.exceeded) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Download limit is exceeded',
+      data: null,
+    });
+  }
 
   let cookieDetails = null;
   // Getting random cookie details
@@ -812,41 +812,35 @@ export const handleStoryBlocksDownload = catchAsync(async (req, res) => {
 
   // Extract the download URL from the response
   const downloadUrl = response?.data?.data?.downloadUrl;
-  return sendResponse(res, {
-    success: true,
-    statusCode: 200,
-    message: 'Download request successful',
-    data: downloadUrl,
-  });
 
-  // if (downloadUrl) {
-  //   const download = {
-  //     service: "Story Blocks",
-  //     content: url,
-  //     contentLicense: null,
-  //     serviceId: cookieDetails?._id,
-  //     licenseId: licenseId,
-  //     status: "pending"
-  //   }
-  //   const result = await addDownloadIntoDB(download, req.user);
+  if (downloadUrl) {
+    const download = {
+      service: "Story Blocks",
+      content: url,
+      contentLicense: null,
+      serviceId: cookieDetails?._id,
+      licenseId: licenseId,
+      status: "pending"
+    }
+    const result = await addDownloadIntoDB(download, req.user);
 
-  //   if (result) {
-  //     return sendResponse(res, {
-  //       success: true,
-  //       statusCode: 200,
-  //       message: 'Download request successful',
-  //       data: { downloadUrl, downloadId: result[0]?._id },
-  //     });
-  //   }
+    if (result) {
+      return sendResponse(res, {
+        success: true,
+        statusCode: 200,
+        message: 'Download request successful',
+        data: { downloadUrl, downloadId: result[0]?._id },
+      });
+    }
 
-  // } else {
-  //   return sendResponse(res, {
-  //     success: false,
-  //     statusCode: 400,
-  //     message: 'Download request is unsuccessful',
-  //     data: null,
-  //   });
-  // }
+  } else {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Download request is unsuccessful',
+      data: null,
+    });
+  }
 });
 
 
