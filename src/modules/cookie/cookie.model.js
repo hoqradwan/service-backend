@@ -19,11 +19,11 @@ const CookieSchema = new mongoose.Schema(
       type: String,
       
     },
-    cookie: {
+    cookie: {   // Vid(story-blocks) || laravel_session(motion-array)
       type: String,
       required: true,
     },
-    csrfToken: {   // csrf token or login session token
+    csrfToken: {   // csrf token(envato) || login session token(story-blocks)
       type: String,
       required: true, 
     },

@@ -23,10 +23,11 @@ import {
   getTotalDownloadForUserService,
   updateDownloadByIdService,
 } from './download.service.js';
-import { envatoCookieCredentials, StoryBlocksCookieCredentials } from './download.utils.js';
+import { envatoCookieCredentials, motionArrayCookieCredentials, StoryBlocksCookieCredentials } from './download.utils.js';
 import { findUserById } from '../user/user.service.js';
 import fetch from 'node-fetch';
-import { isCookieValid, isStoryBlocksCookieValid } from '../cookie/cookie.controller.js';
+import { isCookieValid, isMotionArrayCookieValid, isStoryBlocksCookieValid } from '../cookie/cookie.controller.js';
+import puppeteer from 'puppeteer';
 const cheerio = await import('cheerio');
 
 
@@ -954,7 +955,7 @@ export const handleMotionArrayDownload = catchAsync(async (req, res) => {
   let cookieDetails = null;
   // Getting random cookie details
   for (let i = 0; i < 3; i++) {
-    const cookie = await generateRandomAccount("story-blocks");
+    const cookie = await generateRandomAccount("motion-array");
 
     if (!cookie) {
       break;
@@ -962,8 +963,7 @@ export const handleMotionArrayDownload = catchAsync(async (req, res) => {
     let isCookieWorking;
     // Loop for double check the cookie
     for (let j = 0; j < 2; j++) {
-      isCookieWorking = await isStoryBlocksCookieValid(cookie);
-
+      isCookieWorking = await isMotionArrayCookieValid(cookie);
       if (isCookieWorking) {
         break;
       }
@@ -989,23 +989,10 @@ export const handleMotionArrayDownload = catchAsync(async (req, res) => {
     });
   }
 
-
-  const { itemCode, contentClass } = await getStoryBlockItemCode(url);
-
-  if (!itemCode || !contentClass) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: 'Invalid story-blocks item url',
-      data: null,
-    });
-  }
-
-  const { headers, mainURL } = await StoryBlocksCookieCredentials(
+  const { headers, mainURL } = await motionArrayCookieCredentials(
     cookieDetails,
-    contentClass.toLowerCase(),
-    itemCode,
-    type.toUpperCase()
+    url,
+    type?.toLowerCase()
   );
 
   if (!headers) {
@@ -1026,13 +1013,7 @@ export const handleMotionArrayDownload = catchAsync(async (req, res) => {
     });
   }
 
-  // Make the first HTTP request
-  const response = await axios({
-    method: 'GET',
-    url: mainURL,
-    headers: headers,
-  });
-  // console.log(response?.data);
+  const response = await motionArrayDownloadRequest(headers, mainURL);
 
   if (!response) {
     return sendResponse(res, {
@@ -1043,12 +1024,10 @@ export const handleMotionArrayDownload = catchAsync(async (req, res) => {
     });
   }
 
-  // Extract the download URL from the response
-  const downloadUrl = response?.data?.data?.downloadUrl;
 
-  if (downloadUrl) {
+  if (response) {
     const download = {
-      service: "Story Blocks",
+      service: "Motion Array",
       content: url,
       contentLicense: null,
       serviceId: cookieDetails?._id,
@@ -1062,7 +1041,7 @@ export const handleMotionArrayDownload = catchAsync(async (req, res) => {
         success: true,
         statusCode: 200,
         message: 'Download request successful',
-        data: { downloadUrl, downloadId: result[0]?._id },
+        data: { downloadUrl: response, downloadId: result[0]?._id },
       });
     }
 
@@ -1077,4 +1056,38 @@ export const handleMotionArrayDownload = catchAsync(async (req, res) => {
 });
 
 
+// Function for getting the motion array download url
+const motionArrayDownloadRequest = async (headers, mainURL) => {
+  const browser = await puppeteer?.launch({
+    headless: false,
+  });
+  const page = await browser?.newPage();
 
+  try {
+    // Set extra headers including cookies, referer, and user-agent
+    await page?.setExtraHTTPHeaders(headers);
+
+    // Navigate to the target page
+    await page?.goto(mainURL, { waitUntil: 'networkidle2' });
+
+    // Extract the signed_url from the JSON 
+    const signedUrl = await page?.evaluate(() => {
+      const preElement = document?.querySelector('pre');
+      if (preElement) {
+        const jsonData = JSON?.parse(preElement.innerText);
+        return jsonData?.signed_url;
+      }
+      return null;
+    });
+
+    // Close the browser
+    await browser.close();
+    if (signedUrl) {
+      return signedUrl;
+    }
+    else return false;
+  } catch (error) {
+    console.error("Error:", error.message);
+    await browser.close();
+  }
+}
