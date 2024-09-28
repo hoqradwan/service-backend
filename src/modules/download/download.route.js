@@ -11,6 +11,7 @@ import {
   getTotalDownloadForLicense,
   getTotalDownloadForUser,
   handleEnvatoDownload, handleLicenseDownload,
+  handleMotionArrayDownload,
   handleStoryBlocksDownload,
   updateDownloadById,
 } from './download.controller.js';
@@ -60,6 +61,7 @@ router.get(
 router.get('/my-downloads', adminMiddleware('user'), getMyDownloads);
 router.post('/envato-elements', adminMiddleware('user'), handleEnvatoDownload);
 router.post('/story-blocks', adminMiddleware('user'), handleStoryBlocksDownload);
+router.post('/motion-array', adminMiddleware('user'), handleMotionArrayDownload);
 router.get('/envato-elements-license/:downloadId',adminMiddleware('user'), handleLicenseDownload);
 router.put('/:id',adminMiddleware('user'), updateDownloadById); // given download id.
 

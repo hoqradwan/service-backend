@@ -13,6 +13,7 @@ import {
 import mongoose from 'mongoose';
 import { envatoCookieCredentials, StoryBlocksCookieCredentials } from '../download/download.utils.js';
 import axios from 'axios';
+import puppeteer from 'puppeteer';
 
 // create method for cookie
 export const createCookie = catchAsync(async (req, res) => {
@@ -333,7 +334,8 @@ export const isCookieValid = async (cookieDetails) => {
 export const isStoryBlocksCookieValid = async (cookieDetails) => {
   try {
     const cookie = cookieDetails?.cookie;
-    
+    const csrfToken = cookieDetails?.csrfToken;
+
 
     const urls = [
       "https://www.storyblocks.com/video/download-ajax/3541468/HDMOV",
@@ -345,7 +347,7 @@ export const isStoryBlocksCookieValid = async (cookieDetails) => {
 
     // headers for download request
     const headers = {
-      'Cookie': `login_session=${cookie}`
+      'Cookie': `VID=${cookie}; login_session=${csrfToken};`
     }
 
     // Make the HTTP request
@@ -362,6 +364,61 @@ export const isStoryBlocksCookieValid = async (cookieDetails) => {
       return false;
     };
   } catch (error) {
+    return false;
+  }
+
+};
+
+// Check if the story-blocks cookie is expired or not 
+export const isMotionArrayCookieValid = async (cookieDetails) => {
+  const browser = await puppeteer?.launch({
+    headless: false,
+  });
+  const page = await browser?.newPage();
+  try {
+    const cookie = cookieDetails?.cookie;
+
+    const urls = [
+      "https://motionarray.com/account/download/2721820/",
+      "https://motionarray.com/account/download/2743739/",
+      "https://motionarray.com/account/download/2790964/",
+      "https://motionarray.com/account/download/1980682/",
+      "https://motionarray.com/account/download/1980655/",
+    ]
+
+    // Get a random URL
+    const mainURL = urls[Math?.floor(Math?.random() * urls?.length)];
+
+    // Set extra headers including cookie
+    await page?.setExtraHTTPHeaders({
+      "cookie": `laravel_session=${cookie}`,
+    });
+
+    // Navigate to the target page
+    await page?.goto(mainURL, { waitUntil: 'networkidle2' });
+
+    // Extract the signed_url from the JSON 
+    const signedUrl = await page?.evaluate(() => {
+      const preElement = document?.querySelector('pre');
+      if (preElement) {
+        const jsonData = JSON?.parse(preElement.innerText);
+        return jsonData?.signed_url;
+      }
+      return null;
+    });
+
+    // Close the browser
+    await browser?.close();
+
+    if (signedUrl) {
+      return true;
+    }
+    else {
+      await browser?.close();
+      return false;
+    };
+  } catch (error) {
+    await browser?.close();
     return false;
   }
 

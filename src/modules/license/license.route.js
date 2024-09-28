@@ -21,7 +21,8 @@ const router = express.Router();
 router.get('/',adminMiddleware('admin'), allLicenses);
 router.get('/user-licenses/:id',adminMiddleware('user'), licenseByUser);
 router.get('/daily-stats',adminMiddleware('admin'), getDailyStatisticsForUsedLicenses);
-router.post('/create',adminMiddleware('admin'), createLicense);
+// router.post('/create',adminMiddleware('admin'), createLicense);
+router.post('/create', createLicense);
 router.put(
   '/activate',
   adminMiddleware('user'),

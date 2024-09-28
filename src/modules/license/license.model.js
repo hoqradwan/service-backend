@@ -5,7 +5,7 @@ const licenseSchema = new mongoose.Schema(
   {
     serviceName: {
       type: String,
-      enum: ['Envato'],
+      enum: ['Envato', 'Story-blocks', 'Motion-array'],
       required: true,
     },
     user: {

@@ -205,9 +205,20 @@ export const activateLicenseIntoDB = async (licenseKey, user) => {
     );
 
     // Update the user's isActive status
+    let updateCurrentLicenseOfUser;
+    if(licenseToUpdate?.serviceName.toLowerCase() === "envato"){
+      updateCurrentLicenseOfUser = { isActive: true, currentLicense: licenseToUpdate._id };
+    }
+    else if(licenseToUpdate?.serviceName.toLowerCase() === "story-blocks"){
+      updateCurrentLicenseOfUser = { isActive: true, currentStoryBlocksLicense: licenseToUpdate._id };
+    }
+    else if(licenseToUpdate?.serviceName.toLowerCase() === "motion-array"){
+      updateCurrentLicenseOfUser = { isActive: true, currentMotionArrayLicense: licenseToUpdate._id };
+    }
+    
     const updatedUser = await UserModel.findByIdAndUpdate(
       user.id,
-      { isActive: true, currentLicense: licenseToUpdate._id },
+      updateCurrentLicenseOfUser,
       { new: true, runValidators: true, session }, // Ensure to return the updated document, run validators, and include the session
     );
 

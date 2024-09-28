@@ -49,7 +49,7 @@ export const envatoCookieCredentials = async (cookieDetails, url) => {
 
 
 // Story-blocks cookie details
-export const StoryBlocksCookieCredentials = async ( cookieDetails,contentClass, itemCode, type) => {
+export const StoryBlocksCookieCredentials = async (cookieDetails, contentClass, itemCode, type) => {
 
   if (contentClass === "image") {
     contentClass = "images"
@@ -59,12 +59,50 @@ export const StoryBlocksCookieCredentials = async ( cookieDetails,contentClass, 
   const mainURL = `https://www.storyblocks.com/${contentClass}/download-ajax/${itemCode}/${type}`
 
   const cookie = cookieDetails?.cookie;
+  const csrfToken = cookieDetails?.csrfToken;
 
   // headers for download request
   const headers = {
-    'Cookie': `login_session=${cookie}`
+    'Cookie': `VID=${cookie}; login_session=${csrfToken};`
   }
 
   return { headers, mainURL };
 }
 
+
+// Motion-array cookie details
+export const motionArrayCookieCredentials = async (cookieDetails, url, type) => {
+
+  const last = url?.split("/")?.length - 1;
+  let itemName = (url?.trim()?.split("/")[last]);
+  if (itemName === "") {
+    itemName = (url?.split("/")[last - 1]);
+  }
+  const itemCode = itemName?.split("/")[0]?.split("-")[(itemName?.split("/")[0]?.split("-").length) - 1];
+
+
+
+  if (!itemCode) {
+    return res.status(400).json({ isOk: false, message: 'Invalid url' });
+  }
+
+  // https://motionarray.com/account/download/2651354/?device_token=zy2TycF4onsXUstGau9MGdnLnN7TFt9vYLZpQeNiSAewRPNbSS&resolutionFormat=uhd
+
+  // Main URL for download request
+  let mainURL;
+  if (type) {
+    mainURL = `https://motionarray.com/account/download/${itemCode}/?resolutionFormat=${type}`;
+  }
+  else {
+    mainURL = `https://motionarray.com/account/download/${itemCode}/`;
+  }
+
+  const cookie = cookieDetails?.cookie;
+
+  // headers for download request
+  const headers = {
+    "cookie": `laravel_session=${cookie}`,
+  }
+
+  return { headers, mainURL };
+}

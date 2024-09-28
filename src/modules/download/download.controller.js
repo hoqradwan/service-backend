@@ -23,10 +23,11 @@ import {
   getTotalDownloadForUserService,
   updateDownloadByIdService,
 } from './download.service.js';
-import { envatoCookieCredentials, StoryBlocksCookieCredentials } from './download.utils.js';
+import { envatoCookieCredentials, motionArrayCookieCredentials, StoryBlocksCookieCredentials } from './download.utils.js';
 import { findUserById } from '../user/user.service.js';
 import fetch from 'node-fetch';
-import { isCookieValid, isStoryBlocksCookieValid } from '../cookie/cookie.controller.js';
+import { isCookieValid, isMotionArrayCookieValid, isStoryBlocksCookieValid } from '../cookie/cookie.controller.js';
+import puppeteer from 'puppeteer';
 const cheerio = await import('cheerio');
 
 
@@ -643,7 +644,41 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
   }
 });
 
+// Request for getting Story-Blocks Item Code
+const getStoryBlockItemCode = async (url) => {
 
+  try {
+    const response = await axios({
+      method: 'GET',
+      url: url
+    });
+
+    const $ = cheerio?.load(response?.data);
+    const scriptTags = $('script');
+
+    let stockItemData;
+
+    scriptTags?.each((i, script) => {
+      const scriptContent = $(script)?.html();
+
+      const stockItemMatch = scriptContent?.match(/"stockItem":\s*({[\s\S]*?})/);
+      if (stockItemMatch && stockItemMatch[1]) {
+        stockItemData = stockItemMatch[1];
+      }
+    });
+
+    // Use regex to directly extract the ID and content-class
+    const idMatch = stockItemData?.match(/"id":\s*(\d+)/);
+    const contentClassMatch = stockItemData?.match(/"contentClass":"([^"]+)"/);
+
+    const itemCode = idMatch ? idMatch[1] : null;
+    const contentClass = contentClassMatch ? contentClassMatch[1] : null;
+    return { itemCode, contentClass }
+
+  } catch (error) {
+    console.log("Error in getting item code and content-class:", error);
+  }
+};
 
 // download request to storyBlocks official website
 export const handleStoryBlocksDownload = catchAsync(async (req, res) => {
@@ -677,46 +712,46 @@ export const handleStoryBlocksDownload = catchAsync(async (req, res) => {
     });
   }
   // current license of the user
-  // const licenseId = user?.currentStoryBlocksLicense;
-  // if (!licenseId) {
-  //   return sendResponse(res, {
-  //     success: false,
-  //     statusCode: 400,
-  //     message: 'You do not have a license activated',
-  //     data: null,
-  //   });
-  // }
+  const licenseId = user?.currentStoryBlocksLicense;
+  if (!licenseId) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'You do not have a license activated',
+      data: null,
+    });
+  }
 
   // // Check if licenseId is a valid MongoDB ObjectId
-  // if (!mongoose.Types.ObjectId.isValid(licenseId)) {
-  //   return sendResponse(res, {
-  //     success: false,
-  //     statusCode: 400,
-  //     message: 'Invalid License Id format',
-  //     data: null,
-  //   });
-  // }
+  if (!mongoose.Types.ObjectId.isValid(licenseId)) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Invalid License Id format',
+      data: null,
+    });
+  }
 
   // // checking if daily limit has been exceeded or not..
-  // const limitCheck = await isDailyLimitExceed(licenseId);
+  const limitCheck = await isDailyLimitExceed(licenseId);
 
-  // if (!limitCheck?.isOk) {
-  //   return sendResponse(res, {
-  //     success: false,
-  //     statusCode: 400,
-  //     message: limitCheck?.message,
-  //     data: null,
-  //   });
-  // }
+  if (!limitCheck?.isOk) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: limitCheck?.message,
+      data: null,
+    });
+  }
 
-  // if (limitCheck?.exceeded) {
-  //   return sendResponse(res, {
-  //     success: false,
-  //     statusCode: 400,
-  //     message: 'Download limit is exceeded',
-  //     data: null,
-  //   });
-  // }
+  if (limitCheck?.exceeded) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Download limit is exceeded',
+      data: null,
+    });
+  }
 
   let cookieDetails = null;
   // Getting random cookie details
@@ -812,77 +847,247 @@ export const handleStoryBlocksDownload = catchAsync(async (req, res) => {
 
   // Extract the download URL from the response
   const downloadUrl = response?.data?.data?.downloadUrl;
-  return sendResponse(res, {
-    success: true,
-    statusCode: 200,
-    message: 'Download request successful',
-    data: downloadUrl,
-  });
 
-  // if (downloadUrl) {
-  //   const download = {
-  //     service: "Story Blocks",
-  //     content: url,
-  //     contentLicense: null,
-  //     serviceId: cookieDetails?._id,
-  //     licenseId: licenseId,
-  //     status: "pending"
-  //   }
-  //   const result = await addDownloadIntoDB(download, req.user);
+  if (downloadUrl) {
+    const download = {
+      service: "Story Blocks",
+      content: url,
+      contentLicense: null,
+      serviceId: cookieDetails?._id,
+      licenseId: licenseId,
+      status: "pending"
+    }
+    const result = await addDownloadIntoDB(download, req.user);
 
-  //   if (result) {
-  //     return sendResponse(res, {
-  //       success: true,
-  //       statusCode: 200,
-  //       message: 'Download request successful',
-  //       data: { downloadUrl, downloadId: result[0]?._id },
-  //     });
-  //   }
+    if (result) {
+      return sendResponse(res, {
+        success: true,
+        statusCode: 200,
+        message: 'Download request successful',
+        data: { downloadUrl, downloadId: result[0]?._id },
+      });
+    }
 
-  // } else {
-  //   return sendResponse(res, {
-  //     success: false,
-  //     statusCode: 400,
-  //     message: 'Download request is unsuccessful',
-  //     data: null,
-  //   });
-  // }
+  } else {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Download request is unsuccessful',
+      data: null,
+    });
+  }
 });
 
 
+// download request to storyBlocks official website
+export const handleMotionArrayDownload = catchAsync(async (req, res) => {
+  const { url, type } = req?.body;
+  const userId = req?.user?.id;
 
-// Request for getting Story-Blocks Item Code
-const getStoryBlockItemCode = async (url) => {
+  if (!userId) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: "Couldn't generate user id",
+      data: null,
+    });
+  }
+  // Check if userId is a valid MongoDB ObjectId
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Invalid user Id format',
+      data: null,
+    });
+  }
+  const user = await findUserById(userId);
+  if (!user) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: "Couldn't find the user",
+      data: null,
+    });
+  }
+  // current license of the user
+  const licenseId = user?.currentStoryBlocksLicense;
+  if (!licenseId) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'You do not have a license activated',
+      data: null,
+    });
+  }
+
+  // // Check if licenseId is a valid MongoDB ObjectId
+  if (!mongoose.Types.ObjectId.isValid(licenseId)) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Invalid License Id format',
+      data: null,
+    });
+  }
+
+  // // checking if daily limit has been exceeded or not..
+  const limitCheck = await isDailyLimitExceed(licenseId);
+
+  if (!limitCheck?.isOk) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: limitCheck?.message,
+      data: null,
+    });
+  }
+
+  if (limitCheck?.exceeded) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Download limit is exceeded',
+      data: null,
+    });
+  }
+
+  let cookieDetails = null;
+  // Getting random cookie details
+  for (let i = 0; i < 3; i++) {
+    const cookie = await generateRandomAccount("motion-array");
+
+    if (!cookie) {
+      break;
+    }
+    let isCookieWorking;
+    // Loop for double check the cookie
+    for (let j = 0; j < 2; j++) {
+      isCookieWorking = await isMotionArrayCookieValid(cookie);
+      if (isCookieWorking) {
+        break;
+      }
+    }
+
+    if (!isCookieWorking) {
+      // if cookie is not valid then make it inactive
+      await updateCookieByIdService(cookie?._id, { "status": "inactive" })
+    }
+
+    if (isCookieWorking) {
+      cookieDetails = cookie;
+      break;
+    }
+  }
+
+  if (!cookieDetails) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'No working account found',
+      data: null,
+    });
+  }
+
+  const { headers, mainURL } = await motionArrayCookieCredentials(
+    cookieDetails,
+    url,
+    type?.toLowerCase()
+  );
+
+  if (!headers) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Headers are required',
+      data: null,
+    });
+  }
+
+  if (!mainURL) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'MainUrl is required',
+      data: null,
+    });
+  }
+
+  const response = await motionArrayDownloadRequest(headers, mainURL);
+
+  if (!response) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Item code or type is not valid',
+      data: null,
+    });
+  }
+
+
+  if (response) {
+    const download = {
+      service: "Motion Array",
+      content: url,
+      contentLicense: null,
+      serviceId: cookieDetails?._id,
+      licenseId: licenseId,
+      status: "pending"
+    }
+    const result = await addDownloadIntoDB(download, req.user);
+
+    if (result) {
+      return sendResponse(res, {
+        success: true,
+        statusCode: 200,
+        message: 'Download request successful',
+        data: { downloadUrl: response, downloadId: result[0]?._id },
+      });
+    }
+
+  } else {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Download request is unsuccessful',
+      data: null,
+    });
+  }
+});
+
+
+// Function for getting the motion array download url
+const motionArrayDownloadRequest = async (headers, mainURL) => {
+  const browser = await puppeteer?.launch({
+    headless: false,
+  });
+  const page = await browser?.newPage();
 
   try {
-    const response = await axios({
-      method: 'GET',
-      url: url
-    });
+    // Set extra headers including cookies, referer, and user-agent
+    await page?.setExtraHTTPHeaders(headers);
 
-    const $ = cheerio?.load(response?.data);
-    const scriptTags = $('script');
+    // Navigate to the target page
+    await page?.goto(mainURL, { waitUntil: 'networkidle2' });
 
-    let stockItemData;
-
-    scriptTags?.each((i, script) => {
-      const scriptContent = $(script)?.html();
-
-      const stockItemMatch = scriptContent?.match(/"stockItem":\s*({[\s\S]*?})/);
-      if (stockItemMatch && stockItemMatch[1]) {
-        stockItemData = stockItemMatch[1];
+    // Extract the signed_url from the JSON 
+    const signedUrl = await page?.evaluate(() => {
+      const preElement = document?.querySelector('pre');
+      if (preElement) {
+        const jsonData = JSON?.parse(preElement.innerText);
+        return jsonData?.signed_url;
       }
+      return null;
     });
 
-    // Use regex to directly extract the ID and content-class
-    const idMatch = stockItemData?.match(/"id":\s*(\d+)/);
-    const contentClassMatch = stockItemData?.match(/"contentClass":"([^"]+)"/);
-
-    const itemCode = idMatch ? idMatch[1] : null;
-    const contentClass = contentClassMatch ? contentClassMatch[1] : null;
-    return { itemCode, contentClass }
-
+    // Close the browser
+    await browser.close();
+    if (signedUrl) {
+      return signedUrl;
+    }
+    else return false;
   } catch (error) {
-    console.log("Error in getting item code and content-class:", error);
+    console.error("Error:", error.message);
+    await browser.close();
   }
-};
+}
