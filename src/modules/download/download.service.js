@@ -48,16 +48,17 @@ export const getMyDownloadsFromDB = async (requestedUser, page, limit) => {
 
 
 // Daily download count service by user email
-export const getDailyDownloadForUserService = async (userEmail) => {
+export const getDailyDownloadForUserService = async (userEmail, service) => {
   const today = new Date();
   const startOfDay = new Date(today.setHours(0, 0, 0, 0));
   const endOfDay = new Date(today.setHours(23, 59, 59, 999));
 
-  const downloads = await Download.aggregate([
+  const downloads = await Download?.aggregate([
     {
       $match: {
         downloadedBy: userEmail,
-        status: new RegExp('^accepted$', 'i'), // Case-insensitive match
+        service: new RegExp(`^${service}$`, 'i'), // Case-insensitive match for service 
+        status: new RegExp('^accepted$', 'i'), // Case-insensitive match status
         createdAt: {
           $gte: startOfDay,
           $lte: endOfDay,
@@ -91,6 +92,8 @@ export const getDailyDownloadForUserService = async (userEmail) => {
     dailyDownloads: downloads,
   };
 };
+
+
 
 
 
