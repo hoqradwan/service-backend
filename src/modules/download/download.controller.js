@@ -106,9 +106,8 @@ export const getDailyEnvatoDownloadForUser = catchAsync(async (req, res) => {
 });
 
 
-
-// Total download count by user email
-export const getTotalDownloadForUser = catchAsync(async (req, res) => {
+// daily download count for story blocks by user email
+export const getDailyStoryBlocksDownloadForUser = catchAsync(async (req, res) => {
   const role = req?.user?.role;
   let email = null;
   if (role === 'admin') {
@@ -134,11 +133,233 @@ export const getTotalDownloadForUser = catchAsync(async (req, res) => {
       });
     }
   }
-  const result = await getTotalDownloadForUserService(email);
+
+  const result = await getDailyDownloadForUserService(email, "Story Blocks");
+
   return sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
-    message: 'Total download  is retrieved successfully',
+    message: 'Daily download for story blocks is retrieved successfully',
+    data: result,
+  });
+});
+
+// daily download count for story blocks by user email
+export const getDailyMotionArrayDownloadForUser = catchAsync(async (req, res) => {
+  const role = req?.user?.role;
+  let email = null;
+  if (role === 'admin') {
+    const id = req?.params?.id;
+    const user = await findUserById(id);
+    if (!user) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: httpStatus?.BAD_REQUEST,
+        message: 'No user found with this id',
+        data: null,
+      });
+    }
+    email = user?.email;
+  } else if (role === 'user') {
+    email = req?.user?.email;
+    if (!email) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: httpStatus?.BAD_REQUEST,
+        message: 'Could not find user',
+        data: null,
+      });
+    }
+  }
+
+  const result = await getDailyDownloadForUserService(email, "Motion Array");
+
+  return sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Daily download for motion array is retrieved successfully',
+    data: result,
+  });
+});
+
+// daily download count for story blocks by user email
+export const getDailyFreepikDownloadForUser = catchAsync(async (req, res) => {
+  const role = req?.user?.role;
+  let email = null;
+  if (role === 'admin') {
+    const id = req?.params?.id;
+    const user = await findUserById(id);
+    if (!user) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: httpStatus?.BAD_REQUEST,
+        message: 'No user found with this id',
+        data: null,
+      });
+    }
+    email = user?.email;
+  } else if (role === 'user') {
+    email = req?.user?.email;
+    if (!email) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: httpStatus?.BAD_REQUEST,
+        message: 'Could not find user',
+        data: null,
+      });
+    }
+  }
+
+  const result = await getDailyDownloadForUserService(email, "Freepik");
+
+  return sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Daily download for freepik is retrieved successfully',
+    data: result,
+  });
+});
+
+// Total download count by user email for envato
+export const getTotalEnvatoDownloadForUser = catchAsync(async (req, res) => {
+  const role = req?.user?.role;
+  let email = null;
+  if (role === 'admin') {
+    const id = req?.params?.id;
+    const user = await findUserById(id);
+    if (!user) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: httpStatus?.BAD_REQUEST,
+        message: 'No user found with this id',
+        data: null,
+      });
+    }
+    email = user?.email;
+  } else if (role === 'user') {
+    email = req?.user?.email;
+    if (!email) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: httpStatus?.BAD_REQUEST,
+        message: 'Could not find user',
+        data: null,
+      });
+    }
+  }
+  const result = await getTotalDownloadForUserService(email, "Envato Elements");
+  return sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Total download for envato is retrieved successfully',
+    data: result,
+  });
+});
+
+// Total download count by user email for story blocks
+export const getTotalStoryBlocksDownloadForUser = catchAsync(async (req, res) => {
+  const role = req?.user?.role;
+  let email = null;
+  if (role === 'admin') {
+    const id = req?.params?.id;
+    const user = await findUserById(id);
+    if (!user) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: httpStatus?.BAD_REQUEST,
+        message: 'No user found with this id',
+        data: null,
+      });
+    }
+    email = user?.email;
+  } else if (role === 'user') {
+    email = req?.user?.email;
+    if (!email) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: httpStatus?.BAD_REQUEST,
+        message: 'Could not find user',
+        data: null,
+      });
+    }
+  }
+  const result = await getTotalDownloadForUserService(email, "Story Blocks");
+  return sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Total download for story blocks is retrieved successfully',
+    data: result,
+  });
+});
+
+// Total download count by user email for story blocks
+export const getTotalMotionArrayDownloadForUser = catchAsync(async (req, res) => {
+  const role = req?.user?.role;
+  let email = null;
+  if (role === 'admin') {
+    const id = req?.params?.id;
+    const user = await findUserById(id);
+    if (!user) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: httpStatus?.BAD_REQUEST,
+        message: 'No user found with this id',
+        data: null,
+      });
+    }
+    email = user?.email;
+  } else if (role === 'user') {
+    email = req?.user?.email;
+    if (!email) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: httpStatus?.BAD_REQUEST,
+        message: 'Could not find user',
+        data: null,
+      });
+    }
+  }
+  const result = await getTotalDownloadForUserService(email, "Motion Array");
+  return sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Total download for motion array is retrieved successfully',
+    data: result,
+  });
+});
+
+// Total download count by user email for story blocks
+export const getTotalFreepikDownloadForUser = catchAsync(async (req, res) => {
+  const role = req?.user?.role;
+  let email = null;
+  if (role === 'admin') {
+    const id = req?.params?.id;
+    const user = await findUserById(id);
+    if (!user) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: httpStatus?.BAD_REQUEST,
+        message: 'No user found with this id',
+        data: null,
+      });
+    }
+    email = user?.email;
+  } else if (role === 'user') {
+    email = req?.user?.email;
+    if (!email) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: httpStatus?.BAD_REQUEST,
+        message: 'Could not find user',
+        data: null,
+      });
+    }
+  }
+  const result = await getTotalDownloadForUserService(email, "Freepik");
+  return sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Total download for freepik is retrieved successfully',
     data: result,
   });
 });

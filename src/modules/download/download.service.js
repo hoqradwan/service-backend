@@ -98,11 +98,12 @@ export const getDailyDownloadForUserService = async (userEmail, service) => {
 
 
 
-export const getTotalDownloadForUserService = async (userEmail) => {
+export const getTotalDownloadForUserService = async (userEmail, service) => {
   const result = await Download.aggregate([
     {
       $match: {
         downloadedBy: userEmail,
+        service: service,
         status: 'accepted',
       },
     },

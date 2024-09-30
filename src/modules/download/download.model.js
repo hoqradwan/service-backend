@@ -5,7 +5,7 @@ const DownloadSchema = new Schema(
     service: {
       type: String,
       required: true,
-      enum: ['Envato Elements', 'envato elements', 'Story-Blocks', 'story-blocks', 'Motion-Array', 'motion-array', 'Freepik', 'freepik'],
+      enum: ['Envato Elements', 'Story Blocks', 'Motion Array', 'Freepik',],
     },
     content: { type: String, required: true }, // envato content url link
     contentLicense: { type: String, default: null }, // envato content download license url

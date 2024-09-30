@@ -6,10 +6,16 @@ import {
   getDailyDownloadForCookie,
   getDailyDownloadForLicense,
   getDailyEnvatoDownloadForUser,
+  getDailyFreepikDownloadForUser,
+  getDailyMotionArrayDownloadForUser,
+  getDailyStoryBlocksDownloadForUser,
   getMyDownloads,
   getTotalDownloadForCookie,
   getTotalDownloadForLicense,
-  getTotalDownloadForUser,
+  getTotalEnvatoDownloadForUser,
+  getTotalFreepikDownloadForUser,
+  getTotalMotionArrayDownloadForUser,
+  getTotalStoryBlocksDownloadForUser,
   handleEnvatoDownload, handleFreePikDownload, handleLicenseDownload,
   handleMotionArrayDownload,
   handleStoryBlocksDownload,
@@ -28,32 +34,50 @@ router.post(
   validateRequest(storeDownloadValidationSchema),
   addDownload,
 );
+// daily download count apis
 router.get(
-  '/user-daily-download/:id',
+  '/user-daily-envato-download/:id',
   adminMiddleware('user'),
   getDailyEnvatoDownloadForUser,
 );
 router.get(
   '/user-daily-story-blocks-download/:id',
   adminMiddleware('user'),
-  getDailyEnvatoDownloadForUser,
+  getDailyStoryBlocksDownloadForUser,
 );
 router.get(
   '/user-daily-motion-array-download/:id',
   adminMiddleware('user'),
-  getDailyEnvatoDownloadForUser,
+  getDailyMotionArrayDownloadForUser,
 );
 router.get(
   '/user-daily-freepik-download/:id',
   adminMiddleware('user'),
-  getDailyEnvatoDownloadForUser,
+  getDailyFreepikDownloadForUser,
+);
+///////////
+// total download count apis
+router.get(
+  '/user-total-envato-download/:id',
+  adminMiddleware('user'),
+  getTotalEnvatoDownloadForUser,
 );
 router.get(
-  '/user-total-download/:id',
+  '/user-total-story-blocks-download/:id',
   adminMiddleware('user'),
-  getTotalDownloadForUser,
+  getTotalStoryBlocksDownloadForUser,
 );
-
+router.get(
+  '/user-total-motion-array-download/:id',
+  adminMiddleware('user'),
+  getTotalMotionArrayDownloadForUser,
+);
+router.get(
+  '/user-total-freepik-download/:id',
+  adminMiddleware('user'),
+  getTotalFreepikDownloadForUser,
+);
+/////////
 router.get(
   '/license-daily-download',
   adminMiddleware('user'),
