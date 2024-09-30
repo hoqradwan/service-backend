@@ -423,3 +423,44 @@ export const isMotionArrayCookieValid = async (cookieDetails) => {
   }
 
 };
+
+
+// Check if the Freepik cookie is expired or not 
+export const isFreepikCookieValid = async (cookieDetails) => {
+  try {
+    const cookie = cookieDetails?.cookie;
+    const token = cookieDetails?.csrfToken;
+    const urls = [
+      "https://www.freepik.com/api/regular/download?resource=157432761&action=download",
+      "https://www.freepik.com/api/regular/download?resource=35806886&action=download",
+      "https://www.freepik.com/api/regular/download?resource=4394123&action=download",
+      "https://www.freepik.com/api/regular/download?resource=33488404&action=download",
+      "https://www.freepik.com/api/regular/download?resource=10368006&action=download",
+      "https://www.freepik.com/api/regular/download?resource=8307256&action=download"
+    ]
+
+    // Get a random URL
+    const mainURL = urls[Math?.floor(Math?.random() * urls?.length)];
+    const headers = {
+      'Cookie': `GR_REFRESH=${cookie} GR_TOKEN=${token}`
+    }
+
+    // Make the HTTP request
+    const response = await axios({
+      method: 'GET',
+      url: mainURL,
+      headers: headers,
+    });
+    console.log(response?.data);
+    
+    if (response?.data) {
+      return true;
+    }
+    else {
+      return false;
+    };
+  } catch (error) {
+    return false;
+  }
+
+};

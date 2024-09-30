@@ -5,7 +5,7 @@ const CookieSchema = new mongoose.Schema(
     serviceName: {
       type: String,
       required: true,
-      enum: ['envato', 'story-blocks', 'motion-array'],
+      enum: ['envato', 'story-blocks', 'motion-array', 'freepik'],
     },
     account: {
       type: String,

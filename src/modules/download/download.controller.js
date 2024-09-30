@@ -26,7 +26,7 @@ import {
 import { envatoCookieCredentials, motionArrayCookieCredentials, StoryBlocksCookieCredentials } from './download.utils.js';
 import { findUserById } from '../user/user.service.js';
 import fetch from 'node-fetch';
-import { isCookieValid, isMotionArrayCookieValid, isStoryBlocksCookieValid } from '../cookie/cookie.controller.js';
+import { isCookieValid, isFreepikCookieValid, isMotionArrayCookieValid, isStoryBlocksCookieValid } from '../cookie/cookie.controller.js';
 import puppeteer from 'puppeteer';
 const cheerio = await import('cheerio');
 
@@ -67,8 +67,8 @@ export const getMyDownloads = catchAsync(async (req, res) => {
   });
 });
 
-// daily download count by user email
-export const getDailyDownloadForUser = catchAsync(async (req, res) => {
+// daily download count for envato by user email
+export const getDailyEnvatoDownloadForUser = catchAsync(async (req, res) => {
   const role = req?.user?.role;
   let email = null;
   if (role === 'admin') {
@@ -95,18 +95,19 @@ export const getDailyDownloadForUser = catchAsync(async (req, res) => {
     }
   }
 
-  const result = await getDailyDownloadForUserService(email);
+  const result = await getDailyDownloadForUserService(email, "Envato Elements");
 
   return sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
-    message: 'Daily download  is retrieved successfully',
+    message: 'Daily download for envato is retrieved successfully',
     data: result,
   });
 });
 
-// Total download count by user email
-export const getTotalDownloadForUser = catchAsync(async (req, res) => {
+
+// daily download count for story blocks by user email
+export const getDailyStoryBlocksDownloadForUser = catchAsync(async (req, res) => {
   const role = req?.user?.role;
   let email = null;
   if (role === 'admin') {
@@ -132,11 +133,233 @@ export const getTotalDownloadForUser = catchAsync(async (req, res) => {
       });
     }
   }
-  const result = await getTotalDownloadForUserService(email);
+
+  const result = await getDailyDownloadForUserService(email, "Story Blocks");
+
   return sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
-    message: 'Total download  is retrieved successfully',
+    message: 'Daily download for story blocks is retrieved successfully',
+    data: result,
+  });
+});
+
+// daily download count for story blocks by user email
+export const getDailyMotionArrayDownloadForUser = catchAsync(async (req, res) => {
+  const role = req?.user?.role;
+  let email = null;
+  if (role === 'admin') {
+    const id = req?.params?.id;
+    const user = await findUserById(id);
+    if (!user) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: httpStatus?.BAD_REQUEST,
+        message: 'No user found with this id',
+        data: null,
+      });
+    }
+    email = user?.email;
+  } else if (role === 'user') {
+    email = req?.user?.email;
+    if (!email) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: httpStatus?.BAD_REQUEST,
+        message: 'Could not find user',
+        data: null,
+      });
+    }
+  }
+
+  const result = await getDailyDownloadForUserService(email, "Motion Array");
+
+  return sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Daily download for motion array is retrieved successfully',
+    data: result,
+  });
+});
+
+// daily download count for story blocks by user email
+export const getDailyFreepikDownloadForUser = catchAsync(async (req, res) => {
+  const role = req?.user?.role;
+  let email = null;
+  if (role === 'admin') {
+    const id = req?.params?.id;
+    const user = await findUserById(id);
+    if (!user) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: httpStatus?.BAD_REQUEST,
+        message: 'No user found with this id',
+        data: null,
+      });
+    }
+    email = user?.email;
+  } else if (role === 'user') {
+    email = req?.user?.email;
+    if (!email) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: httpStatus?.BAD_REQUEST,
+        message: 'Could not find user',
+        data: null,
+      });
+    }
+  }
+
+  const result = await getDailyDownloadForUserService(email, "Freepik");
+
+  return sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Daily download for freepik is retrieved successfully',
+    data: result,
+  });
+});
+
+// Total download count by user email for envato
+export const getTotalEnvatoDownloadForUser = catchAsync(async (req, res) => {
+  const role = req?.user?.role;
+  let email = null;
+  if (role === 'admin') {
+    const id = req?.params?.id;
+    const user = await findUserById(id);
+    if (!user) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: httpStatus?.BAD_REQUEST,
+        message: 'No user found with this id',
+        data: null,
+      });
+    }
+    email = user?.email;
+  } else if (role === 'user') {
+    email = req?.user?.email;
+    if (!email) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: httpStatus?.BAD_REQUEST,
+        message: 'Could not find user',
+        data: null,
+      });
+    }
+  }
+  const result = await getTotalDownloadForUserService(email, "Envato Elements");
+  return sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Total download for envato is retrieved successfully',
+    data: result,
+  });
+});
+
+// Total download count by user email for story blocks
+export const getTotalStoryBlocksDownloadForUser = catchAsync(async (req, res) => {
+  const role = req?.user?.role;
+  let email = null;
+  if (role === 'admin') {
+    const id = req?.params?.id;
+    const user = await findUserById(id);
+    if (!user) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: httpStatus?.BAD_REQUEST,
+        message: 'No user found with this id',
+        data: null,
+      });
+    }
+    email = user?.email;
+  } else if (role === 'user') {
+    email = req?.user?.email;
+    if (!email) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: httpStatus?.BAD_REQUEST,
+        message: 'Could not find user',
+        data: null,
+      });
+    }
+  }
+  const result = await getTotalDownloadForUserService(email, "Story Blocks");
+  return sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Total download for story blocks is retrieved successfully',
+    data: result,
+  });
+});
+
+// Total download count by user email for story blocks
+export const getTotalMotionArrayDownloadForUser = catchAsync(async (req, res) => {
+  const role = req?.user?.role;
+  let email = null;
+  if (role === 'admin') {
+    const id = req?.params?.id;
+    const user = await findUserById(id);
+    if (!user) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: httpStatus?.BAD_REQUEST,
+        message: 'No user found with this id',
+        data: null,
+      });
+    }
+    email = user?.email;
+  } else if (role === 'user') {
+    email = req?.user?.email;
+    if (!email) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: httpStatus?.BAD_REQUEST,
+        message: 'Could not find user',
+        data: null,
+      });
+    }
+  }
+  const result = await getTotalDownloadForUserService(email, "Motion Array");
+  return sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Total download for motion array is retrieved successfully',
+    data: result,
+  });
+});
+
+// Total download count by user email for story blocks
+export const getTotalFreepikDownloadForUser = catchAsync(async (req, res) => {
+  const role = req?.user?.role;
+  let email = null;
+  if (role === 'admin') {
+    const id = req?.params?.id;
+    const user = await findUserById(id);
+    if (!user) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: httpStatus?.BAD_REQUEST,
+        message: 'No user found with this id',
+        data: null,
+      });
+    }
+    email = user?.email;
+  } else if (role === 'user') {
+    email = req?.user?.email;
+    if (!email) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: httpStatus?.BAD_REQUEST,
+        message: 'Could not find user',
+        data: null,
+      });
+    }
+  }
+  const result = await getTotalDownloadForUserService(email, "Freepik");
+  return sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Total download for freepik is retrieved successfully',
     data: result,
   });
 });
@@ -879,6 +1102,46 @@ export const handleStoryBlocksDownload = catchAsync(async (req, res) => {
 });
 
 
+
+
+
+// Function for getting the motion array download url
+const motionArrayDownloadRequest = async (headers, mainURL) => {
+  const browser = await puppeteer?.launch({
+    headless: false,
+  });
+  const page = await browser?.newPage();
+
+  try {
+    // Set extra headers including cookies, referer, and user-agent
+    await page?.setExtraHTTPHeaders(headers);
+
+    // Navigate to the target page
+    await page?.goto(mainURL, { waitUntil: 'networkidle2' });
+
+    // Extract the signed_url from the JSON 
+    const signedUrl = await page?.evaluate(() => {
+      const preElement = document?.querySelector('pre');
+      if (preElement) {
+        const jsonData = JSON?.parse(preElement.innerText);
+        return jsonData?.signed_url;
+      }
+      return null;
+    });
+
+    // Close the browser
+    await browser.close();
+    if (signedUrl) {
+      return signedUrl;
+    }
+    else return false;
+  } catch (error) {
+    console.error("Error:", error.message);
+    await browser.close();
+  }
+}
+
+
 // download request to storyBlocks official website
 export const handleMotionArrayDownload = catchAsync(async (req, res) => {
   const { url, type } = req?.body;
@@ -1056,38 +1319,182 @@ export const handleMotionArrayDownload = catchAsync(async (req, res) => {
 });
 
 
-// Function for getting the motion array download url
-const motionArrayDownloadRequest = async (headers, mainURL) => {
-  const browser = await puppeteer?.launch({
-    headless: false,
-  });
-  const page = await browser?.newPage();
 
-  try {
-    // Set extra headers including cookies, referer, and user-agent
-    await page?.setExtraHTTPHeaders(headers);
 
-    // Navigate to the target page
-    await page?.goto(mainURL, { waitUntil: 'networkidle2' });
+// download request to freepik official website
+export const handleFreePikDownload = catchAsync(async (req, res) => {
+  const { url, type } = req?.body;
+  const userId = req?.user?.id;
 
-    // Extract the signed_url from the JSON 
-    const signedUrl = await page?.evaluate(() => {
-      const preElement = document?.querySelector('pre');
-      if (preElement) {
-        const jsonData = JSON?.parse(preElement.innerText);
-        return jsonData?.signed_url;
-      }
-      return null;
+  if (!userId) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: "Couldn't generate user id",
+      data: null,
     });
-
-    // Close the browser
-    await browser.close();
-    if (signedUrl) {
-      return signedUrl;
-    }
-    else return false;
-  } catch (error) {
-    console.error("Error:", error.message);
-    await browser.close();
   }
-}
+  // Check if userId is a valid MongoDB ObjectId
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Invalid user Id format',
+      data: null,
+    });
+  }
+  const user = await findUserById(userId);
+  if (!user) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: "Couldn't find the user",
+      data: null,
+    });
+  }
+  // current freepik license of the user
+  const licenseId = user?.currentFreepikLicense;
+  if (!licenseId) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'You do not have a license activated',
+      data: null,
+    });
+  }
+
+  // // Check if licenseId is a valid MongoDB ObjectId
+  if (!mongoose.Types.ObjectId.isValid(licenseId)) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Invalid License Id format',
+      data: null,
+    });
+  }
+
+  // // checking if daily limit has been exceeded or not..
+  const limitCheck = await isDailyLimitExceed(licenseId);
+
+  if (!limitCheck?.isOk) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: limitCheck?.message,
+      data: null,
+    });
+  }
+
+  if (limitCheck?.exceeded) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Download limit is exceeded',
+      data: null,
+    });
+  }
+
+  let cookieDetails = null;
+  // Getting random cookie details
+  for (let i = 0; i < 3; i++) {
+    const cookie = await generateRandomAccount("freepik");
+
+    if (!cookie) {
+      break;
+    }
+    let isCookieWorking;
+    // Loop for double check the cookie
+    for (let j = 0; j < 2; j++) {
+      isCookieWorking = await isFreepikCookieValid(cookie);
+      console.log("is freepik cookie valid", isCookieWorking);
+      
+      if (isCookieWorking) {
+        break;
+      }
+    }
+
+    if (!isCookieWorking) {
+      // if cookie is not valid then make it inactive
+      await updateCookieByIdService(cookie?._id, { "status": "inactive" })
+    }
+
+    if (isCookieWorking) {
+      cookieDetails = cookie;
+      break;
+    }
+  }
+
+  if (!cookieDetails) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'No working account found',
+      data: null,
+    });
+  }
+
+  const { headers, mainURL } = await motionArrayCookieCredentials(
+    cookieDetails,
+    url,
+    type?.toLowerCase()
+  );
+
+  if (!headers) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Headers are required',
+      data: null,
+    });
+  }
+
+  if (!mainURL) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'MainUrl is required',
+      data: null,
+    });
+  }
+
+  const response = await motionArrayDownloadRequest(headers, mainURL);
+
+  if (!response) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Item code or type is not valid',
+      data: null,
+    });
+  }
+
+
+  if (response) {
+    const download = {
+      service: "Motion Array",
+      content: url,
+      contentLicense: null,
+      serviceId: cookieDetails?._id,
+      licenseId: licenseId,
+      status: "pending"
+    }
+    const result = await addDownloadIntoDB(download, req.user);
+
+    if (result) {
+      return sendResponse(res, {
+        success: true,
+        statusCode: 200,
+        message: 'Download request successful',
+        data: { downloadUrl: response, downloadId: result[0]?._id },
+      });
+    }
+
+  } else {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Download request is unsuccessful',
+      data: null,
+    });
+  }
+});
