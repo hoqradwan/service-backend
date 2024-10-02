@@ -153,13 +153,64 @@ export const suspendLicense = catchAsync(async (req, res) => {
 
 });
 
-export const getDailyStatisticsForUsedLicenses = catchAsync(async (req, res) => {
-  const totalLimit = await getDailyStatisticsForUsedLicensesService();
-  const { dailyDownloads, totalDownloads } = await getTotalAndDailyDownloadsService();
+// Envato stats
+export const getDailyStatisticsForEnvatoForUsedLicenses = catchAsync(async (req, res) => {
+  const totalLimit = await getDailyStatisticsForUsedLicensesService("Envato");
+  const { dailyDownloads, totalDownloads } = await getTotalAndDailyDownloadsService("Envato Elements");
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
-    message: "Retrieved daily stats successfully",
+    message: "Retrieved daily stats for envato successfully",
+    data: {
+      totalLimit,
+      dailyDownloads,
+      totalDownloads
+    },
+  });
+
+});
+// Story Blocks stats
+export const getDailyStatisticsForStoryBlocksForUsedLicenses = catchAsync(async (req, res) => {
+  const totalLimit = await getDailyStatisticsForUsedLicensesService("Story-blocks");
+  const { dailyDownloads, totalDownloads } = await getTotalAndDailyDownloadsService("Story Blocks");
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Retrieved daily stats for story blocks successfully",
+    data: {
+      totalLimit,
+      dailyDownloads,
+      totalDownloads
+    },
+  });
+
+});
+
+// Motion array stats
+export const getDailyStatisticsForMotionArrayForUsedLicenses = catchAsync(async (req, res) => {
+  const totalLimit = await getDailyStatisticsForUsedLicensesService("Motion-array");
+  const { dailyDownloads, totalDownloads } = await getTotalAndDailyDownloadsService("Motion Array");
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Retrieved daily stats for motion array successfully",
+    data: {
+      totalLimit,
+      dailyDownloads,
+      totalDownloads
+    },
+  });
+
+});
+
+// Story Blocks stats
+export const getDailyStatisticsForFreepikForUsedLicenses = catchAsync(async (req, res) => {
+  const totalLimit = await getDailyStatisticsForUsedLicensesService("Freepik");
+  const { dailyDownloads, totalDownloads } = await getTotalAndDailyDownloadsService("Freepik");
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Retrieved daily stats for freepik successfully",
     data: {
       totalLimit,
       dailyDownloads,

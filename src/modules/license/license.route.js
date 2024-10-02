@@ -6,7 +6,10 @@ import {
   allLicenses,
   createLicense,
   deleteLicense,
-  getDailyStatisticsForUsedLicenses,
+  getDailyStatisticsForEnvatoForUsedLicenses,
+  getDailyStatisticsForFreepikForUsedLicenses,
+  getDailyStatisticsForMotionArrayForUsedLicenses,
+  getDailyStatisticsForStoryBlocksForUsedLicenses,
   licenseByUser,
   suspendLicense,
   updateLicense,
@@ -20,7 +23,10 @@ const router = express.Router();
 
 router.get('/',adminMiddleware('admin'), allLicenses);
 router.get('/user-licenses/:id',adminMiddleware('user'), licenseByUser);
-router.get('/daily-stats',adminMiddleware('admin'), getDailyStatisticsForUsedLicenses);
+router.get('/envato-stats', getDailyStatisticsForEnvatoForUsedLicenses);
+router.get('/story-blocks-stats', getDailyStatisticsForStoryBlocksForUsedLicenses);
+router.get('/motion-array-stats', getDailyStatisticsForMotionArrayForUsedLicenses);
+router.get('/freepik-stats', getDailyStatisticsForFreepikForUsedLicenses);
 // router.post('/create',adminMiddleware('admin'), createLicense);
 router.post('/create', createLicense);
 router.put(

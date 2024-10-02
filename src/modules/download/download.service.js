@@ -358,7 +358,7 @@ export const updateDownloadByIdService = async (id, updateData) => {
 };
 
 // service for getting the total number of daily download 
-export const getTotalAndDailyDownloadsService = async () => {
+export const getTotalAndDailyDownloadsService = async (service) => {
   const today = new Date();
   const startOfDay = new Date(today.setHours(0, 0, 0, 0));
   const endOfDay = new Date(today.setHours(23, 59, 59, 999));
@@ -370,6 +370,7 @@ export const getTotalAndDailyDownloadsService = async () => {
           {
             $match: {
               status: 'accepted',
+              service: service,
               createdAt: {
                 $gte: startOfDay,
                 $lte: endOfDay,
@@ -384,6 +385,7 @@ export const getTotalAndDailyDownloadsService = async () => {
           {
             $match: {
               status: 'accepted',
+              service: service
             },
           },
           {
