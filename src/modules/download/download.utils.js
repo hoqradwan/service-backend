@@ -86,7 +86,6 @@ export const motionArrayCookieCredentials = async (cookieDetails, url, type) => 
     return res.status(400).json({ isOk: false, message: 'Invalid url' });
   }
 
-  // https://motionarray.com/account/download/2651354/?device_token=zy2TycF4onsXUstGau9MGdnLnN7TFt9vYLZpQeNiSAewRPNbSS&resolutionFormat=uhd
 
   // Main URL for download request
   let mainURL;
@@ -102,6 +101,46 @@ export const motionArrayCookieCredentials = async (cookieDetails, url, type) => 
   // headers for download request
   const headers = {
     "cookie": `laravel_session=${cookie}`,
+  }
+
+  return { headers, mainURL };
+}
+
+
+// Freepik cookie details
+export const freepikCookieCredentials = async (cookieDetails, url, type) => {
+  // https://www.freepik.com/premium-ai-image/back-school-teacher_289405174.htm#query=university%20teacher&position=6&from_view=keyword&track=ais_hybrid&uuid=be0a0f3b-6619-4190-8827-f58340c4b65e
+  // https://www.freepik.com/icon/video-message_5358498#fromView=popular&page=1&position=9&uuid=e558fbe9-2a17-4f71-adfc-016dfcac61f7
+  // https://www.freepik.com/animated-icon/email-file_11237480#fromView=popular&page=1&position=31&uuid=9ee6b010-f150-4cf2-9db8-66ef017fd3db
+  const last = url?.split("/")?.length - 1;
+  let itemName = (url?.trim()?.split("/")[last]);
+  if (itemName === "") {
+    itemName = (url?.split("/")[last - 1]);
+  }
+  const itemCode = itemName?.split("/")[0]?.split("-")[(itemName?.split("/")[0]?.split("-").length) - 1];
+
+
+
+  if (!itemCode) {
+    return res.status(400).json({ isOk: false, message: 'Invalid url' });
+  }
+
+
+  // Main URL for download request
+  let mainURL;
+  if (type) {
+    mainURL = `https://motionarray.com/account/download/${itemCode}/?resolutionFormat=${type}`;
+  }
+  else {
+    mainURL = `https://motionarray.com/account/download/${itemCode}/`;
+  }
+
+  const cookie = cookieDetails?.cookie;
+  const token = cookieDetails?.csrfToken;
+
+  // headers for download request
+  const headers = {
+    'Cookie': `GR_REFRESH=${cookie} GR_TOKEN=${token}`
   }
 
   return { headers, mainURL };

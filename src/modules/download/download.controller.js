@@ -23,7 +23,7 @@ import {
   getTotalDownloadForUserService,
   updateDownloadByIdService,
 } from './download.service.js';
-import { envatoCookieCredentials, motionArrayCookieCredentials, StoryBlocksCookieCredentials } from './download.utils.js';
+import { envatoCookieCredentials, freepikCookieCredentials, motionArrayCookieCredentials, StoryBlocksCookieCredentials } from './download.utils.js';
 import { findUserById } from '../user/user.service.js';
 import fetch from 'node-fetch';
 import { isCookieValid, isFreepikCookieValid, isMotionArrayCookieValid, isStoryBlocksCookieValid } from '../cookie/cookie.controller.js';
@@ -1406,8 +1406,7 @@ export const handleFreePikDownload = catchAsync(async (req, res) => {
     // Loop for double check the cookie
     for (let j = 0; j < 2; j++) {
       isCookieWorking = await isFreepikCookieValid(cookie);
-      console.log("is freepik cookie valid", isCookieWorking);
-      
+
       if (isCookieWorking) {
         break;
       }
@@ -1433,7 +1432,7 @@ export const handleFreePikDownload = catchAsync(async (req, res) => {
     });
   }
 
-  const { headers, mainURL } = await motionArrayCookieCredentials(
+  const { headers, mainURL } = await freepikCookieCredentials(
     cookieDetails,
     url,
     type?.toLowerCase()
@@ -1457,21 +1456,19 @@ export const handleFreePikDownload = catchAsync(async (req, res) => {
     });
   }
 
-  const response = await motionArrayDownloadRequest(headers, mainURL);
+  // Make the first HTTP request
+  const response = await axios({
+    method: 'GET',
+    url: mainURL,
+    headers: headers,
+  });
 
-  if (!response) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: 'Item code or type is not valid',
-      data: null,
-    });
-  }
+  console.log(" body =====>>>", response?.data);
 
 
   if (response) {
     const download = {
-      service: "Motion Array",
+      service: "Freepik",
       content: url,
       contentLicense: null,
       serviceId: cookieDetails?._id,

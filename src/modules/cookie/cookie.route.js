@@ -14,7 +14,8 @@ router.post('/', createCookie);
 // router.post('/', adminMiddleware('admin'), validateRequest(createCookieValidationSchema), createCookie);
 router.put('/:id', adminMiddleware('admin'), validateRequest(updateCookieValidationSchema), updateCookieById);
 router.delete('/:id', adminMiddleware('admin'), deleteCookieById);
-router.get('/cookie-check/:id', adminMiddleware('admin'), isCookieWorking);//test cookie
+// router.get('/cookie-check/:id', adminMiddleware('admin'), isCookieWorking);//test cookie
+router.get('/cookie-check/:id', isCookieWorking);//test cookie
 
 
 export default router;

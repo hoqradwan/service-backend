@@ -207,7 +207,7 @@ export const deleteCookieById = catchAsync(async (req, res) => {
 
 // Check if the cookie is expired or not 
 export const isCookieWorking = catchAsync(async (req, res) => {
-  const url = "https://elements.envato.com/pink-sunset-modern-retro-serif-PDNXXR2";
+  
   // Extract the id from the request parameters
   const { id } = req?.params;
   // Check if id is a valid MongoDB ObjectId
@@ -231,50 +231,23 @@ export const isCookieWorking = catchAsync(async (req, res) => {
     });
   }
 
-  const { payload, headers, mainURL } = await envatoCookieCredentials(
-    cookieDetails,
-    url,
-  );
+  const service = cookieDetails?.serviceName;
+  let isWorking;
+  if (service === "envato") {
+    isWorking = await isCookieValid(cookieDetails);
 
-  if (!payload) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: 'Payload is required',
-      data: null,
-    });
+  }
+  else if (service === "story-blocks") {
+    isWorking = await isStoryBlocksCookieValid(cookieDetails);
+  }
+  else if (service === "motion-array") {
+    isWorking = await isMotionArrayCookieValid(cookieDetails);
+  }
+  else if (service === "freepik") {
+    isWorking = await isFreepikCookieValid(cookieDetails);
   }
 
-  if (!headers) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: 'Headers are required',
-      data: null,
-    });
-  }
-
-  // Make the first HTTP request
-  const response = await axios({
-    method: 'POST',
-    url: mainURL,
-    headers: headers,
-    data: payload,
-  });
-
-  if (!response) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: 'Download request unsuccessful',
-      data: null,
-    });
-  }
-
-  // Extract the download URL from the response
-  const downloadUrl = response?.data?.data?.attributes?.downloadUrl;
-
-  if (downloadUrl) {
+  if (isWorking) {
     return sendResponse(res, {
       success: true,
       statusCode: 200,
@@ -289,6 +262,7 @@ export const isCookieWorking = catchAsync(async (req, res) => {
       data: null,
     });
   }
+
 });
 
 
@@ -451,9 +425,8 @@ export const isFreepikCookieValid = async (cookieDetails) => {
       url: mainURL,
       headers: headers,
     });
-    console.log(response?.data);
-    
-    if (response?.data) {
+
+    if (response?.data?.url) {
       return true;
     }
     else {
