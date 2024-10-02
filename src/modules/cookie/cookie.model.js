@@ -19,11 +19,11 @@ const CookieSchema = new mongoose.Schema(
       type: String,
       
     },
-    cookie: {   // Vid(story-blocks) || laravel_session(motion-array)
+    cookie: {   // Vid(story-blocks) || laravel_session(motion-array) || GR_REFRESH(Freepik)
       type: String,
       required: true,
     },
-    csrfToken: {   // csrf token(envato) || login session token(story-blocks)
+    csrfToken: {   // csrf token(envato) || login session token(story-blocks) || GR_TOKEN(Freepik)
       type: String,
       required: true, 
     },

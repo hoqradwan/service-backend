@@ -215,6 +215,9 @@ export const activateLicenseIntoDB = async (licenseKey, user) => {
     else if(licenseToUpdate?.serviceName.toLowerCase() === "motion-array"){
       updateCurrentLicenseOfUser = { isActive: true, currentMotionArrayLicense: licenseToUpdate._id };
     }
+    else if(licenseToUpdate?.serviceName.toLowerCase() === "freepik"){
+      updateCurrentLicenseOfUser = { isActive: true, currentFreepikLicense: licenseToUpdate._id };
+    }
     
     const updatedUser = await UserModel.findByIdAndUpdate(
       user.id,

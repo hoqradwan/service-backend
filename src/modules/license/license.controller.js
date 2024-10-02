@@ -58,7 +58,7 @@ export const allLicenses = catchAsync(async (req, res) => {
 });
 
 export const licenseByUser = catchAsync(async (req, res) => {
-  const userId = req.params.id;
+  const userId = req?.params?.id;
   const { page, limit, sortBy, sortOrder, status, serviceName, expiryDate } =
     req.query;
 
