@@ -73,14 +73,14 @@ export const StoryBlocksCookieCredentials = async (cookieDetails, contentClass, 
 // Motion-array cookie details
 export const motionArrayCookieCredentials = async (cookieDetails, url, type) => {
 
-  const last = url?.split("/")?.length - 1;
-  let itemName = (url?.trim()?.split("/")[last]);
+  const isExtraThingsExist = url?.split("?")
+  const cleanUrl = isExtraThingsExist[0];
+  const last = cleanUrl?.split("/")?.length - 1;
+  let itemName = (cleanUrl?.trim()?.split("/")[last]);
   if (itemName === "") {
-    itemName = (url?.split("/")[last - 1]);
+    itemName = (cleanUrl?.split("/")[last - 1]);
   }
   const itemCode = itemName?.split("/")[0]?.split("-")[(itemName?.split("/")[0]?.split("-").length) - 1];
-
-
 
   if (!itemCode) {
     return res.status(400).json({ isOk: false, message: 'Invalid url' });

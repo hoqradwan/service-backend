@@ -3,6 +3,8 @@ import { getTime } from '../../helpers/momentHelpers.js';
 import { Download } from './download.model.js';
 import { default as customMoment } from 'moment-timezone';
 
+
+// Post method for download
 export const addDownloadIntoDB = async (payload, requestedUser) => {
   payload['downloadedAt'] = moment();
   payload['downloadedBy'] = requestedUser.email;
@@ -11,6 +13,7 @@ export const addDownloadIntoDB = async (payload, requestedUser) => {
   return result;
 };
 
+// My download history Service
 export const getMyDownloadsFromDB = async (requestedUser, page, limit) => {
 
   const result = await Download.aggregate([
@@ -93,7 +96,7 @@ export const getDailyDownloadForUserService = async (userEmail, service) => {
   };
 };
 
-
+// Download history of user service based for admin
 export const getTotalDownloadForUserService = async (userEmail, service) => {
   const result = await Download.aggregate([
     {
@@ -137,7 +140,7 @@ export const getTotalDownloadForUserService = async (userEmail, service) => {
 };
 
 
-
+// User total download history service for admin
 export const getTotalDownloadForAllUserService = async (userEmail) => {
   const result = await Download.aggregate([
     {

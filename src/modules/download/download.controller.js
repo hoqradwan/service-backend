@@ -1212,7 +1212,7 @@ export const handleMotionArrayDownload = catchAsync(async (req, res) => {
     });
   }
   // current license of the user
-  const licenseId = user?.currentStoryBlocksLicense;
+  const licenseId = user?.currentMotionArrayLicense;
   if (!licenseId) {
     return sendResponse(res, {
       success: false,
