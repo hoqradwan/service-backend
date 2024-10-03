@@ -18,6 +18,7 @@ import {
   getDailyDownloadForUserService,
   getDownloadById,
   getMyDownloadsFromDB,
+  getTotalDownloadForAllUserService,
   getTotalDownloadForCookieService,
   getTotalDownloadForLicenseService,
   getTotalDownloadForUserService,
@@ -219,6 +220,43 @@ export const getDailyFreepikDownloadForUser = catchAsync(async (req, res) => {
     data: result,
   });
 });
+
+// Total download count by user email for all service
+export const getTotalDownloadsForUser = catchAsync(async (req, res) => {
+  const role = req?.user?.role;
+  let email = null;
+  if (role === 'admin') {
+    const id = req?.params?.id;
+    const user = await findUserById(id);
+    if (!user) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: httpStatus?.BAD_REQUEST,
+        message: 'No user found with this id',
+        data: null,
+      });
+    }
+    email = user?.email;
+  } else if (role === 'user') {
+    email = req?.user?.email;
+    if (!email) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: httpStatus?.BAD_REQUEST,
+        message: 'Could not find user',
+        data: null,
+      });
+    }
+  }
+  const result = await getTotalDownloadForAllUserService(email);
+  return sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Total download retrieved successfully',
+    data: result,
+  });
+});
+
 
 // Total download count by user email for envato
 export const getTotalEnvatoDownloadForUser = catchAsync(async (req, res) => {

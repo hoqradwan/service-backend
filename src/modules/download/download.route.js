@@ -12,6 +12,7 @@ import {
   getMyDownloads,
   getTotalDownloadForCookie,
   getTotalDownloadForLicense,
+  getTotalDownloadsForUser,
   getTotalEnvatoDownloadForUser,
   getTotalFreepikDownloadForUser,
   getTotalMotionArrayDownloadForUser,
@@ -57,6 +58,11 @@ router.get(
 );
 ///////////
 // total download count apis
+router.get(
+  '/user-total-download/:id',
+  adminMiddleware('user'),
+  getTotalDownloadsForUser,
+);
 router.get(
   '/user-total-envato-download/:id',
   adminMiddleware('user'),

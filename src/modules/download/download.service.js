@@ -94,10 +94,6 @@ export const getDailyDownloadForUserService = async (userEmail, service) => {
 };
 
 
-
-
-
-
 export const getTotalDownloadForUserService = async (userEmail, service) => {
   const result = await Download.aggregate([
     {
@@ -110,6 +106,49 @@ export const getTotalDownloadForUserService = async (userEmail, service) => {
     {
       $setWindowFields: {
         sortBy: { downloadedAt: -1 }, // Sort by time of creation
+        output: {
+          serial: {
+            $documentNumber: {}, // Generates a sequential number for each document
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        createdAt: 0, // Excluding unnecessary fields
+        updatedAt: 0,
+        __v: 0,
+        serviceId: 0,
+        licenseId: 0,
+      }
+    }
+  ]);
+
+  const totalDownloadCount = result?.length;
+  const downloads = result?.map((download) => ({
+    ...download,
+    time: getTime(new Date(download.downloadedAt)),
+  }));
+  // Return both the count and the documents with serial numbers
+  return {
+    totalDownloadCount,
+    downloads,
+  };
+};
+
+
+
+export const getTotalDownloadForAllUserService = async (userEmail) => {
+  const result = await Download.aggregate([
+    {
+      $match: {
+        downloadedBy: userEmail,
+        status: 'accepted',
+      },
+    },
+    {
+      $setWindowFields: {
+        sortBy: { downloadedAt: 1 }, // Sort by time of creation
         output: {
           serial: {
             $documentNumber: {}, // Generates a sequential number for each document
