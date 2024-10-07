@@ -3,6 +3,8 @@ import { getTime } from '../../helpers/momentHelpers.js';
 import { Download } from './download.model.js';
 import { default as customMoment } from 'moment-timezone';
 
+
+// Post method for download
 export const addDownloadIntoDB = async (payload, requestedUser) => {
   payload['downloadedAt'] = moment();
   payload['downloadedBy'] = requestedUser.email;
@@ -11,6 +13,7 @@ export const addDownloadIntoDB = async (payload, requestedUser) => {
   return result;
 };
 
+// My download history Service
 export const getMyDownloadsFromDB = async (requestedUser, page, limit) => {
 
   const result = await Download.aggregate([
@@ -48,16 +51,17 @@ export const getMyDownloadsFromDB = async (requestedUser, page, limit) => {
 
 
 // Daily download count service by user email
-export const getDailyDownloadForUserService = async (userEmail) => {
+export const getDailyDownloadForUserService = async (userEmail, service) => {
   const today = new Date();
   const startOfDay = new Date(today.setHours(0, 0, 0, 0));
   const endOfDay = new Date(today.setHours(23, 59, 59, 999));
 
-  const downloads = await Download.aggregate([
+  const downloads = await Download?.aggregate([
     {
       $match: {
         downloadedBy: userEmail,
-        status: new RegExp('^accepted$', 'i'), // Case-insensitive match
+        service: new RegExp(`^${service}$`, 'i'), // Case-insensitive match for service 
+        status: new RegExp('^accepted$', 'i'), // Case-insensitive match status
         createdAt: {
           $gte: startOfDay,
           $lte: endOfDay,
@@ -92,10 +96,52 @@ export const getDailyDownloadForUserService = async (userEmail) => {
   };
 };
 
+// Download history of user service based for admin
+export const getTotalDownloadForUserService = async (userEmail, service) => {
+  const result = await Download.aggregate([
+    {
+      $match: {
+        downloadedBy: userEmail,
+        service: service,
+        status: 'accepted',
+      },
+    },
+    {
+      $setWindowFields: {
+        sortBy: { downloadedAt: -1 }, // Sort by time of creation
+        output: {
+          serial: {
+            $documentNumber: {}, // Generates a sequential number for each document
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        createdAt: 0, // Excluding unnecessary fields
+        updatedAt: 0,
+        __v: 0,
+        serviceId: 0,
+        licenseId: 0,
+      }
+    }
+  ]);
+
+  const totalDownloadCount = result?.length;
+  const downloads = result?.map((download) => ({
+    ...download,
+    time: getTime(new Date(download.downloadedAt)),
+  }));
+  // Return both the count and the documents with serial numbers
+  return {
+    totalDownloadCount,
+    downloads,
+  };
+};
 
 
-
-export const getTotalDownloadForUserService = async (userEmail) => {
+// User total download history service for admin
+export const getTotalDownloadForAllUserService = async (userEmail) => {
   const result = await Download.aggregate([
     {
       $match: {
@@ -105,7 +151,7 @@ export const getTotalDownloadForUserService = async (userEmail) => {
     },
     {
       $setWindowFields: {
-        sortBy: { downloadedAt: -1 }, // Sort by time of creation
+        sortBy: { downloadedAt: 1 }, // Sort by time of creation
         output: {
           serial: {
             $documentNumber: {}, // Generates a sequential number for each document
@@ -354,7 +400,7 @@ export const updateDownloadByIdService = async (id, updateData) => {
 };
 
 // service for getting the total number of daily download 
-export const getTotalAndDailyDownloadsService = async () => {
+export const getTotalAndDailyDownloadsService = async (service) => {
   const today = new Date();
   const startOfDay = new Date(today.setHours(0, 0, 0, 0));
   const endOfDay = new Date(today.setHours(23, 59, 59, 999));
@@ -366,6 +412,7 @@ export const getTotalAndDailyDownloadsService = async () => {
           {
             $match: {
               status: 'accepted',
+              service: service,
               createdAt: {
                 $gte: startOfDay,
                 $lte: endOfDay,
@@ -380,6 +427,7 @@ export const getTotalAndDailyDownloadsService = async () => {
           {
             $match: {
               status: 'accepted',
+              service: service
             },
           },
           {

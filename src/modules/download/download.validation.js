@@ -11,16 +11,11 @@ export const storeDownloadValidationSchema = z.object({
       invalid_type_error: 'content must be a string!',
     }),
     contentLicense: z.string({
-      required_error: 'contentLicense is required!',
       invalid_type_error: 'contentLicense must be a string!',
     }),
     serviceId: z.string({
       required_error: 'serviceId is required!',
       invalid_type_error: 'serviceId must be a string!',
-    }),
-    licenseId: z.string({
-      required_error: 'licenseId is required!',
-      invalid_type_error: 'licenseId must be a string!',
     }),
     status: z.enum(['pending', 'accepted']),
   }),

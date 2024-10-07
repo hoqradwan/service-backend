@@ -15,13 +15,22 @@ const UserSchema = new Schema(
       ref: 'License',
       default: null,
     },
-    tokens: [
-      {
-        token: {
-          type: String,
-        },
-      },
-    ],
+    currentStoryBlocksLicense: {
+      type: Schema.Types.ObjectId,
+      ref: 'License',
+      default: null,
+    },
+    currentMotionArrayLicense: {
+      type: Schema.Types.ObjectId,
+      ref: 'License',
+      default: null,
+    },
+    currentFreepikLicense: {
+      type: Schema.Types.ObjectId,
+      ref: 'License',
+      default: null,
+    },
+    loggedInIps: { type: [String], default: [] }, // Store allowed IP addresses
     deviceLimit: { type: Number, default: 1 }, // Custom device limit for each user
   },
   { timestamps: true },

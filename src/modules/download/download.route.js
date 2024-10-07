@@ -5,12 +5,21 @@ import {
   addDownload,
   getDailyDownloadForCookie,
   getDailyDownloadForLicense,
-  getDailyDownloadForUser,
+  getDailyEnvatoDownloadForUser,
+  getDailyFreepikDownloadForUser,
+  getDailyMotionArrayDownloadForUser,
+  getDailyStoryBlocksDownloadForUser,
   getMyDownloads,
   getTotalDownloadForCookie,
   getTotalDownloadForLicense,
-  getTotalDownloadForUser,
-  handleDownload, handleLicenseDownload,
+  getTotalDownloadsForUser,
+  getTotalEnvatoDownloadForUser,
+  getTotalFreepikDownloadForUser,
+  getTotalMotionArrayDownloadForUser,
+  getTotalStoryBlocksDownloadForUser,
+  handleEnvatoDownload, handleFreePikDownload, handleLicenseDownload,
+  handleMotionArrayDownload,
+  handleStoryBlocksDownload,
   updateDownloadById,
 } from './download.controller.js';
 import {
@@ -26,16 +35,55 @@ router.post(
   validateRequest(storeDownloadValidationSchema),
   addDownload,
 );
+// daily download count apis
 router.get(
-  '/user-daily-download/:id',
+  '/user-daily-envato-download/:id',
   adminMiddleware('user'),
-  getDailyDownloadForUser,
+  getDailyEnvatoDownloadForUser,
 );
+router.get(
+  '/user-daily-story-blocks-download/:id',
+  adminMiddleware('user'),
+  getDailyStoryBlocksDownloadForUser,
+);
+router.get(
+  '/user-daily-motion-array-download/:id',
+  adminMiddleware('user'),
+  getDailyMotionArrayDownloadForUser,
+);
+router.get(
+  '/user-daily-freepik-download/:id',
+  adminMiddleware('user'),
+  getDailyFreepikDownloadForUser,
+);
+///////////
+// total download count apis
 router.get(
   '/user-total-download/:id',
   adminMiddleware('user'),
-  getTotalDownloadForUser,
+  getTotalDownloadsForUser,
 );
+router.get(
+  '/user-total-envato-download/:id',
+  adminMiddleware('user'),
+  getTotalEnvatoDownloadForUser,
+);
+router.get(
+  '/user-total-story-blocks-download/:id',
+  adminMiddleware('user'),
+  getTotalStoryBlocksDownloadForUser,
+);
+router.get(
+  '/user-total-motion-array-download/:id',
+  adminMiddleware('user'),
+  getTotalMotionArrayDownloadForUser,
+);
+router.get(
+  '/user-total-freepik-download/:id',
+  adminMiddleware('user'),
+  getTotalFreepikDownloadForUser,
+);
+/////////
 router.get(
   '/license-daily-download',
   adminMiddleware('user'),
@@ -57,7 +105,10 @@ router.get(
   getTotalDownloadForCookie,
 );
 router.get('/my-downloads', adminMiddleware('user'), getMyDownloads);
-router.post('/envato-elements', adminMiddleware('user'), handleDownload);
+router.post('/envato-elements', adminMiddleware('user'), handleEnvatoDownload);
+router.post('/story-blocks', adminMiddleware('user'), handleStoryBlocksDownload);
+router.post('/motion-array', adminMiddleware('user'), handleMotionArrayDownload);
+router.post('/freepik', adminMiddleware('user'), handleFreePikDownload);
 router.get('/envato-elements-license/:downloadId',adminMiddleware('user'), handleLicenseDownload);
 router.put('/:id',adminMiddleware('user'), updateDownloadById); // given download id.
 

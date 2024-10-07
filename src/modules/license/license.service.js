@@ -3,7 +3,7 @@ import { UserModel } from '../user/user.model.js';
 import { LicenseModel } from './license.model.js';
 
 export const createLicenseIntoDB = async (payload) => {
-  
+
   const result = await LicenseModel.create(payload);
   return result;
 };
@@ -205,9 +205,23 @@ export const activateLicenseIntoDB = async (licenseKey, user) => {
     );
 
     // Update the user's isActive status
+    let updateCurrentLicenseOfUser;
+    if (licenseToUpdate?.serviceName.toLowerCase() === "envato") {
+      updateCurrentLicenseOfUser = { isActive: true, currentLicense: licenseToUpdate._id };
+    }
+    else if (licenseToUpdate?.serviceName.toLowerCase() === "story-blocks") {
+      updateCurrentLicenseOfUser = { isActive: true, currentStoryBlocksLicense: licenseToUpdate._id };
+    }
+    else if (licenseToUpdate?.serviceName.toLowerCase() === "motion-array") {
+      updateCurrentLicenseOfUser = { isActive: true, currentMotionArrayLicense: licenseToUpdate._id };
+    }
+    else if (licenseToUpdate?.serviceName.toLowerCase() === "freepik") {
+      updateCurrentLicenseOfUser = { isActive: true, currentFreepikLicense: licenseToUpdate._id };
+    }
+
     const updatedUser = await UserModel.findByIdAndUpdate(
       user.id,
-      { isActive: true, currentLicense: licenseToUpdate._id },
+      updateCurrentLicenseOfUser,
       { new: true, runValidators: true, session }, // Ensure to return the updated document, run validators, and include the session
     );
 
@@ -252,14 +266,14 @@ export const suspendLicenseIntoDB = async (licenseId) => {
   };
 };
 
-export const getDailyStatisticsForUsedLicensesService = async () => {
+export const getDailyStatisticsForUsedLicensesService = async (serviceName) => {
   const result = await LicenseModel.aggregate([
     {
-      $match: { status: 'used' } 
+      $match: { status: 'used', serviceName: serviceName }
     },
     {
       $group: {
-        _id: null, 
+        _id: null,
         totalDailyLimit: { $sum: '$dailyLimit' } // Sum the dailyLimit field
       }
     }

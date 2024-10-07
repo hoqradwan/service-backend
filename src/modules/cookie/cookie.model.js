@@ -5,7 +5,7 @@ const CookieSchema = new mongoose.Schema(
     serviceName: {
       type: String,
       required: true,
-      enum: ['envato'],
+      enum: ['envato', 'story-blocks', 'motion-array', 'freepik'],
     },
     account: {
       type: String,
@@ -19,13 +19,13 @@ const CookieSchema = new mongoose.Schema(
       type: String,
       
     },
-    cookie: {
+    cookie: {   // Vid(story-blocks) || laravel_session(motion-array) || GR_REFRESH(Freepik)
       type: String,
       required: true,
     },
-    csrfToken: {
+    csrfToken: {   // csrf token(envato) || login session token(story-blocks) || GR_TOKEN(Freepik)
       type: String,
-      required: true,
+      required: true, 
     },
     status: {
       type: String,

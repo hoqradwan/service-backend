@@ -11,8 +11,9 @@ import {
   updateCookieByIdService,
 } from './cookie.service.js';
 import mongoose from 'mongoose';
-import { cookieCredentials } from '../download/download.utils.js';
+import { envatoCookieCredentials, StoryBlocksCookieCredentials } from '../download/download.utils.js';
 import axios from 'axios';
+import puppeteer from 'puppeteer';
 
 // create method for cookie
 export const createCookie = catchAsync(async (req, res) => {
@@ -34,7 +35,7 @@ export const createCookie = catchAsync(async (req, res) => {
     });
   }
   // Checking if the account with same email already exists or not
-  const isAccountExist = await getCookieByAccountEmailService(data.account);
+  const isAccountExist = await getCookieByAccountEmailService(data?.account, data?.serviceName);
   if (isAccountExist) {
     return sendResponse(res, {
       success: false,
@@ -206,7 +207,7 @@ export const deleteCookieById = catchAsync(async (req, res) => {
 
 // Check if the cookie is expired or not 
 export const isCookieWorking = catchAsync(async (req, res) => {
-  const url = "https://elements.envato.com/pink-sunset-modern-retro-serif-PDNXXR2";
+  
   // Extract the id from the request parameters
   const { id } = req?.params;
   // Check if id is a valid MongoDB ObjectId
@@ -230,50 +231,23 @@ export const isCookieWorking = catchAsync(async (req, res) => {
     });
   }
 
-  const { payload, headers, mainURL } = await cookieCredentials(
-    cookieDetails,
-    url,
-  );
+  const service = cookieDetails?.serviceName;
+  let isWorking;
+  if (service === "envato") {
+    isWorking = await isCookieValid(cookieDetails);
 
-  if (!payload) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: 'Payload is required',
-      data: null,
-    });
+  }
+  else if (service === "story-blocks") {
+    isWorking = await isStoryBlocksCookieValid(cookieDetails);
+  }
+  else if (service === "motion-array") {
+    isWorking = await isMotionArrayCookieValid(cookieDetails);
+  }
+  else if (service === "freepik") {
+    isWorking = await isFreepikCookieValid(cookieDetails);
   }
 
-  if (!headers) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: 'Headers are required',
-      data: null,
-    });
-  }
-
-  // Make the first HTTP request
-  const response = await axios({
-    method: 'POST',
-    url: mainURL,
-    headers: headers,
-    data: payload,
-  });
-
-  if (!response) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: 'Download request unsuccessful',
-      data: null,
-    });
-  }
-
-  // Extract the download URL from the response
-  const downloadUrl = response?.data?.data?.attributes?.downloadUrl;
-
-  if (downloadUrl) {
+  if (isWorking) {
     return sendResponse(res, {
       success: true,
       statusCode: 200,
@@ -288,10 +262,11 @@ export const isCookieWorking = catchAsync(async (req, res) => {
       data: null,
     });
   }
+
 });
 
 
-// Check if the cookie is expired or not 
+// Check if the envato cookie is expired or not 
 export const isCookieValid = async (cookieDetails) => {
   try {
     const urls = [
@@ -305,7 +280,7 @@ export const isCookieValid = async (cookieDetails) => {
     // Get a random URL
     const url = urls[Math?.floor(Math?.random() * urls?.length)];
 
-    const { payload, headers, mainURL } = await cookieCredentials(
+    const { payload, headers, mainURL } = await envatoCookieCredentials(
       cookieDetails,
       url,
     );
@@ -318,6 +293,140 @@ export const isCookieValid = async (cookieDetails) => {
       data: payload,
     });
     if (response) {
+      return true;
+    }
+    else {
+      return false;
+    };
+  } catch (error) {
+    return false;
+  }
+
+};
+
+// Check if the story-blocks cookie is expired or not 
+export const isStoryBlocksCookieValid = async (cookieDetails) => {
+  try {
+    const cookie = cookieDetails?.cookie;
+    const csrfToken = cookieDetails?.csrfToken;
+
+
+    const urls = [
+      "https://www.storyblocks.com/video/download-ajax/3541468/HDMOV",
+      "https://www.storyblocks.com/video/download-ajax/3541464/4KMOV",
+    ]
+
+    // Get a random URL
+    const mainURL = urls[Math?.floor(Math?.random() * urls?.length)];
+
+    // headers for download request
+    const headers = {
+      'Cookie': `VID=${cookie}; login_session=${csrfToken};`
+    }
+
+    // Make the HTTP request
+    const response = await axios({
+      method: 'GET',
+      url: mainURL,
+      headers: headers,
+    });
+
+    if (response?.data?.data?.downloadUrl) {
+      return true;
+    }
+    else {
+      return false;
+    };
+  } catch (error) {
+    return false;
+  }
+
+};
+
+// Check if the story-blocks cookie is expired or not 
+export const isMotionArrayCookieValid = async (cookieDetails) => {
+  const browser = await puppeteer?.launch({
+    headless: false,
+  });
+  const page = await browser?.newPage();
+  try {
+    const cookie = cookieDetails?.cookie;
+
+    const urls = [
+      "https://motionarray.com/account/download/2721820/",
+      "https://motionarray.com/account/download/2743739/",
+      "https://motionarray.com/account/download/2790964/",
+      "https://motionarray.com/account/download/1980682/",
+      "https://motionarray.com/account/download/1980655/",
+    ]
+
+    // Get a random URL
+    const mainURL = urls[Math?.floor(Math?.random() * urls?.length)];
+
+    // Set extra headers including cookie
+    await page?.setExtraHTTPHeaders({
+      "cookie": `laravel_session=${cookie}`,
+    });
+
+    // Navigate to the target page
+    await page?.goto(mainURL, { waitUntil: 'networkidle2' });
+
+    // Extract the signed_url from the JSON 
+    const signedUrl = await page?.evaluate(() => {
+      const preElement = document?.querySelector('pre');
+      if (preElement) {
+        const jsonData = JSON?.parse(preElement.innerText);
+        return jsonData?.signed_url;
+      }
+      return null;
+    });
+
+    // Close the browser
+    await browser?.close();
+
+    if (signedUrl) {
+      return true;
+    }
+    else {
+      await browser?.close();
+      return false;
+    };
+  } catch (error) {
+    await browser?.close();
+    return false;
+  }
+
+};
+
+
+// Check if the Freepik cookie is expired or not 
+export const isFreepikCookieValid = async (cookieDetails) => {
+  try {
+    const cookie = cookieDetails?.cookie;
+    const token = cookieDetails?.csrfToken;
+    const urls = [
+      "https://www.freepik.com/api/regular/download?resource=157432761&action=download",
+      "https://www.freepik.com/api/regular/download?resource=35806886&action=download",
+      "https://www.freepik.com/api/regular/download?resource=4394123&action=download",
+      "https://www.freepik.com/api/regular/download?resource=33488404&action=download",
+      "https://www.freepik.com/api/regular/download?resource=10368006&action=download",
+      "https://www.freepik.com/api/regular/download?resource=8307256&action=download"
+    ]
+
+    // Get a random URL
+    const mainURL = urls[Math?.floor(Math?.random() * urls?.length)];
+    const headers = {
+      'Cookie': `GR_REFRESH=${cookie} GR_TOKEN=${token}`
+    }
+
+    // Make the HTTP request
+    const response = await axios({
+      method: 'GET',
+      url: mainURL,
+      headers: headers,
+    });
+
+    if (response?.data?.url) {
       return true;
     }
     else {

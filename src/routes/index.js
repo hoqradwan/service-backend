@@ -13,7 +13,7 @@ router.use("/api/user", userRoutes);
 router.use("/api/banner", bannerRoutes);
 router.use("/api/support", supportRoutes);
 router.use("/api/download", downloadRoutes);
-router.use('/api/license', licenseRoutes)
+router.use('/api/license', licenseRoutes);
 router.use("/api/cookie", cookieRoutes);
 
 export default router;
