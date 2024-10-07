@@ -29,11 +29,17 @@ app.get('/', (req, res) => {
 });
 
 cron.schedule('0 0 * * *', () => {
- // console.log('Running daily license status update...');....
+  // console.log('Running daily license status update...');....
   updateLicenseStatus().catch((err) =>
     console.error('Error updating license status:', err),
   );
 });
+// cron.schedule('* * * * * *', () => {
+//   // console.log('Running license status update every second...');
+//   updateLicenseStatus().catch((err) =>
+//     console.error('Error updating license status:', err),
+//   );
+// });
 
 app.use('*', notFoundRoute);
 app.use(globalErrorHandler);

@@ -5,7 +5,7 @@ const UserSchema = new Schema(
     name: { type: String },
     email: { type: String, required: true, unique: true },
     password: { type: String },
-    adminPassword: { type: String, length: 6 },
+    adminPassword: { type: String, minlength: 6 }, // Fixed length validation
     phone: { type: String },
     image: { type: String },
     role: { type: String, enum: ['admin', 'user'], default: 'user' },
@@ -15,7 +15,13 @@ const UserSchema = new Schema(
       ref: 'License',
       default: null,
     },
-    loggedInIps: { type: [String], default: [] }, // Store allowed IP addresses
+    tokens: [
+      {
+        token: {
+          type: String,
+        },
+      },
+    ],
     deviceLimit: { type: Number, default: 1 }, // Custom device limit for each user
   },
   { timestamps: true },

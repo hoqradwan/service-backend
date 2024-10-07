@@ -9,6 +9,7 @@ import {
   getUserInfo,
   getUserStatistics,
   loginUser,
+  logoutUser,
   // logout,
   registerUser,
   resetPassword,
@@ -19,6 +20,8 @@ import {
   registerUserValidationSchema,
   updateUserValidationSchema,
 } from './user.validation.js';
+import jwt from 'jsonwebtoken';
+import { UserModel } from './user.model.js';
 
 const router = express.Router();
 
@@ -28,9 +31,85 @@ router.post(
   registerUser,
 );
 router.post('/login', validateRequest(loginValidationSchema), loginUser);
+router.post('/logout', adminMiddleware('user', 'admin'), logoutUser);
 router.post('/forget-password', forgotPassword);
 router.post('/reset-password/:token', resetPassword);
-// router.post('/logout', adminMiddleware('user', 'admin'), logout);
+// router.post('/verify-token', (req, res) => {
+//   const token = req.headers.authorization?.split(' ')[1];
+
+//   if (!token) {
+//     return res.status(401).json({ valid: false });
+//   }
+
+//   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+//     if (err) {
+//       return res.status(401).json({ valid: false });
+//     }
+
+//     res.json({ valid: true, user: decoded });
+//   });
+// });
+// router.post('/verify-token', (req, res) => {
+//   const token = req.headers.authorization?.split(' ')[1];
+
+//   // Log received token for debugging
+//   // console.log('Received token:', token);
+
+//   // Check if token is provided
+//   if (!token) {
+//     console.error('No token provided');
+//     return res.status(401).json({ valid: false });
+//   }
+
+//   // Verify the token
+//   // jwt.verify(token, 'Envato', (err, decoded) => {
+//   //   if (err) {
+//   //     console.error('Token verification error:', err);
+//   //     return res.status(401).json({ valid: false });
+//   //   }
+
+//   //   // If verification is successful, return valid status and user data
+//   //   console.log('Decoded token:', decoded);
+//   //   res.json({ valid: true, user: decoded });
+//   // });
+//   const decoded = jwt.verify(token, 'Envato');
+//   console.log(decoded);
+//   res.json({ valid: true, user: decoded });
+// });
+router.post('/verify-token', async (req, res) => {
+  const token = req.headers.authorization?.split(' ')[1];
+
+  // Log received token for debugging
+  console.log('Received token:', token);
+
+  // Check if token is provided
+  if (!token) {
+    console.error('No token provided');
+    return res.status(401).json({ valid: false });
+  }
+
+  try {
+    // Verify the token
+    const decoded = jwt.verify(token, 'Envato');
+
+    // Check if the token exists in the user's tokens array
+    const user = await UserModel.findOne({
+      _id: decoded.id,
+      'tokens.token': token,
+    });
+    if (!user) {
+      console.error('Token not found in user records');
+      return res.status(401).json({ valid: false });
+    }
+
+    // If everything is valid, return user data
+    // console.log('Decoded token:', decoded);
+    res.json({ valid: true, user: decoded });
+  } catch (err) {
+    console.error('Token verification error:', err);
+    return res.status(401).json({ valid: false });
+  }
+});
 
 router.put(
   '/update/:userId',
