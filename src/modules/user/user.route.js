@@ -34,48 +34,7 @@ router.post('/login', validateRequest(loginValidationSchema), loginUser);
 router.post('/logout', adminMiddleware('user', 'admin'), logoutUser);
 router.post('/forget-password', forgotPassword);
 router.post('/reset-password/:token', resetPassword);
-// router.post('/verify-token', (req, res) => {
-//   const token = req.headers.authorization?.split(' ')[1];
 
-//   if (!token) {
-//     return res.status(401).json({ valid: false });
-//   }
-
-//   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-//     if (err) {
-//       return res.status(401).json({ valid: false });
-//     }
-
-//     res.json({ valid: true, user: decoded });
-//   });
-// });
-// router.post('/verify-token', (req, res) => {
-//   const token = req.headers.authorization?.split(' ')[1];
-
-//   // Log received token for debugging
-//   // console.log('Received token:', token);
-
-//   // Check if token is provided
-//   if (!token) {
-//     console.error('No token provided');
-//     return res.status(401).json({ valid: false });
-//   }
-
-//   // Verify the token
-//   // jwt.verify(token, 'Envato', (err, decoded) => {
-//   //   if (err) {
-//   //     console.error('Token verification error:', err);
-//   //     return res.status(401).json({ valid: false });
-//   //   }
-
-//   //   // If verification is successful, return valid status and user data
-//   //   console.log('Decoded token:', decoded);
-//   //   res.json({ valid: true, user: decoded });
-//   // });
-//   const decoded = jwt.verify(token, 'Envato');
-//   console.log(decoded);
-//   res.json({ valid: true, user: decoded });
-// });
 router.post('/verify-token', async (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
 
