@@ -80,11 +80,11 @@ router.post('/verify-token', async (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
 
   // Log received token for debugging
-  console.log('Received token:', token);
+  // console.log('Received token:', token);
 
   // Check if token is provided
   if (!token) {
-    console.error('No token provided');
+    // console.error('No token provided');
     return res.status(401).json({ valid: false });
   }
 
@@ -98,7 +98,7 @@ router.post('/verify-token', async (req, res) => {
       'tokens.token': token,
     });
     if (!user) {
-      console.error('Token not found in user records');
+      // console.error('Token not found in user records');
       return res.status(401).json({ valid: false });
     }
 
@@ -106,7 +106,7 @@ router.post('/verify-token', async (req, res) => {
     // console.log('Decoded token:', decoded);
     res.json({ valid: true, user: decoded });
   } catch (err) {
-    console.error('Token verification error:', err);
+    // console.error('Token verification error:', err);
     return res.status(401).json({ valid: false });
   }
 });
