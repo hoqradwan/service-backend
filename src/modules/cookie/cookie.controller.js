@@ -11,9 +11,13 @@ import {
   updateCookieByIdService,
 } from './cookie.service.js';
 import mongoose from 'mongoose';
-import { envatoCookieCredentials, StoryBlocksCookieCredentials } from '../download/download.utils.js';
+import {
+  envatoCookieCredentials,
+  StoryBlocksCookieCredentials,
+} from '../download/download.utils.js';
 import axios from 'axios';
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-extra';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 
 // create method for cookie
 export const createCookie = catchAsync(async (req, res) => {
@@ -35,7 +39,10 @@ export const createCookie = catchAsync(async (req, res) => {
     });
   }
   // Checking if the account with same email already exists or not
-  const isAccountExist = await getCookieByAccountEmailService(data?.account, data?.serviceName);
+  const isAccountExist = await getCookieByAccountEmailService(
+    data?.account,
+    data?.serviceName,
+  );
   if (isAccountExist) {
     return sendResponse(res, {
       success: false,
@@ -204,10 +211,8 @@ export const deleteCookieById = catchAsync(async (req, res) => {
   });
 });
 
-
-// Check if the cookie is expired or not 
+// Check if the cookie is expired or not
 export const isCookieWorking = catchAsync(async (req, res) => {
-  
   // Extract the id from the request parameters
   const { id } = req?.params;
   // Check if id is a valid MongoDB ObjectId
@@ -233,17 +238,13 @@ export const isCookieWorking = catchAsync(async (req, res) => {
 
   const service = cookieDetails?.serviceName;
   let isWorking;
-  if (service === "envato") {
+  if (service === 'envato') {
     isWorking = await isCookieValid(cookieDetails);
-
-  }
-  else if (service === "story-blocks") {
+  } else if (service === 'story-blocks') {
     isWorking = await isStoryBlocksCookieValid(cookieDetails);
-  }
-  else if (service === "motion-array") {
+  } else if (service === 'motion-array') {
     isWorking = await isMotionArrayCookieValid(cookieDetails);
-  }
-  else if (service === "freepik") {
+  } else if (service === 'freepik') {
     isWorking = await isFreepikCookieValid(cookieDetails);
   }
 
@@ -262,20 +263,18 @@ export const isCookieWorking = catchAsync(async (req, res) => {
       data: null,
     });
   }
-
 });
 
-
-// Check if the envato cookie is expired or not 
+// Check if the envato cookie is expired or not
 export const isCookieValid = async (cookieDetails) => {
   try {
     const urls = [
-      "https://elements.envato.com/t-shirt-mockup-QJVQW8K",
-      "https://elements.envato.com/essential-geometry-grid-backgrounds-ERYKJ6R",
-      "https://elements.envato.com/business-card-mockups-v1-ARHLTBB",
-      "https://elements.envato.com/woosh-DB6WKRP",
-      "https://elements.envato.com/logo-reveal-DQQ955M"
-    ]
+      'https://elements.envato.com/t-shirt-mockup-QJVQW8K',
+      'https://elements.envato.com/essential-geometry-grid-backgrounds-ERYKJ6R',
+      'https://elements.envato.com/business-card-mockups-v1-ARHLTBB',
+      'https://elements.envato.com/woosh-DB6WKRP',
+      'https://elements.envato.com/logo-reveal-DQQ955M',
+    ];
 
     // Get a random URL
     const url = urls[Math?.floor(Math?.random() * urls?.length)];
@@ -294,35 +293,32 @@ export const isCookieValid = async (cookieDetails) => {
     });
     if (response) {
       return true;
-    }
-    else {
+    } else {
       return false;
-    };
+    }
   } catch (error) {
     return false;
   }
-
 };
 
-// Check if the story-blocks cookie is expired or not 
+// Check if the story-blocks cookie is expired or not
 export const isStoryBlocksCookieValid = async (cookieDetails) => {
   try {
     const cookie = cookieDetails?.cookie;
     const csrfToken = cookieDetails?.csrfToken;
 
-
     const urls = [
-      "https://www.storyblocks.com/video/download-ajax/3541468/HDMOV",
-      "https://www.storyblocks.com/video/download-ajax/3541464/4KMOV",
-    ]
+      'https://www.storyblocks.com/video/download-ajax/3541468/HDMOV',
+      'https://www.storyblocks.com/video/download-ajax/3541464/4KMOV',
+    ];
 
     // Get a random URL
     const mainURL = urls[Math?.floor(Math?.random() * urls?.length)];
 
     // headers for download request
     const headers = {
-      'Cookie': `VID=${cookie}; login_session=${csrfToken};`
-    }
+      Cookie: `VID=${cookie}; login_session=${csrfToken};`,
+    };
 
     // Make the HTTP request
     const response = await axios({
@@ -333,91 +329,128 @@ export const isStoryBlocksCookieValid = async (cookieDetails) => {
 
     if (response?.data?.data?.downloadUrl) {
       return true;
-    }
-    else {
+    } else {
       return false;
-    };
+    }
   } catch (error) {
     return false;
   }
-
 };
-
-// Check if the story-blocks cookie is expired or not 
+puppeteer.use(StealthPlugin());
 export const isMotionArrayCookieValid = async (cookieDetails) => {
-  const browser = await puppeteer?.launch({
-    headless: false,
+  const browser = await puppeteer.launch({
+    headless: true, // Run in headless mode
+    // args: ['--no-sandbox', '--disable-setuid-sandbox'],
   });
-  const page = await browser?.newPage();
+  const page = await browser.newPage();
   try {
     const cookie = cookieDetails?.cookie;
 
     const urls = [
-      "https://motionarray.com/account/download/2721820/",
-      "https://motionarray.com/account/download/2743739/",
-      "https://motionarray.com/account/download/2790964/",
-      "https://motionarray.com/account/download/1980682/",
-      "https://motionarray.com/account/download/1980655/",
-    ]
+      'https://motionarray.com/account/download/2721820/',
+      'https://motionarray.com/account/download/2743739/',
+      'https://motionarray.com/account/download/2790964/',
+      'https://motionarray.com/account/download/1980682/',
+      'https://motionarray.com/account/download/1980655/',
+    ];
 
-    // Get a random URL
-    const mainURL = urls[Math?.floor(Math?.random() * urls?.length)];
+    const mainURL = urls[Math.floor(Math.random() * urls.length)];
 
-    // Set extra headers including cookie
-    await page?.setExtraHTTPHeaders({
-      "cookie": `laravel_session=${cookie}`,
+    await page.setExtraHTTPHeaders({
+      cookie: `laravel_session=${cookie}`,
     });
 
-    // Navigate to the target page
-    await page?.goto(mainURL, { waitUntil: 'networkidle2' });
+    await page.goto(mainURL, { waitUntil: 'networkidle2' });
 
-    // Extract the signed_url from the JSON 
-    const signedUrl = await page?.evaluate(() => {
-      const preElement = document?.querySelector('pre');
+    const signedUrl = await page.evaluate(() => {
+      const preElement = document.querySelector('pre');
       if (preElement) {
-        const jsonData = JSON?.parse(preElement.innerText);
-        return jsonData?.signed_url;
+        const jsonData = JSON.parse(preElement.innerText);
+        return jsonData.signed_url;
       }
       return null;
     });
 
-    // Close the browser
-    await browser?.close();
+    await browser.close();
 
-    if (signedUrl) {
-      return true;
-    }
-    else {
-      await browser?.close();
-      return false;
-    };
+    return signedUrl ? true : false;
   } catch (error) {
-    await browser?.close();
+    await browser.close();
     return false;
   }
-
 };
+// Check if the story-blocks cookie is expired or not
+// export const isMotionArrayCookieValid = async (cookieDetails) => {
+//   const browser = await puppeteer?.launch({
+//     headless: false, // Run in headless mode
+//   });
+//   const page = await browser?.newPage();
+//   try {
+//     const cookie = cookieDetails?.cookie;
 
+//     const urls = [
+//       'https://motionarray.com/account/download/2721820/',
+//       'https://motionarray.com/account/download/2743739/',
+//       'https://motionarray.com/account/download/2790964/',
+//       'https://motionarray.com/account/download/1980682/',
+//       'https://motionarray.com/account/download/1980655/',
+//     ];
 
-// Check if the Freepik cookie is expired or not 
+//     // Get a random URL
+//     const mainURL = urls[Math?.floor(Math?.random() * urls?.length)];
+
+//     // Set extra headers including cookie
+//     await page?.setExtraHTTPHeaders({
+//       cookie: `laravel_session=${cookie}`,
+//     });
+
+//     // Navigate to the target page
+//     await page?.goto(mainURL, { waitUntil: 'networkidle2' });
+
+//     // Extract the signed_url from the JSON
+//     const signedUrl = await page?.evaluate(() => {
+//       const preElement = document?.querySelector('pre');
+//       if (preElement) {
+//         const jsonData = JSON?.parse(preElement.innerText);
+//         return jsonData?.signed_url;
+//       }
+//       return null;
+//     });
+
+//     // Close the browser
+//     await browser?.close();
+
+//     if (signedUrl) {
+//       return true;
+//     } else {
+//       await browser?.close();
+//       return false;
+//     }
+//   } catch (error) {
+//     await browser?.close();
+//     return false;
+//   }
+// };
+
+// Check if the Freepik cookie is expired or not
 export const isFreepikCookieValid = async (cookieDetails) => {
   try {
     const cookie = cookieDetails?.cookie;
     const token = cookieDetails?.csrfToken;
     const urls = [
-      "https://www.freepik.com/api/regular/download?resource=157432761&action=download",
-      "https://www.freepik.com/api/regular/download?resource=35806886&action=download",
-      "https://www.freepik.com/api/regular/download?resource=4394123&action=download",
-      "https://www.freepik.com/api/regular/download?resource=33488404&action=download",
-      "https://www.freepik.com/api/regular/download?resource=10368006&action=download",
-      "https://www.freepik.com/api/regular/download?resource=8307256&action=download"
-    ]
+      'https://www.freepik.com/api/regular/download?resource=157432761&action=download',
+      'https://www.freepik.com/api/regular/download?resource=35806886&action=download',
+      'https://www.freepik.com/api/regular/download?resource=4394123&action=download',
+      'https://www.freepik.com/api/regular/download?resource=33488404&action=download',
+      'https://www.freepik.com/api/regular/download?resource=10368006&action=download',
+      'https://www.freepik.com/api/regular/download?resource=8307256&action=download',
+    ];
 
     // Get a random URL
     const mainURL = urls[Math?.floor(Math?.random() * urls?.length)];
     const headers = {
-      'Cookie': `GR_REFRESH=${cookie} GR_TOKEN=${token}`
-    }
+      Cookie: `GR_REFRESH=${cookie} GR_TOKEN=${token}`,
+    };
 
     // Make the HTTP request
     const response = await axios({
@@ -428,12 +461,10 @@ export const isFreepikCookieValid = async (cookieDetails) => {
 
     if (response?.data?.url) {
       return true;
-    }
-    else {
+    } else {
       return false;
-    };
+    }
   } catch (error) {
     return false;
   }
-
 };
