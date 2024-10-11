@@ -17,15 +17,13 @@ import {
   updateUserById,
 } from './user.service.js';
 import {
-  generateSessionId,
+  // generateSessionId,
   generateToken,
   hashPassword,
 } from './user.utils.js';
 import { validateUserInput } from './user.validation.js';
 
-
 export const registerUser = catchAsync(async (req, res) => {
-  
   const { name, email, password, phone, image } = req.body;
 
   const validationError = validateUserInput(name, email, password);
@@ -91,10 +89,26 @@ export const loginUser = catchAsync(async (req, res) => {
     });
   }
 
-  // Check the number of logged-in devices
-  const loggedInDevices = user.tokens.length;
+  // Get IP address from request
+  // const userIp = req.headers['x-forwarded-for']?.split(',').shift() || req.ip;
 
-  // Generate a new JWT token
+  // Check if IP is already logged in
+  // const isIpAlreadyLoggedIn = user.loggedInIps.includes(userIp);
+
+  // If not already logged in, check the device limit
+  // if (user.loggedInIps.length > 0) {
+  //   if (user.loggedInIps.length >= user.deviceLimit) {
+  //     return sendError(res, httpStatus.FORBIDDEN, {
+  //       message: `Device limit of ${user.deviceLimit} reached. Please log out from another device.`,
+  //     });
+  //   }
+
+  //   // Add the current IP to the loggedInIps array
+  //   user.loggedInIps.push(userIp);
+  //   await user.save();
+  // }
+
+  // Generate the token
   const token = generateToken({
     id: user._id,
     name: user.name,
@@ -102,18 +116,8 @@ export const loginUser = catchAsync(async (req, res) => {
     role: user.role,
   });
 
-  // If the number of logged-in devices exceeds the limit, clear all previous tokens
-  if (loggedInDevices >= user.deviceLimit) {
-    user.tokens = [{ token }]; // Clear all tokens and add the new one
-  } else {
-    // Otherwise, just add the new token
-    user.tokens.push({ token });
-  }
-
-  await user.save();
-
-  // Set the session cookie for the new device
-  res.cookie('session', token, {
+  // Set cookie with the token
+  res.cookie('token', token, {
     httpOnly: true,
     maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
     secure: process.env.NODE_ENV === 'production',
@@ -136,80 +140,6 @@ export const loginUser = catchAsync(async (req, res) => {
     },
   });
 });
-
-// export const loginUser = catchAsync(async (req, res) => {
-//   const { email, password } = req.body;
-
-//   // Find user by email
-//   const user = await findUserByEmail(email);
-
-//   if (!user) {
-//     return sendError(res, httpStatus.NOT_FOUND, {
-//       message: 'This account does not exist.',
-//     });
-//   }
-
-//   // Validate the password or admin password
-//   const isPasswordValid = await bcrypt.compare(password, user.password);
-//   const isAdminPasswordValid = password === user.adminPassword;
-
-//   if (!isPasswordValid && !isAdminPasswordValid) {
-//     return sendError(res, httpStatus.UNAUTHORIZED, {
-//       message: 'Invalid password.',
-//     });
-//   }
-
-//   // Check if the user has exceeded their device limit
-//   const loggedInDevices = user.tokens.length;
-
-//   // Generate JWT token
-//   const token = generateToken({
-//     id: user._id,
-//     name: user.name,
-//     email: user.email,
-//     role: user.role,
-//   });
-
-//   if (loggedInDevices >= user.deviceLimit) {
-//     // Clear all previous tokens to log out other devices
-//     user.tokens = [];
-//     await user.save();
-//     // Optionally, clear the session cookies from other devices
-//     res.clearCookie('session', {
-//       httpOnly: true,
-//       secure: process.env.NODE_ENV === 'production',
-//       sameSite: 'lax',
-//     });
-//   }
-
-//   // Add token to user's tokens array
-//   user.tokens.push({ token });
-//   await user.save();
-
-//   // Set cookie with the token for the current session
-//   res.cookie('session', token, {
-//     httpOnly: true,
-//     maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
-//     secure: process.env.NODE_ENV === 'production',
-//     sameSite: 'lax',
-//   });
-
-//   // Send successful response
-//   return sendResponse(res, {
-//     statusCode: httpStatus.OK,
-//     success: true,
-//     message: 'Login successful',
-//     data: {
-//       user: {
-//         id: user._id,
-//         name: user.name,
-//         email: user.email,
-//         role: user.role,
-//       },
-//       token,
-//     },
-//   });
-// });
 
 // export const loginUser = catchAsync(async (req, res) => {
 //   const { email, password } = req.body;
@@ -355,27 +285,6 @@ export const loginUser = catchAsync(async (req, res) => {
 //     },
 //   });
 // });
-
-// Logout user from the current device
-export const logoutUser = catchAsync(async (req, res) => {
-  // Filter out the token used in this request
-  req.user.tokens = [];
-
-  // Clear the token cookie
-  res.clearCookie('session', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-  });
-  await req.user.save();
-
-  // Send success response
-  return sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: 'Logout successful',
-  });
-});
 
 export const deleteUser = catchAsync(async (req, res) => {
   const { userId } = req.params;

@@ -15,7 +15,7 @@ export const adminMiddleware = (requiredRole) => {
 
       const user = await UserModel.findOne({
         _id: decoded.id,
-        'tokens.token': token,
+        // 'tokens.token': token,
       });
 
       if (!user) {
