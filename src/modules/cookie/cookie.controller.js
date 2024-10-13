@@ -339,8 +339,16 @@ export const isStoryBlocksCookieValid = async (cookieDetails) => {
 puppeteer.use(StealthPlugin());
 export const isMotionArrayCookieValid = async (cookieDetails) => {
   const browser = await puppeteer.launch({
-    headless: true, // Run in headless mode
-    // args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    headless: true,
+    executablePath: '/usr/bin/chromium-browser',
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-web-security',
+      '--disable-features=IsolateOrigins,site-per-process',
+      '--window-size=1920x1080',
+    ],
+    defaultViewport: null,
   });
   const page = await browser.newPage();
   try {
