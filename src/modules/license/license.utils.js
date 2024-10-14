@@ -62,9 +62,8 @@ export const updateLicenseStatus = async () => {
         { $set: { isActive: false } },
       );
     }
-
     console.log(
-      `${result.nModified} licenses and users were updated successfully.`,
+      `${result?.modifiedCount} licenses and users were updated successfully.`,
     );
   } catch (error) {
     console.error('Error updating license status and user activity:', error);

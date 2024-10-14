@@ -95,7 +95,7 @@ export const getLicensesFromDB = async (
   };
 };
 
-
+// need to modify
 export const licenseByUserFromDB = async (
   userId,
   filters = {},
@@ -126,6 +126,9 @@ export const licenseByUserFromDB = async (
     .sort(sortOptions)
     .skip((page - 1) * limit)
     .limit(limit);
+
+    // console.log("result", result);
+    
 
   // Add serial numbers to the results
   const resultWithSerial = result.map((item, index) => ({

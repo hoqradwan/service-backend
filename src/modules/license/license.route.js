@@ -5,6 +5,7 @@ import {
   activateLicense,
   allLicenses,
   createLicense,
+  currentLicensesByUser,
   deleteLicense,
   getDailyStatisticsForEnvatoForUsedLicenses,
   getDailyStatisticsForFreepikForUsedLicenses,
@@ -23,6 +24,7 @@ const router = express.Router();
 
 router.get('/',adminMiddleware('admin'), allLicenses);
 router.get('/user-licenses/:id',adminMiddleware('user'), licenseByUser);
+router.get('/user-current-licenses/:id',adminMiddleware('user'), currentLicensesByUser);
 router.get('/envato-stats', getDailyStatisticsForEnvatoForUsedLicenses);
 router.get('/story-blocks-stats', getDailyStatisticsForStoryBlocksForUsedLicenses);
 router.get('/motion-array-stats', getDailyStatisticsForMotionArrayForUsedLicenses);

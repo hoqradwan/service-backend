@@ -13,6 +13,7 @@ import {
 } from './license.service.js';
 import { LicenseModel } from './license.model.js';
 import { getTotalAndDailyDownloadsService } from '../download/download.service.js';
+import { getUserLicensesService } from '../user/user.service.js';
 
 export const createLicense = catchAsync(async (req, res) => {
   const license = req.body;
@@ -75,11 +76,23 @@ export const licenseByUser = catchAsync(async (req, res) => {
   };
 
   const result = await licenseByUserFromDB(userId, filters, paginationOptions);
+
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
     message: 'User Licenses retrieved successfully',
     data: result,
+  });
+});
+
+export const currentLicensesByUser = catchAsync(async (req, res) => {
+  const userId = req?.params?.id;
+  const result = await getUserLicensesService(userId);
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'User Current Licenses retrieved successfully',
+    data: {data: result},
   });
 });
 

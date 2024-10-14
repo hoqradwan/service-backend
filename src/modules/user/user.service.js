@@ -120,3 +120,29 @@ export const getUserStatisticsService = async () => {
 
 //   return user;
 // };
+
+
+export const getUserLicensesService = async (userId) => {
+  try {
+    const user = await UserModel.findById(userId)
+      .populate('currentLicense')
+      .populate('currentStoryBlocksLicense')
+      .populate('currentMotionArrayLicense')
+      .populate('currentFreepikLicense');
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+    const licenses = [];
+    if (user?.currentLicense) { licenses?.push(user?.currentLicense) }
+    if (user?.currentStoryBlocksLicense) { licenses?.push(user?.currentStoryBlocksLicense) }
+    if (user?.currentMotionArrayLicense) { licenses?.push(user?.currentMotionArrayLicense) }
+    if (user?.currentFreepikLicense) { licenses?.push(user?.currentFreepikLicense) }
+
+    return licenses;
+    
+  } catch (error) {
+    console.error(error);
+    throw new Error('Error fetching user licenses');
+  }
+};
