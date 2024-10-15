@@ -12,60 +12,94 @@ export const generateLicenseKey = (length = 32) => {
     .substring(0, length);
 };
 const formatDateWithOffset = (date) => {
-  // Convert to UTC ISO string
-  const isoString = date.toISOString(); // Example: "2024-08-01T20:20:38.366Z"
-
-  // Replace 'Z' with '+00:00' to match the desired format
-  const formattedDate = isoString.replace('Z', '+00:00');
-
-  return formattedDate;
+  // Convert the date to an ISO string and replace 'Z' with '+00:00'
+  return date.toISOString().replace('Z', '+00:00');
 };
 
-// checking if the license is expired or not
-// export const updateLicenseStatus = async () => {
-//   const now = new Date();
-//   const formattedDate = formatDateWithOffset(now);
-
-//   try {
-//     const result = await LicenseModel.updateMany(
-//       { expiryDate: { $lte: formattedDate }, status: { $ne: 'expired' } },
-//       { $set: { status: 'expired' } },
-//     );
-
-//   } catch (error) {
-//     console.error('Error updating license status:', error);
-//   }
-// };
 export const updateLicenseStatus = async () => {
   const now = new Date();
-  const formattedDate = formatDateWithOffset(now);
+  const formattedDate = formatDateWithOffset(now); // Ensure this returns a valid date
+
+  console.log('Formatted Date:', formattedDate);
 
   try {
-    // Step 1: Update licenses that have expired
+    // Step 1: Find all licenses that have expired but are not yet marked as "expired"
     const expiredLicenses = await LicenseModel.find({
       expiryDate: { $lte: formattedDate },
-      status: { $ne: 'expired' },
+      status: { $ne: 'expired' }, // Select licenses that are not already marked as expired
     });
 
-    // Update the status of those licenses to "expired"
-    const result = await LicenseModel.updateMany(
-      { expiryDate: { $lte: formattedDate }, status: { $ne: 'expired' } },
+    console.log('Expired Licenses:', expiredLicenses);
+
+    if (expiredLicenses.length === 0) {
+      console.log('No licenses to expire.');
+      return;
+    }
+
+    const expiredLicenseIds = expiredLicenses.map((license) => license._id);
+
+    // Step 2: Update the license status to "expired"
+    const updateLicensesResult = await LicenseModel.updateMany(
+      { _id: { $in: expiredLicenseIds } },
       { $set: { status: 'expired' } },
     );
 
-    if (expiredLicenses.length > 0) {
-      const expiredLicenseIds = expiredLicenses.map((license) => license._id);
-
-      // Step 2: Find users whose current license is in the expired licenses
-      await UserModel.updateMany(
-        { currentLicense: { $in: expiredLicenseIds } },
-        { $set: { isActive: false } },
-      );
-    }
     console.log(
-      `${result?.modifiedCount} licenses and users were updated successfully.`,
+      `${updateLicensesResult.modifiedCount} licenses were marked as expired.`,
+    );
+
+    // Step 3: Find users whose current license or any other specific service license is expired
+    const updateUsersResult = await UserModel.updateMany(
+      {
+        $or: [
+          { currentLicense: { $in: expiredLicenseIds } },
+          { currentStoryBlocksLicense: { $in: expiredLicenseIds } },
+          { currentMotionArrayLicense: { $in: expiredLicenseIds } },
+          { currentFreepikLicense: { $in: expiredLicenseIds } },
+        ],
+      },
+      { $set: { isActive: false } },
+    );
+
+    console.log(
+      `${updateUsersResult.modifiedCount} users were deactivated due to expired licenses.`,
     );
   } catch (error) {
     console.error('Error updating license status and user activity:', error);
   }
 };
+
+// export const updateLicenseStatus = async () => {
+//   const now = new Date();
+//   const formattedDate = formatDateWithOffset(now);
+
+//   try {
+//     // Step 1: Update licenses that have expired
+//     const expiredLicenses = await LicenseModel.find({
+//       expiryDate: { $lte: formattedDate },
+//       status: { $ne: 'expired' },
+//     });
+//     console.log('Expired licenses:', expiredLicenses);
+
+//     // Update the status of those licenses to "expired"
+//     const result = await LicenseModel.updateMany(
+//       { expiryDate: { $lte: formattedDate }, status: { $ne: 'expired' } },
+//       { $set: { status: 'expired' } },
+//     );
+
+//     if (expiredLicenses.length > 0) {
+//       const expiredLicenseIds = expiredLicenses.map((license) => license._id);
+
+//       // Step 2: Find users whose current license is in the expired licenses
+//       await UserModel.updateMany(
+//         { currentLicense: { $in: expiredLicenseIds } },
+//         { $set: { isActive: false } },
+//       );
+//     }
+//     // console.log(
+//     //   `${result?.modifiedCount} licenses and users were updated successfully.`,
+//     // );
+//   } catch (error) {
+//     console.error('Error updating license status and user activity:', error);
+//   }
+// };
