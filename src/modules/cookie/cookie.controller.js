@@ -70,14 +70,14 @@ export const getAllCookies = catchAsync(async (req, res) => {
 
   const cookies = await getAllCookiesService(page, limit);
 
-  if (cookies.length === 0) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: httpStatus.NOT_FOUND,
-      message: 'No cookies found',
-      data: null,
-    });
-  }
+  // if (cookies.length === 0) {
+  //   return sendResponse(res, {
+  //     success: false,
+  //     statusCode: httpStatus.NOT_FOUND,
+  //     message: 'No cookies found',
+  //     data: null,
+  //   });
+  // }
 
   const totalCookies = await getTotalDocumentCountService();
   const totalPages = Math.ceil(totalCookies / limit);

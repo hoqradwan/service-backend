@@ -22,12 +22,22 @@ import {
 } from './license.validation.js';
 const router = express.Router();
 
-router.get('/',adminMiddleware('admin'), allLicenses);
-router.get('/user-licenses/:id',adminMiddleware('user'), licenseByUser);
-router.get('/user-current-licenses/:id',adminMiddleware('user'), currentLicensesByUser);
+router.get('/', adminMiddleware('admin'), allLicenses);
+router.get('/user-licenses/:id', adminMiddleware('admin'), licenseByUser);
+router.get(
+  '/user-current-licenses/:id',
+  adminMiddleware('user'),
+  currentLicensesByUser,
+);
 router.get('/envato-stats', getDailyStatisticsForEnvatoForUsedLicenses);
-router.get('/story-blocks-stats', getDailyStatisticsForStoryBlocksForUsedLicenses);
-router.get('/motion-array-stats', getDailyStatisticsForMotionArrayForUsedLicenses);
+router.get(
+  '/story-blocks-stats',
+  getDailyStatisticsForStoryBlocksForUsedLicenses,
+);
+router.get(
+  '/motion-array-stats',
+  getDailyStatisticsForMotionArrayForUsedLicenses,
+);
 router.get('/freepik-stats', getDailyStatisticsForFreepikForUsedLicenses);
 // router.post('/create',adminMiddleware('admin'), createLicense);
 router.post('/create', createLicense);
@@ -43,13 +53,7 @@ router.put(
   validateRequest(updateLicenseValidationSchema),
   updateLicense,
 );
-router.put(
-  '/change-status/:id',
-  adminMiddleware('admin'),
-  suspendLicense,
-);
-router.delete('/delete/:id',adminMiddleware('admin'), deleteLicense);
+router.put('/change-status/:id', adminMiddleware('admin'), suspendLicense);
+router.delete('/delete/:id', adminMiddleware('admin'), deleteLicense);
 
 export default router;
-
-

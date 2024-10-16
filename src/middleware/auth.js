@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { UserModel } from '../modules/user/user.model.js';
 
-export const adminMiddleware = (requiredRole) => {
+export const adminMiddleware = (...requiredRoles) => {
   return async (req, res, next) => {
     const token = req.headers.authorization?.split(' ')[1];
     if (!token) {
@@ -15,7 +15,6 @@ export const adminMiddleware = (requiredRole) => {
 
       const user = await UserModel.findOne({
         _id: decoded.id,
-        // 'tokens.token': token,
       });
 
       if (!user) {
@@ -28,8 +27,8 @@ export const adminMiddleware = (requiredRole) => {
       req.user = user;
       req.userId = user._id;
 
-      // Role-based authorization
-      if (requiredRole && user.role !== requiredRole) {
+      // Role-based authorization: Check if user has one of the required roles
+      if (requiredRoles.length && !requiredRoles.includes(user.role)) {
         return res
           .status(403)
           .json({ success: false, message: 'Access denied' });

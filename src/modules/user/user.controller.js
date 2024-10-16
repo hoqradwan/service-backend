@@ -22,6 +22,7 @@ import {
   hashPassword,
 } from './user.utils.js';
 import { validateUserInput } from './user.validation.js';
+import { LicenseModel } from '../license/license.model.js';
 
 export const registerUser = catchAsync(async (req, res) => {
   const { name, email, password, phone, image } = req.body;
@@ -453,7 +454,31 @@ export const getUserInfo = catchAsync(async (req, res) => {
   });
 });
 
+// export const getSelfInfo = catchAsync(async (req, res) => {
+//   const user = await UserModel.findById(
+//     req.params.id,
+//     '-password -adminPassword',
+//   );
+//   if (!user) {
+//     return sendError(res, httpStatus.NOT_FOUND, {
+//       message: 'User not found.',
+//     });
+//   }
+// const license = await LicenseModel.find({  $or: [
+//   { currentLicense },
+//   { currentStoryBlocksLicense },
+//   { currentMotionArrayLicense },
+//   { currentFreepikLicense},
+// ],})
+//   sendResponse(res, {
+//     statusCode: httpStatus.OK,
+//     success: true,
+//     message: 'User information retrieved successfully',
+//     data: { information: user },
+//   });
+// });
 export const getSelfInfo = catchAsync(async (req, res) => {
+  // Find the user by their ID, excluding the password and adminPassword fields
   const user = await UserModel.findById(
     req.params.id,
     '-password -adminPassword',
@@ -464,11 +489,42 @@ export const getSelfInfo = catchAsync(async (req, res) => {
     });
   }
 
+  // Extract the user's current licenses
+  const {
+    currentLicense,
+    currentStoryBlocksLicense,
+    currentMotionArrayLicense,
+    currentFreepikLicense,
+  } = user;
+
+  // Find licenses where the _id matches any of the user's current licenses
+  const licenses = await LicenseModel.find({
+    _id: {
+      $in: [
+        currentLicense,
+        currentStoryBlocksLicense,
+        currentMotionArrayLicense,
+        currentFreepikLicense,
+      ].filter(Boolean), // Remove null values
+    },
+  });
+  // console.log(licenses);
+  // Extract the expiryDate from each license
+  const licenseInfo = licenses.map((license) => ({
+    serviceName: license.serviceName,
+    expiryDate: license.expiryDate,
+    status: license.status,
+  }));
+
+  // Send response including user information and associated license expiry dates
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: 'User information retrieved successfully',
-    data: { information: user },
+    data: {
+      information: user,
+      licenses: licenseInfo, // Send back relevant license information
+    },
   });
 });
 

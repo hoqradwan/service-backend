@@ -1192,7 +1192,7 @@ const motionArrayDownloadRequest = async (headers, mainURL) => {
       return signedUrl;
     } else return false;
   } catch (error) {
-    console.error('Error:', error.message);
+    // console.error('Error:', error.message);
     await browser.close();
   }
 };

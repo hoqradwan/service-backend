@@ -17,7 +17,9 @@ import {
   getTotalFreepikDownloadForUser,
   getTotalMotionArrayDownloadForUser,
   getTotalStoryBlocksDownloadForUser,
-  handleEnvatoDownload, handleFreePikDownload, handleLicenseDownload,
+  handleEnvatoDownload,
+  handleFreePikDownload,
+  handleLicenseDownload,
   handleMotionArrayDownload,
   handleStoryBlocksDownload,
   updateDownloadById,
@@ -38,49 +40,49 @@ router.post(
 // daily download count apis
 router.get(
   '/user-daily-envato-download/:id',
-  adminMiddleware('user'),
+  adminMiddleware('admin', 'user'),
   getDailyEnvatoDownloadForUser,
 );
 router.get(
   '/user-daily-story-blocks-download/:id',
-  adminMiddleware('user'),
+  adminMiddleware('admin', 'user'),
   getDailyStoryBlocksDownloadForUser,
 );
 router.get(
   '/user-daily-motion-array-download/:id',
-  adminMiddleware('user'),
+  adminMiddleware('admin', 'user'),
   getDailyMotionArrayDownloadForUser,
 );
 router.get(
   '/user-daily-freepik-download/:id',
-  adminMiddleware('user'),
+  adminMiddleware('admin', 'user'),
   getDailyFreepikDownloadForUser,
 );
 ///////////
 // total download count apis
 router.get(
   '/user-total-download/:id',
-  adminMiddleware('user'),
+  adminMiddleware('admin', 'user'),
   getTotalDownloadsForUser,
 );
 router.get(
   '/user-total-envato-download/:id',
-  adminMiddleware('user'),
+  adminMiddleware('admin', 'user'),
   getTotalEnvatoDownloadForUser,
 );
 router.get(
   '/user-total-story-blocks-download/:id',
-  adminMiddleware('user'),
+  adminMiddleware('admin', 'user'),
   getTotalStoryBlocksDownloadForUser,
 );
 router.get(
   '/user-total-motion-array-download/:id',
-  adminMiddleware('user'),
+  adminMiddleware('admin', 'user'),
   getTotalMotionArrayDownloadForUser,
 );
 router.get(
   '/user-total-freepik-download/:id',
-  adminMiddleware('user'),
+  adminMiddleware('admin', 'user'),
   getTotalFreepikDownloadForUser,
 );
 /////////
@@ -106,10 +108,22 @@ router.get(
 );
 router.get('/my-downloads', adminMiddleware('user'), getMyDownloads);
 router.post('/envato-elements', adminMiddleware('user'), handleEnvatoDownload);
-router.post('/story-blocks', adminMiddleware('user'), handleStoryBlocksDownload);
-router.post('/motion-array', adminMiddleware('user'), handleMotionArrayDownload);
+router.post(
+  '/story-blocks',
+  adminMiddleware('user'),
+  handleStoryBlocksDownload,
+);
+router.post(
+  '/motion-array',
+  adminMiddleware('user'),
+  handleMotionArrayDownload,
+);
 router.post('/freepik', adminMiddleware('user'), handleFreePikDownload);
-router.get('/envato-elements-license/:downloadId',adminMiddleware('user'), handleLicenseDownload);
-router.put('/:id',adminMiddleware('user'), updateDownloadById); // given download id.
+router.get(
+  '/envato-elements-license/:downloadId',
+  adminMiddleware('user'),
+  handleLicenseDownload,
+);
+router.put('/:id', adminMiddleware('user'), updateDownloadById); // given download id.
 
 export const downloadRoutes = router;

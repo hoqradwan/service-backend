@@ -47,7 +47,7 @@ router.get(
 ); // Admin can login generating new password in any user account
 router.get('/user-list', adminMiddleware('admin'), getUserInfo);
 
-router.get('/information/:id', getSelfInfo);
+router.get('/information/:id', adminMiddleware('user', 'admin'), getSelfInfo);
 router.get('/user-stats', adminMiddleware('admin'), getUserStatistics);
 
 export default router;
