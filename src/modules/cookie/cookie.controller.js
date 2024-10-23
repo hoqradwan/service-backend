@@ -446,12 +446,11 @@ export const isFreepikCookieValid = async (cookieDetails) => {
     const cookie = cookieDetails?.cookie;
     const token = cookieDetails?.csrfToken;
     const urls = [
-      'https://www.freepik.com/api/regular/download?resource=157432761&action=download',
-      'https://www.freepik.com/api/regular/download?resource=35806886&action=download',
-      'https://www.freepik.com/api/regular/download?resource=4394123&action=download',
-      'https://www.freepik.com/api/regular/download?resource=33488404&action=download',
-      'https://www.freepik.com/api/regular/download?resource=10368006&action=download',
-      'https://www.freepik.com/api/regular/download?resource=8307256&action=download',
+      'https://www.freepik.com/api/regular/download?resource=28495268&action=download',
+      'https://www.freepik.com/api/regular/download?resource=13240550&action=download',
+      'https://www.freepik.com/api/regular/download?resource=13913503&action=download',
+      'https://www.freepik.com/api/regular/download?resource=25745444&action=download',
+      'https://www.freepik.com/api/regular/download?resource=14314205&action=download',
     ];
 
     // Get a random URL

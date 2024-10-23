@@ -1394,6 +1394,7 @@ export const handleFreePikDownload = catchAsync(async (req, res) => {
     });
   }
   const user = await findUserById(userId);
+  
   if (!user) {
     return sendResponse(res, {
       success: false,

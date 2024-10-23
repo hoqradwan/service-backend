@@ -109,30 +109,33 @@ export const motionArrayCookieCredentials = async (cookieDetails, url, type) => 
 
 // Freepik cookie details
 export const freepikCookieCredentials = async (cookieDetails, url, type) => {
-  // https://www.freepik.com/premium-ai-image/back-school-teacher_289405174.htm#query=university%20teacher&position=6&from_view=keyword&track=ais_hybrid&uuid=be0a0f3b-6619-4190-8827-f58340c4b65e
-  // https://www.freepik.com/icon/video-message_5358498#fromView=popular&page=1&position=9&uuid=e558fbe9-2a17-4f71-adfc-016dfcac61f7
-  // https://www.freepik.com/animated-icon/email-file_11237480#fromView=popular&page=1&position=31&uuid=9ee6b010-f150-4cf2-9db8-66ef017fd3db
-  const last = url?.split("/")?.length - 1;
-  let itemName = (url?.trim()?.split("/")[last]);
-  if (itemName === "") {
-    itemName = (url?.split("/")[last - 1]);
-  }
-  const itemCode = itemName?.split("/")[0]?.split("-")[(itemName?.split("/")[0]?.split("-").length) - 1];
 
-
+  const itemList = url?.trim()?.split("/")
+  const content = itemList[3];
+  let item = itemList?.[itemList?.length - 1];
+  const itemSplit1 = item?.split("#");
+  const itemSplit2 = itemSplit1[0]?.split(".htm");
+  const itemSplit3 = itemSplit2[0]?.split("_");
+  const itemCode = itemSplit3[itemSplit3?.length - 1];
 
   if (!itemCode) {
     return res.status(400).json({ isOk: false, message: 'Invalid url' });
   }
 
-
   // Main URL for download request
   let mainURL;
-  if (type) {
-    mainURL = `https://motionarray.com/account/download/${itemCode}/?resolutionFormat=${type}`;
+
+  if (content === "icon") {
+    mainURL = `https://www.freepik.com/api/icon/download?optionId=${itemCode}&format=${type}&type=original`
+  }
+  else if (content === "free-photo" || content === "premium-photo" || content === "free-vector" || content === "premium-vector" || content === "free-psd" || content === "premium-psd") {
+    mainURL = `https://www.freepik.com/api/regular/download?resource=${itemCode}&action=download`
+  }
+  else if (content === "free-video" || content === "premium-video") {
+    mainURL = `https://www.freepik.com/api/video/${itemCode}/download`
   }
   else {
-    mainURL = `https://motionarray.com/account/download/${itemCode}/`;
+    return res.status(400).json({ isOk: false, message: 'Invalid url' });
   }
 
   const cookie = cookieDetails?.cookie;
