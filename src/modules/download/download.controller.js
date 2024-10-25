@@ -1394,7 +1394,7 @@ export const handleFreePikDownload = catchAsync(async (req, res) => {
     });
   }
   const user = await findUserById(userId);
-  
+
   if (!user) {
     return sendResponse(res, {
       success: false,
@@ -1514,9 +1514,8 @@ export const handleFreePikDownload = catchAsync(async (req, res) => {
     headers: headers,
   });
 
-  console.log(' body =====>>>', response?.data);
 
-  if (response) {
+  if (response?.data?.url) {
     const download = {
       service: 'Freepik',
       content: url,
@@ -1532,7 +1531,7 @@ export const handleFreePikDownload = catchAsync(async (req, res) => {
         success: true,
         statusCode: 200,
         message: 'Download request successful',
-        data: { downloadUrl: response, downloadId: result[0]?._id },
+        data: { downloadUrl: response?.data?.url, downloadId: result[0]?._id },
       });
     }
   } else {
@@ -1544,3 +1543,34 @@ export const handleFreePikDownload = catchAsync(async (req, res) => {
     });
   }
 });
+
+
+// Request for getting Freepik Video Quality
+export const getFreepikVideoQuality = async (mainURL) => {
+  try {
+    const response = await axios.get(mainURL);
+
+    const $ = cheerio?.load(response.data);
+
+    // Locate the __NEXT_DATA__ script tag and extract its JSON content
+    const nextDataScript = $('#__NEXT_DATA__')?.html();
+
+    if (nextDataScript) {
+      const nextData = JSON.parse(nextDataScript);
+
+      // Access the options object
+      const options = nextData?.props?.pageProps?.options;
+      if (options) {
+        return options;
+      } else {
+        return false;
+      }
+    } else {
+      console.log("__NEXT_DATA__ script tag not found.");
+      return false;
+    }
+  } catch (error) {
+    console.log("Error in getting data:", error);
+    return false;
+  }
+};

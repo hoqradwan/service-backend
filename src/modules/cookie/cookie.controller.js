@@ -443,21 +443,21 @@ export const isMotionArrayCookieValid = async (cookieDetails) => {
 // Check if the Freepik cookie is expired or not
 export const isFreepikCookieValid = async (cookieDetails) => {
   try {
+
     const cookie = cookieDetails?.cookie;
     const token = cookieDetails?.csrfToken;
     const urls = [
       'https://www.freepik.com/api/regular/download?resource=28495268&action=download',
       'https://www.freepik.com/api/regular/download?resource=13240550&action=download',
       'https://www.freepik.com/api/regular/download?resource=13913503&action=download',
-      'https://www.freepik.com/api/regular/download?resource=25745444&action=download',
       'https://www.freepik.com/api/regular/download?resource=14314205&action=download',
     ];
-
     // Get a random URL
     const mainURL = urls[Math?.floor(Math?.random() * urls?.length)];
+
     const headers = {
-      Cookie: `GR_REFRESH=${cookie} GR_TOKEN=${token}`,
-    };
+      'Cookie': `GR_REFRESH=${cookie}; GR_TOKEN=${token}`
+    }
 
     // Make the HTTP request
     const response = await axios({

@@ -1,3 +1,4 @@
+import { getFreepikVideoQuality } from "./download.controller.js";
 
 // Envato cookie details
 export const envatoCookieCredentials = async (cookieDetails, url) => {
@@ -125,17 +126,38 @@ export const freepikCookieCredentials = async (cookieDetails, url, type) => {
   // Main URL for download request
   let mainURL;
 
-  if (content === "icon") {
+  if (content === "icon" || content === "animated-icon") {
     mainURL = `https://www.freepik.com/api/icon/download?optionId=${itemCode}&format=${type}&type=original`
   }
-  else if (content === "free-photo" || content === "premium-photo" || content === "free-vector" || content === "premium-vector" || content === "free-psd" || content === "premium-psd") {
-    mainURL = `https://www.freepik.com/api/regular/download?resource=${itemCode}&action=download`
-  }
+  
   else if (content === "free-video" || content === "premium-video") {
-    mainURL = `https://www.freepik.com/api/video/${itemCode}/download`
+
+    const options = await getFreepikVideoQuality(url);
+    if (type === "original") {
+      const optionId = options?.find(option => option?.isOriginal === true)
+      if (!optionId) {
+        return res.status(400).json({ isOk: false, message: 'Invalid url' });
+      }
+      else {
+        mainURL = `https://www.freepik.com/api/video/${itemCode}/download?optionId=${optionId?.id}`
+      }
+
+    }
+    else {
+
+      const optionId = options?.find(option => option?.quality === type && option?.isOriginal === false)
+      if (!optionId) {
+        return res.status(400).json({ isOk: false, message: 'Invalid url' });
+      }
+      else {
+        mainURL = `https://www.freepik.com/api/video/${itemCode}/download?optionId=${optionId?.id}`
+      }
+    }
+
   }
-  else {
-    return res.status(400).json({ isOk: false, message: 'Invalid url' });
+  // (content === "free-photo" || content === "premium-photo"  || content === "free-vector" || content === "premium-vector" || content === "free-psd" || content === "premium-psd")
+  else  {
+    mainURL = `https://www.freepik.com/api/regular/download?resource=${itemCode}&action=download`
   }
 
   const cookie = cookieDetails?.cookie;
@@ -143,7 +165,7 @@ export const freepikCookieCredentials = async (cookieDetails, url, type) => {
 
   // headers for download request
   const headers = {
-    'Cookie': `GR_REFRESH=${cookie} GR_TOKEN=${token}`
+    'Cookie': `GR_REFRESH=${cookie}; GR_TOKEN=${token}`
   }
 
   return { headers, mainURL };
