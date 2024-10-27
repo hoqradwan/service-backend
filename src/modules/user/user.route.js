@@ -6,6 +6,7 @@ import {
   forgotPassword,
   getAdminPassword,
   getSelfInfo,
+  getServiceStatus,
   getUserInfo,
   getUserStatistics,
   loginUser,
@@ -49,6 +50,7 @@ router.get('/user-list', adminMiddleware('admin'), getUserInfo);
 
 router.get('/information/:id', adminMiddleware('user', 'admin'), getSelfInfo);
 router.get('/user-stats', adminMiddleware('admin'), getUserStatistics);
+router.get('/service-status/:service', adminMiddleware('user'), getServiceStatus);
 
 export default router;
 // import express from 'express';

@@ -1373,6 +1373,7 @@ export const handleMotionArrayDownload = catchAsync(async (req, res) => {
 
 // download request to freepik official website
 export const handleFreePikDownload = catchAsync(async (req, res) => {
+  
   const { url, type } = req?.body;
   const userId = req?.user?.id;
 
@@ -1486,7 +1487,7 @@ export const handleFreePikDownload = catchAsync(async (req, res) => {
   const { headers, mainURL } = await freepikCookieCredentials(
     cookieDetails,
     url,
-    type?.toLowerCase(),
+    type,
   );
 
   if (!headers) {

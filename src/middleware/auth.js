@@ -28,7 +28,7 @@ export const adminMiddleware = (...requiredRoles) => {
       req.userId = user._id;
 
       // Role-based authorization: Check if user has one of the required roles
-      if (requiredRoles.length && !requiredRoles.includes(user.role)) {
+      if (requiredRoles?.length && !requiredRoles?.includes(user.role)) {
         return res
           .status(403)
           .json({ success: false, message: 'Access denied' });
@@ -36,7 +36,7 @@ export const adminMiddleware = (...requiredRoles) => {
 
       next();
     } catch (error) {
-      res.status(400).json({ success: false, message: 'Invalid token' });
+      res?.status(400)?.json({ success: false, message: 'Invalid token' });
     }
   };
 };

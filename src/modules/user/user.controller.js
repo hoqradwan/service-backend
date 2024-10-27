@@ -23,6 +23,7 @@ import {
 } from './user.utils.js';
 import { validateUserInput } from './user.validation.js';
 import { LicenseModel } from '../license/license.model.js';
+import { getLicenseByIdService } from '../license/license.service.js';
 
 export const registerUser = catchAsync(async (req, res) => {
   const { name, email, password, phone, image } = req.body;
@@ -647,6 +648,55 @@ export const getUserStatistics = catchAsync(async (req, res) => {
     success: true,
     statusCode: httpStatus.OK,
     message: 'Retrieved user stats successfully',
+    data: result,
+  });
+});
+
+
+export const getServiceStatus = catchAsync(async (req, res) => {
+  
+  const userId = req?.user?.id
+  const service = req?.params?.service;
+  const user = await findUserById(userId);
+  let result = false;
+
+  if ((service === "envato" && user?.currentLicense === null) || (service === "motion-array" && user?.currentMotionArrayLicense === null) || (service === "story-blocks" && user?.currentStoryBlocksLicense === null) || (service === "freepik" && user?.currentFreepikLicense === null)) {
+    return sendError(res, httpStatus.NOT_FOUND, {
+      message: 'No  license activated.',
+      data: result
+    });
+  }
+
+
+  if(service === "envato"){
+    const license = await getLicenseByIdService(user?.currentLicense);
+    if(license?.status === "used"){
+      result = true;
+    }
+  }
+  else if(service === "motion-array"){
+    const license = await getLicenseByIdService(user?.currentMotionArrayLicense);
+    if(license?.status === "used"){
+      result = true;
+    }
+  }
+  else if(service === "story-blocks"){
+    const license = await getLicenseByIdService(user?.currentStoryBlocksLicense);
+    if(license?.status === "used"){
+      result = true;
+    }
+  }
+  else if(service === "freepik"){
+    const license = await getLicenseByIdService(user?.currentFreepikLicense);
+    if(license?.status === "used"){
+      result = true;
+    }
+  }
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Retrieved service status successfully',
     data: result,
   });
 });

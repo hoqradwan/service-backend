@@ -120,7 +120,8 @@ export const freepikCookieCredentials = async (cookieDetails, url, type) => {
   const itemCode = itemSplit3[itemSplit3?.length - 1];
 
   if (!itemCode) {
-    return res.status(400).json({ isOk: false, message: 'Invalid url' });
+    // return res.status(400).json({ isOk: false, message: 'Invalid url' });
+    return { headers: false , mainURL: false };
   }
 
   // Main URL for download request
@@ -133,10 +134,12 @@ export const freepikCookieCredentials = async (cookieDetails, url, type) => {
   else if (content === "free-video" || content === "premium-video") {
 
     const options = await getFreepikVideoQuality(url);
+    
     if (type === "original") {
       const optionId = options?.find(option => option?.isOriginal === true)
       if (!optionId) {
-        return res.status(400).json({ isOk: false, message: 'Invalid url' });
+        // return res.status(400).json({ isOk: false, message: 'Invalid url' });
+        return { headers: false , mainURL: false };
       }
       else {
         mainURL = `https://www.freepik.com/api/video/${itemCode}/download?optionId=${optionId?.id}`
@@ -147,7 +150,8 @@ export const freepikCookieCredentials = async (cookieDetails, url, type) => {
 
       const optionId = options?.find(option => option?.quality === type && option?.isOriginal === false)
       if (!optionId) {
-        return res.status(400).json({ isOk: false, message: 'Invalid url' });
+        // return res.status(400).json({ isOk: false, message: 'Invalid url' });
+        return { headers: false , mainURL: false };
       }
       else {
         mainURL = `https://www.freepik.com/api/video/${itemCode}/download?optionId=${optionId?.id}`
