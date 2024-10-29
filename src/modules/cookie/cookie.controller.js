@@ -444,19 +444,20 @@ export const isMotionArrayCookieValid = async (cookieDetails) => {
 export const isFreepikCookieValid = async (cookieDetails) => {
   try {
 
-    const cookie = cookieDetails?.cookie;
-    const token = cookieDetails?.csrfToken;
+    const cookie = cookieDetails?.cookie?.trim();
+    const token = cookieDetails?.csrfToken?.trim();
+    
     const urls = [
-      'https://www.freepik.com/api/regular/download?resource=28495268&action=download',
-      'https://www.freepik.com/api/regular/download?resource=13240550&action=download',
-      'https://www.freepik.com/api/regular/download?resource=13913503&action=download',
-      'https://www.freepik.com/api/regular/download?resource=14314205&action=download',
+      `https://www.freepik.com/api/regular/download?walletId=${token}&resource=28495268&action=download`,
+      `https://www.freepik.com/api/regular/download?walletId=${token}&resource=13240550&action=download`,
+      `https://www.freepik.com/api/regular/download?walletId=${token}&resource=13913503&action=download`,
+      `https://www.freepik.com/api/regular/download?walletId=${token}&resource=14314205&action=download`,
     ];
     // Get a random URL
     const mainURL = urls[Math?.floor(Math?.random() * urls?.length)];
 
     const headers = {
-      'Cookie': `GR_REFRESH=${cookie}; GR_TOKEN=${token}`
+      'Cookie': `${cookie}`
     }
 
     // Make the HTTP request

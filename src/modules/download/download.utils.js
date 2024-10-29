@@ -118,31 +118,33 @@ export const freepikCookieCredentials = async (cookieDetails, url, type) => {
   const itemSplit2 = itemSplit1[0]?.split(".htm");
   const itemSplit3 = itemSplit2[0]?.split("_");
   const itemCode = itemSplit3[itemSplit3?.length - 1];
+  const cookie = cookieDetails?.cookie?.trim();
+  const token = cookieDetails?.csrfToken?.trim();
 
   if (!itemCode) {
     // return res.status(400).json({ isOk: false, message: 'Invalid url' });
-    return { headers: false , mainURL: false };
+    return { headers: false, mainURL: false };
   }
 
   // Main URL for download request
   let mainURL;
 
   if (content === "icon" || content === "animated-icon") {
-    mainURL = `https://www.freepik.com/api/icon/download?optionId=${itemCode}&format=${type}&type=original`
+    mainURL = `https://www.freepik.com/api/icon/download?walletId=${token}&optionId=${itemCode}&format=${type}&type=original`
   }
-  
+
   else if (content === "free-video" || content === "premium-video") {
 
     const options = await getFreepikVideoQuality(url);
-    
+
     if (type === "original") {
       const optionId = options?.find(option => option?.isOriginal === true)
       if (!optionId) {
         // return res.status(400).json({ isOk: false, message: 'Invalid url' });
-        return { headers: false , mainURL: false };
+        return { headers: false, mainURL: false };
       }
       else {
-        mainURL = `https://www.freepik.com/api/video/${itemCode}/download?optionId=${optionId?.id}`
+        mainURL = `https://www.freepik.com/api/video/${itemCode}/download?walletId=${token}&optionId=${optionId?.id}`
       }
 
     }
@@ -151,25 +153,25 @@ export const freepikCookieCredentials = async (cookieDetails, url, type) => {
       const optionId = options?.find(option => option?.quality === type && option?.isOriginal === false)
       if (!optionId) {
         // return res.status(400).json({ isOk: false, message: 'Invalid url' });
-        return { headers: false , mainURL: false };
+        return { headers: false, mainURL: false };
       }
       else {
-        mainURL = `https://www.freepik.com/api/video/${itemCode}/download?optionId=${optionId?.id}`
+        mainURL = `https://www.freepik.com/api/video/${itemCode}/download?walletId=${token}&optionId=${optionId?.id}`
       }
     }
 
   }
   // (content === "free-photo" || content === "premium-photo"  || content === "free-vector" || content === "premium-vector" || content === "free-psd" || content === "premium-psd")
-  else  {
-    mainURL = `https://www.freepik.com/api/regular/download?resource=${itemCode}&action=download`
+  else {
+    mainURL = `https://www.freepik.com/api/regular/download?walletId=${token}&resource=${itemCode}&action=download`
   }
 
-  const cookie = cookieDetails?.cookie;
-  const token = cookieDetails?.csrfToken;
+
 
   // headers for download request
   const headers = {
-    'Cookie': `GR_REFRESH=${cookie}; GR_TOKEN=${token}`
+    // 'Cookie': `GR_REFRESH=${cookie}; GR_TOKEN=${token}`
+    'Cookie': `${cookie}`
   }
 
   return { headers, mainURL };
