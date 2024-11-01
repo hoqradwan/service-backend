@@ -1490,6 +1490,10 @@ export const handleFreePikDownload = catchAsync(async (req, res) => {
     type,
   );
 
+  // console.log("url ==> ", mainURL);
+  // console.log("headers ==> ", headers);
+  
+
   if (!headers) {
     return sendResponse(res, {
       success: false,

@@ -445,13 +445,13 @@ export const isFreepikCookieValid = async (cookieDetails) => {
   try {
 
     const cookie = cookieDetails?.cookie?.trim();
-    const token = cookieDetails?.csrfToken?.trim();
+    // const token = cookieDetails?.csrfToken?.trim();
     
     const urls = [
-      `https://www.freepik.com/api/regular/download?walletId=${token}&resource=28495268&action=download`,
-      `https://www.freepik.com/api/regular/download?walletId=${token}&resource=13240550&action=download`,
-      `https://www.freepik.com/api/regular/download?walletId=${token}&resource=13913503&action=download`,
-      `https://www.freepik.com/api/regular/download?walletId=${token}&resource=14314205&action=download`,
+      `https://www.freepik.com/api/video/3303228/download?optionId=17456541`,
+      `https://www.freepik.com/api/video/3189593/download?optionId=13076035`,
+      `https://www.freepik.com/api/video/3181021/download?optionId=13043637`,
+      `https://www.freepik.com/api/video/3193317/download?optionId=13090250`,
     ];
     // Get a random URL
     const mainURL = urls[Math?.floor(Math?.random() * urls?.length)];
