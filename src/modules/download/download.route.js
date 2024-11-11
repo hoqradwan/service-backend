@@ -124,6 +124,7 @@ router.get(
   adminMiddleware('user'),
   handleLicenseDownload,
 );
-router.put('/:id', adminMiddleware('user'), updateDownloadById); // given download id.
+
+router.put('/:id', adminMiddleware('user'), updateDownloadById);
 
 export const downloadRoutes = router;

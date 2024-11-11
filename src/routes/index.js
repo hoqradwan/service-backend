@@ -6,14 +6,16 @@ import { downloadRoutes } from '../modules/download/download.route.js';
 import { supportRoutes } from '../modules/support/support.route.js';
 
 import licenseRoutes from '../modules/license/license.route.js';
+import { downloadRestrictRoutes } from '../modules/downloadDelay/downloadDelay.route.js';
 
 const router = express.Router();
 
-router.use("/api/user", userRoutes);
-router.use("/api/banner", bannerRoutes);
-router.use("/api/support", supportRoutes);
-router.use("/api/download", downloadRoutes);
+router.use('/api/user', userRoutes);
+router.use('/api/banner', bannerRoutes);
+router.use('/api/support', supportRoutes);
+router.use('/api/download', downloadRoutes);
+router.use('/api/downloadRestrict', downloadRestrictRoutes);
 router.use('/api/license', licenseRoutes);
-router.use("/api/cookie", cookieRoutes);
+router.use('/api/cookie', cookieRoutes);
 
 export default router;

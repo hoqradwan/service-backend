@@ -40,6 +40,8 @@ import {
 } from '../cookie/cookie.controller.js';
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+import { DownloadRestrict } from '../downloadDelay/downloadDelay.model.js';
+import { delay } from '../downloadDelay/downloadDelay.utils.js';
 const cheerio = await import('cheerio');
 
 export const addDownload = catchAsync(async (req, res) => {
@@ -845,7 +847,23 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
       data: null,
     });
   }
+  // Delay download
+  const restriction = await DownloadRestrict.findOne({
+    service: 'Envato Elements',
+  });
 
+  if (restriction.isRestricted) {
+    const delayInMilliseconds = restriction.delay * 1000;
+    // console.log(
+    //   `Task will start after a delay of ${
+    //     delayInMilliseconds / 1000
+    //   } seconds...`,
+    // );
+
+    // Await the delay before proceeding
+    await delay(delayInMilliseconds); // Using the delay function
+    // console.log('Task started after the delay.');
+  }
   const { payload, headers, mainURL } = await envatoCookieCredentials(
     cookieDetails,
     url,
@@ -1066,7 +1084,22 @@ export const handleStoryBlocksDownload = catchAsync(async (req, res) => {
       data: null,
     });
   }
+  const restriction = await DownloadRestrict.findOne({
+    service: 'Story Blocks',
+  });
 
+  if (restriction.isRestricted) {
+    const delayInMilliseconds = restriction.delay * 1000;
+    // console.log(
+    //   `Task will start after a delay of ${
+    //     delayInMilliseconds / 1000
+    //   } seconds...`,
+    // );
+
+    // Await the delay before proceeding
+    await delay(delayInMilliseconds); // Using the delay function
+    // console.log('Task started after the delay.');
+  }
   const { itemCode, contentClass } = await getStoryBlockItemCode(url);
 
   if (!itemCode || !contentClass) {
@@ -1373,7 +1406,6 @@ export const handleMotionArrayDownload = catchAsync(async (req, res) => {
 
 // download request to freepik official website
 export const handleFreePikDownload = catchAsync(async (req, res) => {
-  
   const { url, type } = req?.body;
   const userId = req?.user?.id;
 
@@ -1492,7 +1524,6 @@ export const handleFreePikDownload = catchAsync(async (req, res) => {
 
   // console.log("url ==> ", mainURL);
   // console.log("headers ==> ", headers);
-  
 
   if (!headers) {
     return sendResponse(res, {
@@ -1518,7 +1549,6 @@ export const handleFreePikDownload = catchAsync(async (req, res) => {
     url: mainURL,
     headers: headers,
   });
-
 
   if (response?.data?.url) {
     const download = {
@@ -1549,7 +1579,6 @@ export const handleFreePikDownload = catchAsync(async (req, res) => {
   }
 });
 
-
 // Request for getting Freepik Video Quality
 export const getFreepikVideoQuality = async (mainURL) => {
   try {
@@ -1571,11 +1600,11 @@ export const getFreepikVideoQuality = async (mainURL) => {
         return false;
       }
     } else {
-      console.log("__NEXT_DATA__ script tag not found.");
+      console.log('__NEXT_DATA__ script tag not found.');
       return false;
     }
   } catch (error) {
-    console.log("Error in getting data:", error);
+    console.log('Error in getting data:', error);
     return false;
   }
 };
