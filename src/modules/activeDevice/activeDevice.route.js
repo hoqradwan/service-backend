@@ -7,11 +7,11 @@ import { adminMiddleware } from '../../middleware/auth.js';
 
 const router = express.Router();
 
-router.post('/sign-out-all/:id', logoutAllDevicesController);
 router.post(
   '/log-out',
   adminMiddleware('user'),
   logOutFromCurrentDeviceController,
 );
+router.post('/sign-out-all', logoutAllDevicesController);
 
 export const activeDeviceRoutes = router;

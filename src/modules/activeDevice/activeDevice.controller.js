@@ -2,25 +2,27 @@ import mongoose from 'mongoose';
 import catchAsync from '../../utils/catchAsync.js';
 import sendResponse from '../../utils/sendResponse.js';
 import httpStatus from 'http-status';
-import { logOutFromCurrentDeviceService } from './activeDevice.service.js';
+import {
+  logoutAllDevicesService,
+  logOutFromCurrentDeviceService,
+} from './activeDevice.service.js';
+import { findUserByEmail } from '../user/user.service.js';
 
 // log out from all devices controller
 export const logoutAllDevicesController = catchAsync(async (req, res) => {
   // Extract the id from the request parameters
-  const { id } = req.params;
-
-  // Check if id is a valid MongoDB ObjectId
-  if (!mongoose.Types.ObjectId.isValid(id)) {
+  const email = req?.body?.email;
+  const user = await findUserByEmail(email);
+  if (!user) {
     return sendResponse(res, {
       success: false,
-      statusCode: httpStatus.BAD_REQUEST,
-      message: 'Invalid Id format',
+      statusCode: httpStatus.NOT_FOUND,
+      message: 'No user was found with this email',
       data: null,
     });
   }
-
   // Find and delete the active devices by id
-  const result = await logoutAllDevicesService(id);
+  const result = await logoutAllDevicesService(user?._id);
 
   // Check if the active accounts were found and deleted
   if (!result) {
@@ -36,8 +38,8 @@ export const logoutAllDevicesController = catchAsync(async (req, res) => {
   return sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
-    message: 'Active devices were deleted successfully!',
-    data: result,
+    message: 'Logged Out from all devices successfully!',
+    data: null,
   });
 });
 
