@@ -8,6 +8,7 @@ import cron from 'node-cron';
 import { updateLicenseStatus } from './src/modules/license/license.utils.js';
 import globalErrorHandler from './src/middleware/globalErrorHandler.js';
 import notFoundRoute from './src/middleware/notFoundRoute.js';
+import { cleanExpiredDevicesService } from './src/modules/activeDevice/activeDevice.service.js';
 dotenv.config();
 const PORT = process.env.PORT || 5000;
 
@@ -34,6 +35,14 @@ cron.schedule('0 0 * * *', () => {
     console.error('Error updating license status:', err),
   );
 });
+
+// Delete active devices if the token is expired
+cron.schedule('0 0 * * *', async () => {
+  cleanExpiredDevicesService().catch((err) =>
+    console.error('Error cleaning the expired active devices', err),
+  );
+});
+
 // cron.schedule('* * * * * *', () => {
 //   // console.log('Running license status update every second...');
 //   updateLicenseStatus().catch((err) =>

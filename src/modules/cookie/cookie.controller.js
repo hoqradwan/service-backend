@@ -443,10 +443,9 @@ export const isMotionArrayCookieValid = async (cookieDetails) => {
 // Check if the Freepik cookie is expired or not
 export const isFreepikCookieValid = async (cookieDetails) => {
   try {
-
     const cookie = cookieDetails?.cookie?.trim();
     // const token = cookieDetails?.csrfToken?.trim();
-    
+
     const urls = [
       `https://www.freepik.com/api/video/3303228/download?optionId=17456541`,
       `https://www.freepik.com/api/video/3189593/download?optionId=13076035`,
@@ -457,8 +456,8 @@ export const isFreepikCookieValid = async (cookieDetails) => {
     const mainURL = urls[Math?.floor(Math?.random() * urls?.length)];
 
     const headers = {
-      'Cookie': `${cookie}`
-    }
+      Cookie: `${cookie}`,
+    };
 
     // Make the HTTP request
     const response = await axios({
