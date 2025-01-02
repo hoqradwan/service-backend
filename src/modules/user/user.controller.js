@@ -97,8 +97,9 @@ export const loginUser = catchAsync(async (req, res) => {
   }
 
   // Check active devices
+  const deviceLimit = user?.deviceLimit || 1;
   const activeDevices = await activeDevicesByIdService(user?._id);
-  if (activeDevices?.length >= user?.deviceLimit) {
+  if (activeDevices?.length >= deviceLimit) {
     return sendError(res, httpStatus.UNAUTHORIZED, {
       message: 'Device limit exceeded',
     });
@@ -106,9 +107,9 @@ export const loginUser = catchAsync(async (req, res) => {
 
   // Extract device details from request headers
   const deviceInfo = {
-    deviceName: req.headers['x-device-name'] || 'Unknown Device',
-    ipAddress: req.ip, // Express middleware can provide the client IP
-    userAgent: req.headers['user-agent'], // User-Agent header
+    deviceName: req.headers['x-device-name'] || 'Unknown Device', // Custom header for device name
+    ipAddress: req.ip || req.headers['x-forwarded-for'] || 'Unknown IP', // Handling IP address
+    userAgent: req.headers['user-agent'] || 'Unknown User-Agent', // User-Agent header
   };
 
   const userId = user?._id;

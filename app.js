@@ -30,25 +30,21 @@ app.get('/', (req, res) => {
 });
 
 cron.schedule('0 0 * * *', () => {
-  // console.log('Running daily license status update...');....
+  console.log('Running daily license status update...');
   updateLicenseStatus().catch((err) =>
     console.error('Error updating license status:', err),
   );
 });
 
-// Delete active devices if the token is expired
-cron.schedule('0 0 * * *', async () => {
-  cleanExpiredDevicesService().catch((err) =>
-    console.error('Error cleaning the expired active devices', err),
-  );
+// Delete active devices if the token is expired(checking in every minute)
+cron.schedule('* * * * *', async () => {
+  // console.log('Cron job triggered');
+  try {
+    await cleanExpiredDevicesService();
+  } catch (err) {
+    console.error('Error cleaning expired active devices:', err);
+  }
 });
-
-// cron.schedule('* * * * * *', () => {
-//   // console.log('Running license status update every second...');
-//   updateLicenseStatus().catch((err) =>
-//     console.error('Error updating license status:', err),
-//   );
-// });
 
 app.use('*', notFoundRoute);
 app.use(globalErrorHandler);
