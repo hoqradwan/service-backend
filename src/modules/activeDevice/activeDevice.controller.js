@@ -3,26 +3,16 @@ import catchAsync from '../../utils/catchAsync.js';
 import sendResponse from '../../utils/sendResponse.js';
 import httpStatus from 'http-status';
 import {
+  isUserSessionValidService,
   logoutAllDevicesService,
   logOutFromCurrentDeviceService,
 } from './activeDevice.service.js';
-import { findUserByEmail } from '../user/user.service.js';
 
 // log out from all devices controller
 export const logoutAllDevicesController = catchAsync(async (req, res) => {
-  // Extract the id from the request parameters
-  const email = req?.body?.email;
-  const user = await findUserByEmail(email);
-  if (!user) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: httpStatus.NOT_FOUND,
-      message: 'No user was found with this email',
-      data: null,
-    });
-  }
+  const userId = req?.userId;
   // Find and delete the active devices by id
-  const result = await logoutAllDevicesService(user?._id);
+  const result = await logoutAllDevicesService(userId);
 
   // Check if the active accounts were found and deleted
   if (!result) {
@@ -71,3 +61,25 @@ export const logOutFromCurrentDeviceController = catchAsync(
     });
   },
 );
+// Is valid session controller
+export const isUserSessionValidController = catchAsync(async (req, res) => {
+  // Send a success response confirming deletion
+  const { token } = req?.body;
+
+  const result = await isUserSessionValidService(token);
+
+  if (!result) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: httpStatus.NOT_FOUND,
+      message: 'Failed to Log Out',
+      data: null,
+    });
+  }
+  return sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Valid User Session',
+    data: null,
+  });
+});

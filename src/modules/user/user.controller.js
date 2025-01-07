@@ -97,13 +97,13 @@ export const loginUser = catchAsync(async (req, res) => {
   }
 
   // Check active devices
-  const deviceLimit = user?.deviceLimit || 1;
-  const activeDevices = await activeDevicesByIdService(user?._id);
-  if (activeDevices?.length >= deviceLimit) {
-    return sendError(res, httpStatus.UNAUTHORIZED, {
-      message: 'Device limit exceeded',
-    });
-  }
+  // const deviceLimit = user?.deviceLimit || 1;
+  // const activeDevices = await activeDevicesByIdService(user?._id);
+  // if (activeDevices?.length >= deviceLimit) {
+  //   return sendError(res, httpStatus.UNAUTHORIZED, {
+  //     message: 'Device limit exceeded',
+  //   });
+  // }
 
   // Extract device details from request headers
   const deviceInfo = {
@@ -319,29 +319,6 @@ export const getUserInfo = catchAsync(async (req, res) => {
   });
 });
 
-// export const getSelfInfo = catchAsync(async (req, res) => {
-//   const user = await UserModel.findById(
-//     req.params.id,
-//     '-password -adminPassword',
-//   );
-//   if (!user) {
-//     return sendError(res, httpStatus.NOT_FOUND, {
-//       message: 'User not found.',
-//     });
-//   }
-// const license = await LicenseModel.find({  $or: [
-//   { currentLicense },
-//   { currentStoryBlocksLicense },
-//   { currentMotionArrayLicense },
-//   { currentFreepikLicense},
-// ],})
-//   sendResponse(res, {
-//     statusCode: httpStatus.OK,
-//     success: true,
-//     message: 'User information retrieved successfully',
-//     data: { information: user },
-//   });
-// });
 export const getSelfInfo = catchAsync(async (req, res) => {
   // Find the user by their ID, excluding the password and adminPassword fields
   const user = await UserModel.findById(

@@ -1,5 +1,6 @@
 import express from 'express';
 import {
+  isUserSessionValidController,
   logoutAllDevicesController,
   logOutFromCurrentDeviceController,
 } from './activeDevice.controller.js';
@@ -12,6 +13,11 @@ router.post(
   adminMiddleware('user'),
   logOutFromCurrentDeviceController,
 );
-router.post('/sign-out-all', logoutAllDevicesController);
+router.post(
+  '/sign-out-all',
+  adminMiddleware('user'),
+  logoutAllDevicesController,
+);
+router.post('/is-session-valid', isUserSessionValidController);
 
 export const activeDeviceRoutes = router;

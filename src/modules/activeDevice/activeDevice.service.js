@@ -47,3 +47,9 @@ export const logOutFromCurrentDeviceService = async (userId, deviceId) => {
     deviceId: deviceId,
   });
 };
+// is session valid
+export const isUserSessionValidService = async (token) => {
+  return await ActiveDeviceModel.findOne({
+    token,
+  });
+};
