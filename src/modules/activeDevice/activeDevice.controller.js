@@ -6,6 +6,7 @@ import {
   isUserSessionValidService,
   logoutAllDevicesService,
   logOutFromCurrentDeviceService,
+  totalLoggedInDeviceService,
 } from './activeDevice.service.js';
 
 // log out from all devices controller
@@ -81,5 +82,28 @@ export const isUserSessionValidController = catchAsync(async (req, res) => {
     statusCode: httpStatus.OK,
     message: 'Valid User Session',
     data: null,
+  });
+});
+
+// Is device limit crossed controller
+export const totalLoggedInDeviceController = catchAsync(async (req, res) => {
+  // Send a success response confirming deletion
+  const userId = req?.userId;
+
+  const result = await totalLoggedInDeviceService(userId);
+
+  if (!result) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: httpStatus.NOT_FOUND,
+      message: 'Failed to Log Out',
+      data: null,
+    });
+  }
+  return sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Valid User Session',
+    data: { loggedInDevices: result },
   });
 });

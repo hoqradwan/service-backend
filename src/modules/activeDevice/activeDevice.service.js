@@ -26,7 +26,7 @@ export const activeDevicesByIdService = async (userId) => {
 // add new login device service
 export const addDeviceService = async (userId, deviceId, token, deviceInfo) => {
   const issuedAt = new Date();
-  const expiresAt = new Date(issuedAt.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const expiresAt = new Date(issuedAt.getTime() + 2 * 60 * 60 * 1000);
   // Save device info
   const device = new ActiveDeviceModel({
     userId,
@@ -51,5 +51,12 @@ export const logOutFromCurrentDeviceService = async (userId, deviceId) => {
 export const isUserSessionValidService = async (token) => {
   return await ActiveDeviceModel.findOne({
     token,
+  });
+};
+
+// is session valid
+export const totalLoggedInDeviceService = async (userId) => {
+  return await ActiveDeviceModel.countDocuments({
+    userId,
   });
 };

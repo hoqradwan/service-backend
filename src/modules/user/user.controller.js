@@ -60,7 +60,7 @@ export const registerUser = catchAsync(async (req, res) => {
 
   res.cookie('token', token, {
     httpOnly: true,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    maxAge: 2 * 60 * 60 * 1000, // 2 hours
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
   });
@@ -96,15 +96,6 @@ export const loginUser = catchAsync(async (req, res) => {
     });
   }
 
-  // Check active devices
-  // const deviceLimit = user?.deviceLimit || 1;
-  // const activeDevices = await activeDevicesByIdService(user?._id);
-  // if (activeDevices?.length >= deviceLimit) {
-  //   return sendError(res, httpStatus.UNAUTHORIZED, {
-  //     message: 'Device limit exceeded',
-  //   });
-  // }
-
   // Extract device details from request headers
   const deviceInfo = {
     deviceName: req.headers['x-device-name'] || 'Unknown Device', // Custom header for device name
@@ -130,7 +121,7 @@ export const loginUser = catchAsync(async (req, res) => {
   // Set cookie with the token
   res.cookie('token', token, {
     httpOnly: true,
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
+    maxAge: 2 * 60 * 60 * 1000, // 2 hours
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
   });

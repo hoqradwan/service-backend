@@ -3,6 +3,7 @@ import {
   isUserSessionValidController,
   logoutAllDevicesController,
   logOutFromCurrentDeviceController,
+  totalLoggedInDeviceController,
 } from './activeDevice.controller.js';
 import { adminMiddleware } from '../../middleware/auth.js';
 
@@ -19,5 +20,10 @@ router.post(
   logoutAllDevicesController,
 );
 router.post('/is-session-valid', isUserSessionValidController);
+router.get(
+  '/logged-in-devices',
+  adminMiddleware('user'),
+  totalLoggedInDeviceController,
+);
 
 export const activeDeviceRoutes = router;
