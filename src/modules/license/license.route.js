@@ -39,8 +39,8 @@ router.get(
   getDailyStatisticsForMotionArrayForUsedLicenses,
 );
 router.get('/freepik-stats', getDailyStatisticsForFreepikForUsedLicenses);
-// router.post('/create',adminMiddleware('admin'), createLicense);
-router.post('/create', createLicense);
+router.post('/create', adminMiddleware('admin'), createLicense);
+// router.post('/create', createLicense);
 router.put(
   '/activate',
   adminMiddleware('user'),
