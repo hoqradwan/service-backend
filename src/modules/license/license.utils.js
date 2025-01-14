@@ -29,7 +29,7 @@ export const updateLicenseStatus = async () => {
       status: { $ne: 'expired' }, // Select licenses that are not already marked as expired
     });
 
-    console.log('Expired Licenses:', expiredLicenses);
+    // console.log('Expired Licenses:', expiredLicenses);
 
     if (expiredLicenses.length === 0) {
       console.log('No licenses to expire.');

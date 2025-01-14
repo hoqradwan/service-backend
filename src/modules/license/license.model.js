@@ -31,7 +31,7 @@ const licenseSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['new', 'used', 'expired','suspended'],
+      enum: ['new', 'used', 'expired', 'suspended'],
       default: 'new',
     },
     activationDate: {
@@ -41,7 +41,11 @@ const licenseSchema = new mongoose.Schema(
     expiryDate: {
       type: Date,
       default: null,
-    }
+    },
+    deviceLimit: {
+      type: Number,
+      default: 1,
+    },
   },
   { timestamps: true },
 );

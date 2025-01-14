@@ -4,6 +4,7 @@ import userRoutes from '../modules/user/user.route.js';
 import cookieRoutes from '../modules/cookie/cookie.route.js';
 import { downloadRoutes } from '../modules/download/download.route.js';
 import { supportRoutes } from '../modules/support/support.route.js';
+import { activeDeviceRoutes } from '../modules/activeDevice/activeDevice.route.js';
 
 import licenseRoutes from '../modules/license/license.route.js';
 import { downloadRestrictRoutes } from '../modules/downloadDelay/downloadDelay.route.js';
@@ -17,5 +18,6 @@ router.use('/api/download', downloadRoutes);
 router.use('/api/downloadRestrict', downloadRestrictRoutes);
 router.use('/api/license', licenseRoutes);
 router.use('/api/cookie', cookieRoutes);
+router.use('/api/active-device', activeDeviceRoutes);
 
 export default router;

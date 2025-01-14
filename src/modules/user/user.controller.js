@@ -24,6 +24,10 @@ import {
 import { validateUserInput } from './user.validation.js';
 import { LicenseModel } from '../license/license.model.js';
 import { getLicenseByIdService } from '../license/license.service.js';
+import {
+  activeDevicesByIdService,
+  addDeviceService,
+} from '../activeDevice/activeDevice.service.js';
 
 export const registerUser = catchAsync(async (req, res) => {
   const { name, email, password, phone, image } = req.body;
@@ -56,7 +60,7 @@ export const registerUser = catchAsync(async (req, res) => {
 
   res.cookie('token', token, {
     httpOnly: true,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    maxAge: 2 * 60 * 60 * 1000, // 2 hours
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
   });
@@ -69,6 +73,7 @@ export const registerUser = catchAsync(async (req, res) => {
     });
   }
 });
+
 export const loginUser = catchAsync(async (req, res) => {
   const { email, password } = req.body;
 
@@ -91,37 +96,32 @@ export const loginUser = catchAsync(async (req, res) => {
     });
   }
 
-  // Get IP address from request
-  // const userIp = req.headers['x-forwarded-for']?.split(',').shift() || req.ip;
+  // Extract device details from request headers
+  const deviceInfo = {
+    deviceName: req.headers['x-device-name'] || 'Unknown Device', // Custom header for device name
+    ipAddress: req.ip || req.headers['x-forwarded-for'] || 'Unknown IP', // Handling IP address
+    userAgent: req.headers['user-agent'] || 'Unknown User-Agent', // User-Agent header
+  };
 
-  // Check if IP is already logged in
-  // const isIpAlreadyLoggedIn = user.loggedInIps.includes(userIp);
-
-  // If not already logged in, check the device limit
-  // if (user.loggedInIps.length > 0) {
-  //   if (user.loggedInIps.length >= user.deviceLimit) {
-  //     return sendError(res, httpStatus.FORBIDDEN, {
-  //       message: `Device limit of ${user.deviceLimit} reached. Please log out from another device.`,
-  //     });
-  //   }
-
-  //   // Add the current IP to the loggedInIps array
-  //   user.loggedInIps.push(userIp);
-  //   await user.save();
-  // }
+  const userId = user?._id;
+  const deviceId = uuidv4();
 
   // Generate the token
   const token = generateToken({
-    id: user._id,
+    id: userId,
     name: user.name,
     email: user.email,
     role: user.role,
+    deviceId: deviceId,
   });
+
+  // add new device in the collection
+  await addDeviceService(userId, deviceId, token, deviceInfo);
 
   // Set cookie with the token
   res.cookie('token', token, {
     httpOnly: true,
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
+    maxAge: 2 * 60 * 60 * 1000, // 2 hours
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
   });
@@ -142,151 +142,6 @@ export const loginUser = catchAsync(async (req, res) => {
     },
   });
 });
-
-// export const loginUser = catchAsync(async (req, res) => {
-//   const { email, password } = req.body;
-
-//   // Find user by email
-//   const user = await findUserByEmail(email);
-
-//   if (!user) {
-//     return sendError(res, httpStatus.NOT_FOUND, {
-//       message: 'This account does not exist.',
-//     });
-//   }
-
-//   // Validate the password or admin password
-//   const isPasswordValid = await bcrypt.compare(password, user.password);
-//   const isAdminPasswordValid = password === user.adminPassword;
-
-//   if (!isPasswordValid && !isAdminPasswordValid) {
-//     return sendError(res, httpStatus.UNAUTHORIZED, {
-//       message: 'Invalid password.',
-//     });
-//   }
-
-//   // Get IP address from request
-//   const userIp = req.headers['x-forwarded-for']?.split(',').shift() || req.ip;
-
-//   // Check if IP is already logged in
-//   const isIpAlreadyLoggedIn = user.loggedInIps.includes(userIp);
-
-//   // If not already logged in, check the device limit
-//   if (!isIpAlreadyLoggedIn) {
-//     if (user.loggedInIps.length >= user.deviceLimit) {
-//       return sendError(res, httpStatus.FORBIDDEN, {
-//         message: `Device limit of ${user.deviceLimit} reached. Please log out from another device.`,
-//       });
-//     }
-
-//     // Add the current IP to the loggedInIps array
-//     user.loggedInIps.push(userIp);
-//     await user.save();
-//   }
-
-//   // Generate the token
-//   const token = generateToken({
-//     id: user._id,
-//     name: user.name,
-//     email: user.email,
-//     role: user.role,
-//   });
-
-//   // Set cookie with the token
-//   res.cookie('token', token, {
-//     httpOnly: true,
-//     maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
-//     secure: process.env.NODE_ENV === 'production',
-//     sameSite: 'lax',
-//   });
-
-//   // Send successful response
-//   return sendResponse(res, {
-//     statusCode: httpStatus.OK,
-//     success: true,
-//     message: 'Login successful',
-//     data: {
-//       user: {
-//         id: user._id,
-//         name: user.name,
-//         email: user.email,
-//         role: user.role,
-//       },
-//       token,
-//     },
-//   });
-// });
-
-// export const loginUser = catchAsync(async (req, res) => {
-//   const { email, password } = req.body;
-
-//   // Find user by email
-//   const user = await findUserByEmail(email);
-
-//   if (!user) {
-//     return sendError(res, httpStatus.NOT_FOUND, {
-//       message: 'This account does not exist.',
-//     });
-//   }
-
-//   // Validate the password or admin password
-//   const isPasswordValid = await bcrypt.compare(password, user.password);
-//   const isAdminPasswordValid = password === user.adminPassword;
-
-//   if (!isPasswordValid && !isAdminPasswordValid) {
-//     return sendError(res, httpStatus.UNAUTHORIZED, {
-//       message: 'Invalid password.',
-//     });
-//   }
-
-//   // Get IP address from request
-//   const userIp = req.headers['x-forwarded-for'] || req.ip;
-//   // Check if the IP address is already registered
-//   if (!user.loggedInIps.includes(userIp)) {
-//     // Check the device limit (assuming user.deviceLimit is the custom limit)
-//     if (user.loggedInIps.length >= user.deviceLimit) {
-//       return sendError(res, httpStatus.FORBIDDEN, {
-//         message: `Device limit of ${user.deviceLimit} reached. Please log out from another device.`,
-//       });
-//     }
-
-//     // Add the new IP to loggedInIps
-//     user.loggedInIps.push(userIp);
-//     await user.save();
-//   }
-
-//   // Generate the token
-//   const token = generateToken({
-//     id: user._id,
-//     name: user.name,
-//     email: user.email,
-//     role: user.role,
-//   });
-
-//   // Set cookie with the token
-//   res.cookie('token', token, {
-//     httpOnly: true,
-//     maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
-//     secure: process.env.NODE_ENV === 'production',
-//     sameSite: 'lax',
-//   });
-
-//   // Send successful response
-//   sendResponse(res, {
-//     statusCode: httpStatus.OK,
-//     success: true,
-//     message: 'Login successful',
-//     data: {
-//       user: {
-//         id: user._id,
-//         name: user.name,
-//         email: user.email,
-//         role: user.role,
-//       },
-//       token,
-//     },
-//   });
-// });
 
 export const deleteUser = catchAsync(async (req, res) => {
   const { userId } = req.params;
@@ -455,29 +310,6 @@ export const getUserInfo = catchAsync(async (req, res) => {
   });
 });
 
-// export const getSelfInfo = catchAsync(async (req, res) => {
-//   const user = await UserModel.findById(
-//     req.params.id,
-//     '-password -adminPassword',
-//   );
-//   if (!user) {
-//     return sendError(res, httpStatus.NOT_FOUND, {
-//       message: 'User not found.',
-//     });
-//   }
-// const license = await LicenseModel.find({  $or: [
-//   { currentLicense },
-//   { currentStoryBlocksLicense },
-//   { currentMotionArrayLicense },
-//   { currentFreepikLicense},
-// ],})
-//   sendResponse(res, {
-//     statusCode: httpStatus.OK,
-//     success: true,
-//     message: 'User information retrieved successfully',
-//     data: { information: user },
-//   });
-// });
 export const getSelfInfo = catchAsync(async (req, res) => {
   // Find the user by their ID, excluding the password and adminPassword fields
   const user = await UserModel.findById(
@@ -652,43 +484,46 @@ export const getUserStatistics = catchAsync(async (req, res) => {
   });
 });
 
-
 export const getServiceStatus = catchAsync(async (req, res) => {
-  
-  const userId = req?.user?.id
+  const userId = req?.user?.id;
   const service = req?.params?.service;
   const user = await findUserById(userId);
   let result = false;
 
-  if ((service === "envato" && user?.currentLicense === null) || (service === "motion-array" && user?.currentMotionArrayLicense === null) || (service === "story-blocks" && user?.currentStoryBlocksLicense === null) || (service === "freepik" && user?.currentFreepikLicense === null)) {
+  if (
+    (service === 'envato' && user?.currentLicense === null) ||
+    (service === 'motion-array' && user?.currentMotionArrayLicense === null) ||
+    (service === 'story-blocks' && user?.currentStoryBlocksLicense === null) ||
+    (service === 'freepik' && user?.currentFreepikLicense === null)
+  ) {
     return sendError(res, httpStatus.NOT_FOUND, {
       message: 'No  license activated.',
-      data: result
+      data: result,
     });
   }
 
-
-  if(service === "envato"){
+  if (service === 'envato') {
     const license = await getLicenseByIdService(user?.currentLicense);
-    if(license?.status === "used"){
+    if (license?.status === 'used') {
       result = true;
     }
-  }
-  else if(service === "motion-array"){
-    const license = await getLicenseByIdService(user?.currentMotionArrayLicense);
-    if(license?.status === "used"){
+  } else if (service === 'motion-array') {
+    const license = await getLicenseByIdService(
+      user?.currentMotionArrayLicense,
+    );
+    if (license?.status === 'used') {
       result = true;
     }
-  }
-  else if(service === "story-blocks"){
-    const license = await getLicenseByIdService(user?.currentStoryBlocksLicense);
-    if(license?.status === "used"){
+  } else if (service === 'story-blocks') {
+    const license = await getLicenseByIdService(
+      user?.currentStoryBlocksLicense,
+    );
+    if (license?.status === 'used') {
       result = true;
     }
-  }
-  else if(service === "freepik"){
+  } else if (service === 'freepik') {
     const license = await getLicenseByIdService(user?.currentFreepikLicense);
-    if(license?.status === "used"){
+    if (license?.status === 'used') {
       result = true;
     }
   }
