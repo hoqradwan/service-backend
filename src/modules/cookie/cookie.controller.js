@@ -446,54 +446,55 @@ export const isFreepikCookieValid = async (cookieDetails) => {
   try {
     const cookie = cookieDetails?.cookie?.trim();
 
-    const { csrf_freepik, GR_TOKEN } = await generateGRToken(cookie);
+    const { GR_TOKEN } = await generateGRToken(cookie);
 
     let updatedCookieDetails;
-    if (csrf_freepik && GR_TOKEN) {
+    if (GR_TOKEN) {
       cookieDetails = cookieDetails.toObject();
-      updatedCookieDetails = { ...cookieDetails, csrf_freepik, GR_TOKEN };
-    } else {
-      return false;
-    }
-
-    const urls = [
-      `https://www.freepik.com/api/video/3762321/download?optionId=19242183`,
-    ];
-    // Get a random URL
-    const mainURL = urls[Math?.floor(Math?.random() * urls?.length)];
-
-    const headers = {
-      Cookie: `GR_REFRESH=${cookie}; GR_TOKEN=${GR_TOKEN}; csrf_freepik=${csrf_freepik};`,
-      'sec-ch-ua':
-        '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
-      'sec-ch-ua-arch': '""',
-      'sec-ch-ua-bitness': '"64"',
-      'sec-ch-ua-full-version': '"131.0.6778.267"',
-      'sec-ch-ua-full-version-list':
-        '"Google Chrome";v="131.0.6778.267", "Chromium";v="131.0.6778.267", "Not_A Brand";v="24.0.0.0"',
-      'sec-ch-ua-mobile': '?1',
-      'sec-ch-ua-model': '"Nexus 5"',
-      'sec-ch-ua-platform': '"Android"',
-      'sec-ch-ua-platform-version': '"6.0"',
-      'sec-fetch-dest': 'empty',
-      'sec-fetch-mode': 'cors',
-      'sec-fetch-site': 'same-origin',
-      'user-agent':
-        'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36',
-    };
-
-    // Make the HTTP request
-    const response = await axios({
-      method: 'GET',
-      url: mainURL,
-      headers: headers,
-    });
-
-    if (response?.data?.url) {
+      updatedCookieDetails = { ...cookieDetails, GR_TOKEN };
       return updatedCookieDetails;
     } else {
       return false;
     }
+
+    // const urls = [
+    //   `https://www.freepik.com/api/video/3762321/download?optionId=19242183`,
+    // ];
+    // Get a random URL
+    // const mainURL = urls[Math?.floor(Math?.random() * urls?.length)];
+
+    // const headers = {
+    //   Cookie: `GR_REFRESH=${cookie}; GR_TOKEN=${GR_TOKEN};`,
+    //   'sec-ch-ua':
+    //     '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+    //   'sec-ch-ua-arch': '""',
+    //   'sec-ch-ua-bitness': '"64"',
+    //   'sec-ch-ua-full-version': '"131.0.6778.267"',
+    //   'sec-ch-ua-full-version-list':
+    //     '"Google Chrome";v="131.0.6778.267", "Chromium";v="131.0.6778.267", "Not_A Brand";v="24.0.0.0"',
+    //   'sec-ch-ua-mobile': '?1',
+    //   'sec-ch-ua-model': '"Nexus 5"',
+    //   'sec-ch-ua-platform': '"Android"',
+    //   'sec-ch-ua-platform-version': '"6.0"',
+    //   'sec-fetch-dest': 'empty',
+    //   'sec-fetch-mode': 'cors',
+    //   'sec-fetch-site': 'same-origin',
+    //   'user-agent':
+    //     'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36',
+    // };
+
+    // Make the HTTP request
+    // const response = await axios({
+    //   method: 'GET',
+    //   url: mainURL,
+    //   headers: headers,
+    // });
+
+    // if (response?.data?.url) {
+    //   return updatedCookieDetails;
+    // } else {
+    //   return false;
+    // }
   } catch (error) {
     // console.log(error);
     return false;
@@ -502,7 +503,8 @@ export const isFreepikCookieValid = async (cookieDetails) => {
 
 export const generateGRToken = async (cookie) => {
   try {
-    const mainURL = 'https://www.freepik.com/cartoons';
+    const mainURL =
+      'https://www.freepik.com/api/social/like?type=photo&id=32637779';
 
     const headers = {
       Cookie: `GR_REFRESH=${cookie};`,
@@ -539,11 +541,11 @@ export const generateGRToken = async (cookie) => {
           return [key, value];
         }),
       );
-      const csrf_freepik = cookies['csrf_freepik'];
+      // const csrf_freepik = cookies['csrf_freepik'];
       const GR_TOKEN = cookies['GR_TOKEN'];
 
-      if (GR_TOKEN && csrf_freepik) {
-        return { GR_TOKEN, csrf_freepik };
+      if (GR_TOKEN) {
+        return { GR_TOKEN };
       } else {
         return false;
       }

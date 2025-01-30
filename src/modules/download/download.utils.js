@@ -123,8 +123,9 @@ export const freepikCookieCredentials = async (cookieDetails, url, type) => {
   const itemSplit3 = itemSplit2[0]?.split('_');
   const itemCode = itemSplit3[itemSplit3?.length - 1];
   const cookie = cookieDetails?.cookie?.trim();
-  const csrf_freepik = cookieDetails?.csrf_freepik?.trim();
+  // const csrf_freepik = cookieDetails?.csrf_freepik?.trim();
   const GR_TOKEN = cookieDetails?.GR_TOKEN?.trim();
+  const walletId = cookieDetails?.csrfToken?.trim();
 
   // const token = cookieDetails?.csrfToken?.trim();
 
@@ -137,7 +138,7 @@ export const freepikCookieCredentials = async (cookieDetails, url, type) => {
   let mainURL;
 
   if (content === 'icon' || content === 'animated-icon') {
-    mainURL = `https://www.freepik.com/api/icon/download?optionId=${itemCode}&format=${type}&type=original`;
+    mainURL = `https://www.freepik.com/api/icon/download?walletId=${walletId}&optionId=${itemCode}&format=${type}&type=original`;
   } else if (content === 'free-video' || content === 'premium-video') {
     const options = await getFreepikVideoQuality(url);
 
@@ -147,7 +148,7 @@ export const freepikCookieCredentials = async (cookieDetails, url, type) => {
         // return res.status(400).json({ isOk: false, message: 'Invalid url' });
         return { headers: false, mainURL: false };
       } else {
-        mainURL = `https://www.freepik.com/api/video/${itemCode}/download?optionId=${optionId?.id}`;
+        mainURL = `https://www.freepik.com/api/video/${itemCode}/download?walletId=${walletId}&optionId=${optionId?.id}`;
       }
     } else {
       const optionId = options?.find(
@@ -157,18 +158,18 @@ export const freepikCookieCredentials = async (cookieDetails, url, type) => {
         // return res.status(400).json({ isOk: false, message: 'Invalid url' });
         return { headers: false, mainURL: false };
       } else {
-        mainURL = `https://www.freepik.com/api/video/${itemCode}/download?optionId=${optionId?.id}`;
+        mainURL = `https://www.freepik.com/api/video/${itemCode}/download?walletId=${walletId}&optionId=${optionId?.id}`;
       }
     }
   }
   // (content === "free-photo" || content === "premium-photo"  || content === "free-vector" || content === "premium-vector" || content === "free-psd" || content === "premium-psd")
   else {
-    mainURL = `https://www.freepik.com/api/regular/download?resource=${itemCode}&action=download`;
+    mainURL = `https://www.freepik.com/api/regular/download?walletId=${walletId}&resource=${itemCode}&action=download`;
   }
 
   // headers for download request
   const headers = {
-    Cookie: `GR_REFRESH=${cookie}; GR_TOKEN=${GR_TOKEN}; csrf_freepik=${csrf_freepik};`,
+    Cookie: `GR_REFRESH=${cookie}; GR_TOKEN=${GR_TOKEN};`,
     'sec-ch-ua':
       '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
     'sec-ch-ua-arch': '""',

@@ -1509,6 +1509,8 @@ export const handleFreePikDownload = catchAsync(async (req, res) => {
       data: null,
     });
   }
+  // console.log('main url', mainURL);
+  // console.log('header => ', headers);
 
   // Make the first HTTP request
   const response = await axios({
