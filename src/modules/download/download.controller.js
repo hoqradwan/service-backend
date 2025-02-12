@@ -1502,7 +1502,7 @@ export const handleFreePikDownload = catchAsync(async (req, res) => {
     }
 
     if (isCookieWorking) {
-      cookieDetails = cookie;
+      cookieDetails = isCookieWorking;
       break;
     }
   }
@@ -1523,7 +1523,7 @@ export const handleFreePikDownload = catchAsync(async (req, res) => {
   );
 
   // console.log("url ==> ", mainURL);
-  // console.log("headers ==> ", headers);
+  // console.log('headersssss ==> ', headers);
 
   if (!headers) {
     return sendResponse(res, {
@@ -1542,6 +1542,8 @@ export const handleFreePikDownload = catchAsync(async (req, res) => {
       data: null,
     });
   }
+  // console.log('main url', mainURL);
+  // console.log('header => ', headers);
 
   // Make the first HTTP request
   const response = await axios({
@@ -1549,6 +1551,7 @@ export const handleFreePikDownload = catchAsync(async (req, res) => {
     url: mainURL,
     headers: headers,
   });
+  // console.log(response?.data);
 
   if (response?.data?.url) {
     const download = {
@@ -1582,18 +1585,40 @@ export const handleFreePikDownload = catchAsync(async (req, res) => {
 // Request for getting Freepik Video Quality
 export const getFreepikVideoQuality = async (mainURL) => {
   try {
-    const response = await axios.get(mainURL);
-
-    const $ = cheerio?.load(response.data);
-
+    const headers = {
+      'sec-ch-ua':
+        '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+      'sec-ch-ua-arch': '""',
+      'sec-ch-ua-bitness': '"64"',
+      'sec-ch-ua-full-version': '"131.0.6778.267"',
+      'sec-ch-ua-full-version-list':
+        '"Google Chrome";v="131.0.6778.267", "Chromium";v="131.0.6778.267", "Not_A Brand";v="24.0.0.0"',
+      'sec-ch-ua-mobile': '?1',
+      'sec-ch-ua-model': '"Nexus 5"',
+      'sec-ch-ua-platform': '"Android"',
+      'sec-ch-ua-platform-version': '"6.0"',
+      'sec-fetch-dest': 'empty',
+      'sec-fetch-mode': 'cors',
+      'sec-fetch-site': 'same-origin',
+      'user-agent':
+        'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36',
+    };
+    // Make the HTTP request
+    const response = await axios({
+      method: 'GET',
+      url: mainURL,
+      headers: headers,
+    });
+    // const response = await axios.get(mainURL);
+    const $ = cheerio?.load(response?.data);
     // Locate the __NEXT_DATA__ script tag and extract its JSON content
     const nextDataScript = $('#__NEXT_DATA__')?.html();
 
     if (nextDataScript) {
       const nextData = JSON.parse(nextDataScript);
-
       // Access the options object
       const options = nextData?.props?.pageProps?.options;
+      // console.log('options', options);
       if (options) {
         return options;
       } else {

@@ -441,22 +441,89 @@ export const isMotionArrayCookieValid = async (cookieDetails) => {
 // };
 
 // Check if the Freepik cookie is expired or not
+
 export const isFreepikCookieValid = async (cookieDetails) => {
   try {
     const cookie = cookieDetails?.cookie?.trim();
-    // const token = cookieDetails?.csrfToken?.trim();
 
-    const urls = [
-      `https://www.freepik.com/api/video/3303228/download?optionId=17456541`,
-      `https://www.freepik.com/api/video/3189593/download?optionId=13076035`,
-      `https://www.freepik.com/api/video/3181021/download?optionId=13043637`,
-      `https://www.freepik.com/api/video/3193317/download?optionId=13090250`,
-    ];
+    const { GR_TOKEN } = await generateGRToken(cookie);
+
+    let updatedCookieDetails;
+    if (GR_TOKEN) {
+      cookieDetails = cookieDetails.toObject();
+      updatedCookieDetails = { ...cookieDetails, GR_TOKEN };
+      return updatedCookieDetails;
+    } else {
+      return false;
+    }
+
+    // const urls = [
+    //   `https://www.freepik.com/api/video/3762321/download?optionId=19242183`,
+    // ];
     // Get a random URL
-    const mainURL = urls[Math?.floor(Math?.random() * urls?.length)];
+    // const mainURL = urls[Math?.floor(Math?.random() * urls?.length)];
+
+    // const headers = {
+    //   Cookie: `GR_REFRESH=${cookie}; GR_TOKEN=${GR_TOKEN};`,
+    //   'sec-ch-ua':
+    //     '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+    //   'sec-ch-ua-arch': '""',
+    //   'sec-ch-ua-bitness': '"64"',
+    //   'sec-ch-ua-full-version': '"131.0.6778.267"',
+    //   'sec-ch-ua-full-version-list':
+    //     '"Google Chrome";v="131.0.6778.267", "Chromium";v="131.0.6778.267", "Not_A Brand";v="24.0.0.0"',
+    //   'sec-ch-ua-mobile': '?1',
+    //   'sec-ch-ua-model': '"Nexus 5"',
+    //   'sec-ch-ua-platform': '"Android"',
+    //   'sec-ch-ua-platform-version': '"6.0"',
+    //   'sec-fetch-dest': 'empty',
+    //   'sec-fetch-mode': 'cors',
+    //   'sec-fetch-site': 'same-origin',
+    //   'user-agent':
+    //     'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36',
+    // };
+
+    // Make the HTTP request
+    // const response = await axios({
+    //   method: 'GET',
+    //   url: mainURL,
+    //   headers: headers,
+    // });
+
+    // if (response?.data?.url) {
+    //   return updatedCookieDetails;
+    // } else {
+    //   return false;
+    // }
+  } catch (error) {
+    // console.log(error);
+    return false;
+  }
+};
+
+export const generateGRToken = async (cookie) => {
+  try {
+    const mainURL =
+      'https://www.freepik.com/api/social/like?type=photo&id=32637779';
 
     const headers = {
-      Cookie: `${cookie}`,
+      Cookie: `GR_REFRESH=${cookie};`,
+      'sec-ch-ua':
+        '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+      'sec-ch-ua-arch': '""',
+      'sec-ch-ua-bitness': '"64"',
+      'sec-ch-ua-full-version': '"131.0.6778.267"',
+      'sec-ch-ua-full-version-list':
+        '"Google Chrome";v="131.0.6778.267", "Chromium";v="131.0.6778.267", "Not_A Brand";v="24.0.0.0"',
+      'sec-ch-ua-mobile': '?1',
+      'sec-ch-ua-model': '"Nexus 5"',
+      'sec-ch-ua-platform': '"Android"',
+      'sec-ch-ua-platform-version': '"6.0"',
+      'sec-fetch-dest': 'empty',
+      'sec-fetch-mode': 'cors',
+      'sec-fetch-site': 'same-origin',
+      'user-agent':
+        'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36',
     };
 
     // Make the HTTP request
@@ -466,12 +533,28 @@ export const isFreepikCookieValid = async (cookieDetails) => {
       headers: headers,
     });
 
-    if (response?.data?.url) {
-      return true;
+    if (response?.headers) {
+      const setCookieArray = response?.headers['set-cookie'];
+      const cookies = Object?.fromEntries(
+        setCookieArray?.map((cookie) => {
+          const [key, value] = cookie.split(';')[0].split('=');
+          return [key, value];
+        }),
+      );
+      // const csrf_freepik = cookies['csrf_freepik'];
+      const GR_TOKEN = cookies['GR_TOKEN'];
+
+      if (GR_TOKEN) {
+        return { GR_TOKEN };
+      } else {
+        return false;
+      }
     } else {
       return false;
     }
   } catch (error) {
+    // console.log(error);
+
     return false;
   }
 };
