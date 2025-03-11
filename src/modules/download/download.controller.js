@@ -941,9 +941,29 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
 // Request for getting Story-Blocks Item Code
 const getStoryBlockItemCode = async (url) => {
   try {
+    const headers = {
+      'sec-ch-ua':
+        '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+      'sec-ch-ua-arch': '""',
+      'sec-ch-ua-bitness': '"64"',
+      'sec-ch-ua-full-version': '"131.0.6778.267"',
+      'sec-ch-ua-full-version-list':
+        '"Google Chrome";v="131.0.6778.267", "Chromium";v="131.0.6778.267", "Not_A Brand";v="24.0.0.0"',
+      'sec-ch-ua-mobile': '?1',
+      'sec-ch-ua-model': '"Nexus 5"',
+      'sec-ch-ua-platform': '"Android"',
+      'sec-ch-ua-platform-version': '"6.0"',
+      'sec-fetch-dest': 'empty',
+      'sec-fetch-mode': 'cors',
+      'sec-fetch-site': 'same-origin',
+      'user-agent':
+        'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36',
+    };
+
     const response = await axios({
       method: 'GET',
       url: url,
+      headers: headers,
     });
 
     const $ = cheerio?.load(response?.data);
@@ -1087,8 +1107,9 @@ export const handleStoryBlocksDownload = catchAsync(async (req, res) => {
   const restriction = await DownloadRestrict.findOne({
     service: 'Story Blocks',
   });
+  // console.log(restriction);
 
-  if (restriction.isRestricted) {
+  if (restriction?.isRestricted) {
     const delayInMilliseconds = restriction.delay * 1000;
     // console.log(
     //   `Task will start after a delay of ${
