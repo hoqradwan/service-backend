@@ -940,59 +940,123 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
 
 // Request for getting Story-Blocks Item Code
 const getStoryBlockItemCode = async (url) => {
+  const browser = await puppeteer.launch({ headless: false });
+  const page = await browser.newPage();
+
   try {
-    const headers = {
-      'sec-ch-ua':
-        '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
-      'sec-ch-ua-arch': '""',
-      'sec-ch-ua-bitness': '"64"',
-      'sec-ch-ua-full-version': '"131.0.6778.267"',
-      'sec-ch-ua-full-version-list':
-        '"Google Chrome";v="131.0.6778.267", "Chromium";v="131.0.6778.267", "Not_A Brand";v="24.0.0.0"',
-      'sec-ch-ua-mobile': '?1',
-      'sec-ch-ua-model': '"Nexus 5"',
-      'sec-ch-ua-platform': '"Android"',
-      'sec-ch-ua-platform-version': '"6.0"',
-      'sec-fetch-dest': 'empty',
-      'sec-fetch-mode': 'cors',
-      'sec-fetch-site': 'same-origin',
-      'user-agent':
-        'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36',
-    };
+    // Set user-agent like mobile
+    await page.setUserAgent(
+      'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36',
+    );
 
-    const response = await axios({
-      method: 'GET',
-      url: url,
-      headers: headers,
-    });
+    // Navigate to page and wait for network + DOM stability
+    await page?.goto(url, { waitUntil: 'networkidle2' });
 
-    const $ = cheerio?.load(response?.data);
-    const scriptTags = $('script');
+    // Wait until "stockItem" appears in a script tag
+    await page?.waitForFunction(
+      () => {
+        const scripts = Array.from(document.querySelectorAll('script'));
+        return scripts.some((script) =>
+          script?.innerText?.includes('"stockItem"'),
+        );
+      },
+      { timeout: 60000 },
+    );
 
-    let stockItemData;
-
-    scriptTags?.each((i, script) => {
-      const scriptContent = $(script)?.html();
-
-      const stockItemMatch = scriptContent?.match(
-        /"stockItem":\s*({[\s\S]*?})/,
-      );
-      if (stockItemMatch && stockItemMatch[1]) {
-        stockItemData = stockItemMatch[1];
+    // Evaluate and extract stockItem JSON string
+    const stockItemData = await page.evaluate(() => {
+      const scripts = Array.from(document.querySelectorAll('script'));
+      for (let script of scripts) {
+        const content = script.innerText;
+        const match = content.match(/"stockItem":\s*({[\s\S]*?})/);
+        if (match && match[1]) {
+          return match[1];
+        }
       }
+      return null;
     });
 
-    // Use regex to directly extract the ID and content-class
-    const idMatch = stockItemData?.match(/"id":\s*(\d+)/);
-    const contentClassMatch = stockItemData?.match(/"contentClass":"([^"]+)"/);
+    // Extract values from raw string
+    if (stockItemData) {
+      const idMatch = stockItemData?.match(/"id":\s*(\d+)/);
+      const contentClassMatch = stockItemData?.match(
+        /"contentClass":"([^"]+)"/,
+      );
 
-    const itemCode = idMatch ? idMatch[1] : null;
-    const contentClass = contentClassMatch ? contentClassMatch[1] : null;
-    return { itemCode, contentClass };
+      const itemCode = idMatch ? idMatch[1] : null;
+      const contentClass = contentClassMatch ? contentClassMatch[1] : null;
+
+      await browser.close();
+      return { itemCode, contentClass };
+    } else {
+      console.log('❌ stockItem not found in any script tags.');
+      await browser.close();
+      return null;
+    }
   } catch (error) {
-    console.log('Error in getting item code and content-class:', error);
+    console.log(
+      '🔥 Error in getting item code and content-class:',
+      error.message,
+    );
+    await browser.close();
+    return null;
   }
 };
+
+// const getStoryBlockItemCode = async (url) => {
+//   try {
+//     const headers = {
+//       'sec-ch-ua':
+//         '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+//       'sec-ch-ua-arch': '""',
+//       'sec-ch-ua-bitness': '"64"',
+//       'sec-ch-ua-full-version': '"131.0.6778.267"',
+//       'sec-ch-ua-full-version-list':
+//         '"Google Chrome";v="131.0.6778.267", "Chromium";v="131.0.6778.267", "Not_A Brand";v="24.0.0.0"',
+//       'sec-ch-ua-mobile': '?1',
+//       'sec-ch-ua-model': '"Nexus 5"',
+//       'sec-ch-ua-platform': '"Android"',
+//       'sec-ch-ua-platform-version': '"6.0"',
+//       'sec-fetch-dest': 'empty',
+//       'sec-fetch-mode': 'cors',
+//       'sec-fetch-site': 'same-origin',
+//       'user-agent':
+//         'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36',
+//     };
+
+//     const response = await axios({
+//       method: 'GET',
+//       url: url,
+//       headers: headers,
+//     });
+
+//     const $ = cheerio?.load(response?.data);
+//     const scriptTags = $('script');
+
+//     let stockItemData;
+
+//     scriptTags?.each((i, script) => {
+//       const scriptContent = $(script)?.html();
+
+//       const stockItemMatch = scriptContent?.match(
+//         /"stockItem":\s*({[\s\S]*?})/,
+//       );
+//       if (stockItemMatch && stockItemMatch[1]) {
+//         stockItemData = stockItemMatch[1];
+//       }
+//     });
+
+//     // Use regex to directly extract the ID and content-class
+//     const idMatch = stockItemData?.match(/"id":\s*(\d+)/);
+//     const contentClassMatch = stockItemData?.match(/"contentClass":"([^"]+)"/);
+
+//     const itemCode = idMatch ? idMatch[1] : null;
+//     const contentClass = contentClassMatch ? contentClassMatch[1] : null;
+//     return { itemCode, contentClass };
+//   } catch (error) {
+//     console.log('Error in getting item code and content-class:', error);
+//   }
+// };
 
 // download request to storyBlocks official website
 export const handleStoryBlocksDownload = catchAsync(async (req, res) => {
@@ -1104,13 +1168,13 @@ export const handleStoryBlocksDownload = catchAsync(async (req, res) => {
       data: null,
     });
   }
-  const restriction = await DownloadRestrict.findOne({
+  const restriction = await DownloadRestrict?.findOne({
     service: 'Story Blocks',
   });
   // console.log(restriction);
 
   if (restriction?.isRestricted) {
-    const delayInMilliseconds = restriction.delay * 1000;
+    const delayInMilliseconds = restriction?.delay * 1000;
     // console.log(
     //   `Task will start after a delay of ${
     //     delayInMilliseconds / 1000
@@ -1132,21 +1196,11 @@ export const handleStoryBlocksDownload = catchAsync(async (req, res) => {
     });
   }
 
-  const { headers, mainURL } = await StoryBlocksCookieCredentials(
-    cookieDetails,
+  const { mainURL } = await StoryBlocksCookieCredentials(
     contentClass.toLowerCase(),
     itemCode,
     type.toUpperCase(),
   );
-
-  if (!headers) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: 'Headers are required',
-      data: null,
-    });
-  }
 
   if (!mainURL) {
     return sendResponse(res, {
@@ -1158,11 +1212,7 @@ export const handleStoryBlocksDownload = catchAsync(async (req, res) => {
   }
 
   // Make the first HTTP request
-  const response = await axios({
-    method: 'GET',
-    url: mainURL,
-    headers: headers,
-  });
+  const response = await storyBlocksDownloadRequest(mainURL, cookieDetails);
   // console.log(response?.data);
 
   if (!response) {
@@ -1175,7 +1225,7 @@ export const handleStoryBlocksDownload = catchAsync(async (req, res) => {
   }
 
   // Extract the download URL from the response
-  const downloadUrl = response?.data?.data?.downloadUrl;
+  const downloadUrl = response;
 
   if (downloadUrl) {
     const download = {
@@ -1205,6 +1255,66 @@ export const handleStoryBlocksDownload = catchAsync(async (req, res) => {
     });
   }
 });
+
+const storyBlocksDownloadRequest = async (mainURL, cookieDetails) => {
+  const browser = await puppeteer?.launch({
+    headless: false,
+  });
+
+  const page = await browser?.newPage();
+
+  try {
+    // Set User-Agent and Referer
+    await page.setUserAgent(
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
+    );
+
+    await page.setExtraHTTPHeaders({
+      referer: 'https://www.storyblocks.com/',
+    });
+
+    // Set Cookies
+    await page.setCookie(
+      {
+        name: 'VID',
+        value: cookieDetails?.cookie,
+        domain: '.storyblocks.com',
+      },
+      {
+        name: 'login_session',
+        value: cookieDetails?.csrfToken,
+        domain: '.storyblocks.com',
+      },
+    );
+
+    // Now go to the download endpoint
+    await page.goto(mainURL, { waitUntil: 'networkidle2' });
+
+    // Try to get JSON content (if rendered)
+    const response = await page?.evaluate(() => {
+      const preElement = document?.querySelector('pre');
+      if (preElement) {
+        try {
+          return JSON.parse(preElement.innerText);
+        } catch (e) {
+          return { error: 'Failed to parse JSON' };
+        }
+      }
+      return null;
+    });
+    await browser.close();
+
+    if (response?.data?.downloadUrl) {
+      return response?.data?.downloadUrl;
+    } else {
+      return null;
+    }
+  } catch (error) {
+    console.error('Error in story blocks download request:', error.message);
+    await browser.close();
+  }
+};
+
 puppeteer.use(StealthPlugin());
 
 // Function for getting the motion array download url

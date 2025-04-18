@@ -51,7 +51,6 @@ export const envatoCookieCredentials = async (cookieDetails, url) => {
 
 // Story-blocks cookie details
 export const StoryBlocksCookieCredentials = async (
-  cookieDetails,
   contentClass,
   itemCode,
   type,
@@ -63,31 +62,7 @@ export const StoryBlocksCookieCredentials = async (
   // Main URL for download request
   const mainURL = `https://www.storyblocks.com/${contentClass}/download-ajax/${itemCode}/${type}`;
 
-  const cookie = cookieDetails?.cookie;
-  const csrfToken = cookieDetails?.csrfToken;
-
-  // headers for download request
-  const headers = {
-    Cookie: `VID=${cookie}; login_session=${csrfToken};`,
-    'sec-ch-ua':
-      '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
-    'sec-ch-ua-arch': '""',
-    'sec-ch-ua-bitness': '"64"',
-    'sec-ch-ua-full-version': '"131.0.6778.267"',
-    'sec-ch-ua-full-version-list':
-      '"Google Chrome";v="131.0.6778.267", "Chromium";v="131.0.6778.267", "Not_A Brand";v="24.0.0.0"',
-    'sec-ch-ua-mobile': '?1',
-    'sec-ch-ua-model': '"Nexus 5"',
-    'sec-ch-ua-platform': '"Android"',
-    'sec-ch-ua-platform-version': '"6.0"',
-    'sec-fetch-dest': 'empty',
-    'sec-fetch-mode': 'cors',
-    'sec-fetch-site': 'same-origin',
-    'user-agent':
-      'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36',
-  };
-
-  return { headers, mainURL };
+  return { mainURL };
 };
 
 // Motion-array cookie details

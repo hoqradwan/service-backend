@@ -302,58 +302,128 @@ export const isCookieValid = async (cookieDetails) => {
 };
 
 // Check if the story-blocks cookie is expired or not
+// export const isStoryBlocksCookieValid = async (cookieDetails) => {
+//   try {
+//     const cookie = cookieDetails?.cookie;
+//     const csrfToken = cookieDetails?.csrfToken;
+
+//     const urls = [
+//       'https://www.storyblocks.com/video/download-ajax/3541468/HDMOV',
+//       'https://www.storyblocks.com/video/download-ajax/3541464/4KMOV',
+//       'https://www.storyblocks.com/video/download-ajax/348794725/4KMP4',
+//       'https://www.storyblocks.com/video/download-ajax/10937614/HDMOV',
+//     ];
+
+//     // Get a random URL
+//     const mainURL = urls[Math?.floor(Math?.random() * urls?.length)];
+
+//     // headers for download request
+//     const headers = {
+//       Cookie: `VID=${cookie}; login_session=${csrfToken};`,
+//       'sec-ch-ua':
+//         '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+//       'sec-ch-ua-arch': '""',
+//       'sec-ch-ua-bitness': '"64"',
+//       'sec-ch-ua-full-version': '"131.0.6778.267"',
+//       'sec-ch-ua-full-version-list':
+//         '"Google Chrome";v="131.0.6778.267", "Chromium";v="131.0.6778.267", "Not_A Brand";v="24.0.0.0"',
+//       'sec-ch-ua-mobile': '?1',
+//       'sec-ch-ua-model': '"Nexus 5"',
+//       'sec-ch-ua-platform': '"Android"',
+//       'sec-ch-ua-platform-version': '"6.0"',
+//       'sec-fetch-dest': 'empty',
+//       'sec-fetch-mode': 'cors',
+//       'sec-fetch-site': 'same-origin',
+//       'user-agent':
+//         'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36',
+//     };
+
+//     // Make the HTTP request
+//     const response = await axios({
+//       method: 'GET',
+//       url: mainURL,
+//       headers: headers,
+//     });
+
+//     if (response?.data?.data?.downloadUrl) {
+//       return true;
+//     } else {
+//       return false;
+//     }
+//   } catch (error) {
+//     return false;
+//   }
+// };
 export const isStoryBlocksCookieValid = async (cookieDetails) => {
+  const browser = await puppeteer?.launch({
+    headless: false,
+  });
+  const page = await browser?.newPage();
+
+  const urls = [
+    'https://www.storyblocks.com/video/download-ajax/3541468/HDMOV',
+    'https://www.storyblocks.com/video/download-ajax/3541464/4KMOV',
+    'https://www.storyblocks.com/video/download-ajax/348794725/4KMP4',
+    'https://www.storyblocks.com/video/download-ajax/10937614/HDMOV',
+  ];
+
   try {
     const cookie = cookieDetails?.cookie;
     const csrfToken = cookieDetails?.csrfToken;
-
-    const urls = [
-      'https://www.storyblocks.com/video/download-ajax/3541468/HDMOV',
-      'https://www.storyblocks.com/video/download-ajax/3541464/4KMOV',
-      'https://www.storyblocks.com/video/download-ajax/348794725/4KMP4',
-      'https://www.storyblocks.com/video/download-ajax/10937614/HDMOV',
-    ];
-
     // Get a random URL
     const mainURL = urls[Math?.floor(Math?.random() * urls?.length)];
 
-    // headers for download request
-    const headers = {
-      Cookie: `VID=${cookie}; login_session=${csrfToken};`,
-      'sec-ch-ua':
-        '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
-      'sec-ch-ua-arch': '""',
-      'sec-ch-ua-bitness': '"64"',
-      'sec-ch-ua-full-version': '"131.0.6778.267"',
-      'sec-ch-ua-full-version-list':
-        '"Google Chrome";v="131.0.6778.267", "Chromium";v="131.0.6778.267", "Not_A Brand";v="24.0.0.0"',
-      'sec-ch-ua-mobile': '?1',
-      'sec-ch-ua-model': '"Nexus 5"',
-      'sec-ch-ua-platform': '"Android"',
-      'sec-ch-ua-platform-version': '"6.0"',
-      'sec-fetch-dest': 'empty',
-      'sec-fetch-mode': 'cors',
-      'sec-fetch-site': 'same-origin',
-      'user-agent':
-        'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36',
-    };
+    // Set User-Agent and Referer
+    await page?.setUserAgent(
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
+    );
 
-    // Make the HTTP request
-    const response = await axios({
-      method: 'GET',
-      url: mainURL,
-      headers: headers,
+    await page?.setExtraHTTPHeaders({
+      referer: 'https://www.storyblocks.com/',
     });
 
-    if (response?.data?.data?.downloadUrl) {
+    // Set Cookies
+    await page.setCookie(
+      {
+        name: 'VID',
+        value: cookie,
+        domain: '.storyblocks.com',
+      },
+      {
+        name: 'login_session',
+        value: csrfToken,
+        domain: '.storyblocks.com',
+      },
+    );
+    // Now go to the download endpoint
+    await page.goto(mainURL, { waitUntil: 'networkidle2' });
+
+    // Try to get JSON content (if rendered)
+    const response = await page?.evaluate(() => {
+      const preElement = document?.querySelector('pre');
+      if (preElement) {
+        try {
+          return JSON?.parse(preElement.innerText);
+        } catch (e) {
+          return { error: 'Failed to parse JSON' };
+        }
+      }
+      return null;
+    });
+
+    await browser?.close();
+
+    if (response?.data?.downloadUrl) {
       return true;
     } else {
       return false;
     }
   } catch (error) {
-    return false;
+    console.error('Error:', error?.message);
+    await browser?.close();
   }
 };
+
 puppeteer.use(StealthPlugin());
 export const isMotionArrayCookieValid = async (cookieDetails) => {
   const browser = await puppeteer.launch({
@@ -392,7 +462,7 @@ export const isMotionArrayCookieValid = async (cookieDetails) => {
       const preElement = document.querySelector('pre');
       if (preElement) {
         const jsonData = JSON.parse(preElement.innerText);
-        return jsonData.signed_url;
+        return jsonData?.signed_url;
       }
       return null;
     });
