@@ -11,13 +11,12 @@ import {
   updateCookieByIdService,
 } from './cookie.service.js';
 import mongoose from 'mongoose';
-import {
-  envatoCookieCredentials,
-  StoryBlocksCookieCredentials,
-} from '../download/download.utils.js';
+import { envatoCookieCredentials } from '../download/download.utils.js';
 import axios from 'axios';
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+
+puppeteer.use(StealthPlugin());
 
 // create method for cookie
 export const createCookie = catchAsync(async (req, res) => {
@@ -354,9 +353,19 @@ export const isCookieValid = async (cookieDetails) => {
 //     return false;
 //   }
 // };
+
 export const isStoryBlocksCookieValid = async (cookieDetails) => {
   const browser = await puppeteer?.launch({
-    headless: false,
+    headless: true,
+    executablePath: '/usr/bin/chromium-browser',
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-web-security',
+      '--disable-features=IsolateOrigins,site-per-process',
+      '--window-size=1920x1080',
+    ],
+    defaultViewport: null,
   });
   const page = await browser?.newPage();
 
@@ -424,7 +433,6 @@ export const isStoryBlocksCookieValid = async (cookieDetails) => {
   }
 };
 
-puppeteer.use(StealthPlugin());
 export const isMotionArrayCookieValid = async (cookieDetails) => {
   const browser = await puppeteer.launch({
     headless: true,

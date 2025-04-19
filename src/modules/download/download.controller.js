@@ -43,6 +43,7 @@ import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import { DownloadRestrict } from '../downloadDelay/downloadDelay.model.js';
 import { delay } from '../downloadDelay/downloadDelay.utils.js';
 const cheerio = await import('cheerio');
+puppeteer.use(StealthPlugin());
 
 export const addDownload = catchAsync(async (req, res) => {
   const download = req.body;
@@ -939,8 +940,20 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
 });
 
 // Request for getting Story-Blocks Item Code
+
 const getStoryBlockItemCode = async (url) => {
-  const browser = await puppeteer.launch({ headless: false });
+  const browser = await puppeteer.launch({
+    headless: true,
+    executablePath: '/usr/bin/chromium-browser',
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-web-security',
+      '--disable-features=IsolateOrigins,site-per-process',
+      '--window-size=1920x1080',
+    ],
+    defaultViewport: null,
+  });
   const page = await browser.newPage();
 
   try {
@@ -1258,7 +1271,16 @@ export const handleStoryBlocksDownload = catchAsync(async (req, res) => {
 
 const storyBlocksDownloadRequest = async (mainURL, cookieDetails) => {
   const browser = await puppeteer?.launch({
-    headless: false,
+    headless: true,
+    executablePath: '/usr/bin/chromium-browser',
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-web-security',
+      '--disable-features=IsolateOrigins,site-per-process',
+      '--window-size=1920x1080',
+    ],
+    defaultViewport: null,
   });
 
   const page = await browser?.newPage();
@@ -1314,8 +1336,6 @@ const storyBlocksDownloadRequest = async (mainURL, cookieDetails) => {
     await browser.close();
   }
 };
-
-puppeteer.use(StealthPlugin());
 
 // Function for getting the motion array download url
 const motionArrayDownloadRequest = async (headers, mainURL) => {
