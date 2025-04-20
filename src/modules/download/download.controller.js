@@ -943,7 +943,7 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
 
 const getStoryBlockItemCode = async (url) => {
   const browser = await puppeteer.launch({
-    headless: true,
+    headless: false,
     executablePath: '/usr/bin/chromium-browser',
     args: [
       '--no-sandbox',
@@ -1271,7 +1271,7 @@ export const handleStoryBlocksDownload = catchAsync(async (req, res) => {
 
 const storyBlocksDownloadRequest = async (mainURL, cookieDetails) => {
   const browser = await puppeteer?.launch({
-    headless: true,
+    headless: false,
     executablePath: '/usr/bin/chromium-browser',
     args: [
       '--no-sandbox',

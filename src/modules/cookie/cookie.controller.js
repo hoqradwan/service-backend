@@ -356,7 +356,7 @@ export const isCookieValid = async (cookieDetails) => {
 
 export const isStoryBlocksCookieValid = async (cookieDetails) => {
   const browser = await puppeteer?.launch({
-    headless: true,
+    headless: false,
     executablePath: '/usr/bin/chromium-browser',
     args: [
       '--no-sandbox',
