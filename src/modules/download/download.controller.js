@@ -29,6 +29,7 @@ import {
   freepikCookieCredentials,
   motionArrayCookieCredentials,
   StoryBlocksCookieCredentials,
+  StoryBlocksPuppeteerCredential,
 } from './download.utils.js';
 import { findUserById } from '../user/user.service.js';
 import fetch from 'node-fetch';
@@ -942,18 +943,7 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
 // Request for getting Story-Blocks Item Code
 
 const getStoryBlockItemCode = async (url) => {
-  const browser = await puppeteer.launch({
-    headless: false,
-    executablePath: '/usr/bin/chromium-browser',
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-web-security',
-      '--disable-features=IsolateOrigins,site-per-process',
-      '--window-size=1920x1080',
-    ],
-    defaultViewport: null,
-  });
+  const browser = await puppeteer.launch(StoryBlocksPuppeteerCredential);
   const page = await browser.newPage();
 
   try {
@@ -1270,18 +1260,7 @@ export const handleStoryBlocksDownload = catchAsync(async (req, res) => {
 });
 
 const storyBlocksDownloadRequest = async (mainURL, cookieDetails) => {
-  const browser = await puppeteer?.launch({
-    headless: false,
-    executablePath: '/usr/bin/chromium-browser',
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-web-security',
-      '--disable-features=IsolateOrigins,site-per-process',
-      '--window-size=1920x1080',
-    ],
-    defaultViewport: null,
-  });
+  const browser = await puppeteer?.launch(StoryBlocksPuppeteerCredential);
 
   const page = await browser?.newPage();
 

@@ -11,7 +11,10 @@ import {
   updateCookieByIdService,
 } from './cookie.service.js';
 import mongoose from 'mongoose';
-import { envatoCookieCredentials } from '../download/download.utils.js';
+import {
+  envatoCookieCredentials,
+  StoryBlocksPuppeteerCredential,
+} from '../download/download.utils.js';
 import axios from 'axios';
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
@@ -355,18 +358,7 @@ export const isCookieValid = async (cookieDetails) => {
 // };
 
 export const isStoryBlocksCookieValid = async (cookieDetails) => {
-  const browser = await puppeteer?.launch({
-    headless: false,
-    executablePath: '/usr/bin/chromium-browser',
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-web-security',
-      '--disable-features=IsolateOrigins,site-per-process',
-      '--window-size=1920x1080',
-    ],
-    defaultViewport: null,
-  });
+  const browser = await puppeteer?.launch(StoryBlocksPuppeteerCredential);
   const page = await browser?.newPage();
 
   const urls = [

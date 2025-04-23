@@ -50,6 +50,19 @@ export const envatoCookieCredentials = async (cookieDetails, url) => {
 };
 
 // Story-blocks cookie details
+export const StoryBlocksPuppeteerCredential = {
+  headless: true,
+  // executablePath: '/usr/bin/chromium-browser',
+  // args: [
+  //   '--no-sandbox',
+  //   '--disable-setuid-sandbox',
+  //   '--disable-web-security',
+  //   '--disable-features=IsolateOrigins,site-per-process',
+  //   '--window-size=1920x1080',
+  // ],
+  // defaultViewport: null,
+};
+
 export const StoryBlocksCookieCredentials = async (
   contentClass,
   itemCode,
