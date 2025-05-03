@@ -850,12 +850,12 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
     });
   }
   // Delay download
-  const restriction = await DownloadRestrict.findOne({
+  const restriction = await DownloadRestrict?.findOne({
     service: 'Envato Elements',
   });
 
-  if (restriction.isRestricted) {
-    const delayInMilliseconds = restriction.delay * 1000;
+  if (restriction?.isRestricted) {
+    const delayInMilliseconds = restriction?.delay * 1000;
     // console.log(
     //   `Task will start after a delay of ${
     //     delayInMilliseconds / 1000
