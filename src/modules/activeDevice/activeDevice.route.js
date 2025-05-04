@@ -11,7 +11,7 @@ const router = express.Router();
 
 router.post(
   '/log-out',
-  adminMiddleware('user'),
+  adminMiddleware('user','admin'),
   logOutFromCurrentDeviceController,
 );
 router.post(

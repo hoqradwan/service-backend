@@ -8,12 +8,14 @@ import { activeDeviceRoutes } from '../modules/activeDevice/activeDevice.route.j
 
 import licenseRoutes from '../modules/license/license.route.js';
 import { downloadRestrictRoutes } from '../modules/downloadDelay/downloadDelay.route.js';
+import { notificationRoutes } from '../modules/notification/notification.route.js';
 
 const router = express.Router();
 
 router.use('/api/user', userRoutes);
 router.use('/api/banner', bannerRoutes);
 router.use('/api/support', supportRoutes);
+router.use('/api/notification', notificationRoutes);
 router.use('/api/download', downloadRoutes);
 router.use('/api/downloadRestrict', downloadRestrictRoutes);
 router.use('/api/license', licenseRoutes);
