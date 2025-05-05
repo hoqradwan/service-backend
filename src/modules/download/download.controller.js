@@ -838,7 +838,7 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
       return sendResponse(res, {
         success: false,
         statusCode: 400,
-        message: 'Something went wrong! Please try again',
+        message: 'please try again after a couple of minutes!',
         data: null,
       });
     }
