@@ -830,9 +830,17 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
       }
     }
 
+    // temporary stopping inactive condition
+
     if (!isCookieWorking) {
       // if cookie is not valid then make it inactive
-      await updateCookieByIdService(cookie?._id, { status: 'inactive' });
+      // await updateCookieByIdService(cookie?._id, { status: 'inactive' });
+      return sendResponse(res, {
+        success: false,
+        statusCode: 400,
+        message: 'Something went wrong! Please try again',
+        data: null,
+      });
     }
 
     if (isCookieWorking) {
