@@ -834,13 +834,7 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
 
     if (!isCookieWorking) {
       // if cookie is not valid then make it inactive
-      // await updateCookieByIdService(cookie?._id, { status: 'inactive' });
-      return sendResponse(res, {
-        success: false,
-        statusCode: 400,
-        message: 'please try again after a couple of minutes!',
-        data: null,
-      });
+      await updateCookieByIdService(cookie?._id, { status: 'inactive' });
     }
 
     if (isCookieWorking) {

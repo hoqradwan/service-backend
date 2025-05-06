@@ -9,6 +9,7 @@ import { updateLicenseStatus } from './src/modules/license/license.utils.js';
 import globalErrorHandler from './src/middleware/globalErrorHandler.js';
 import notFoundRoute from './src/middleware/notFoundRoute.js';
 import { cleanExpiredDevicesService } from './src/modules/activeDevice/activeDevice.service.js';
+import { checkRecentlyInactiveCookies } from './src/modules/cookie/cookie.utils.js';
 dotenv.config();
 const PORT = process.env.PORT || 5000;
 
@@ -43,6 +44,15 @@ cron.schedule('* * * * *', async () => {
     await cleanExpiredDevicesService();
   } catch (err) {
     console.error('Error cleaning expired active devices:', err);
+  }
+});
+
+// Check and reactivate valid cookies every 30 minutes
+cron.schedule('*/30 * * * *', async () => {
+  try {
+    await checkRecentlyInactiveCookies();
+  } catch (error) {
+    console.error('Error in cookie reactivation cron job:', error);
   }
 });
 
