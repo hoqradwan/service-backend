@@ -2,48 +2,46 @@ import { getFreepikVideoQuality } from './download.controller.js';
 
 // Envato cookie details
 export const envatoCookieCredentials = async (cookieDetails, url) => {
-  const last = url?.split('/')?.length - 1;
-  const itemName = url?.split('/')[last];
-  const itemCode = itemName?.split('/')[0]?.split('-')[
-    itemName?.split('/')[0]?.split('-').length - 1
-  ];
+  const mainURL = `https://app.envato.com/download.data`;
 
-  if (!itemCode) {
+  const itemUuid = url.split('/')[4];
+  const itemType = url.split('/')[3];
+
+  if (!itemUuid || !itemType) {
     return res.status(400).json({ isOk: false, message: 'Invalid url' });
   }
 
-  // Main URL for download request
-  const mainURL = `https://elements.envato.com/elements-api/items/${itemCode}/download_and_license.json`;
-
   const cookie = cookieDetails?.cookie;
-  const csrfToken = cookieDetails?.csrfToken;
-  const project = cookieDetails?.project;
 
-  // payload for download request
+  // payload for download requestW
   const payload = {
-    licenseType: 'project',
-    projectName: project,
+    itemUuid,
+    itemType,
   };
 
   // headers for download request
   const headers = {
-    Cookie: `_elements_session_4=${cookie}`, //must required
-    'X-CSRF-Token': csrfToken, //must required
-    Accept: 'application/json',
+    Cookie: `envatoid=${cookie}`,
+    Accept: '*/*',
     'Accept-Encoding': 'gzip, deflate, br, zstd',
     'Accept-Language': 'en-US,en;q=0.9',
-    'Content-Type': 'application/json',
-    Origin: 'https://elements.envato.com',
+    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+    Origin: 'https://app.envato.com',
     Referer: url,
-    'Sec-CH-UA':
-      '"Not)A;Brand";v="99", "Google Chrome";v="127", "Chromium";v="127"',
+    'Sec-CH-UA': `"Not:A-Brand";v="99", "Google Chrome";v="145", "Chromium";v="145"`,
     'Sec-CH-UA-Mobile': '?1',
-    'Sec-CH-UA-Platform': '"Android"',
+    'Sec-CH-UA-Platform': `"Android"`,
     'Sec-Fetch-Dest': 'empty',
     'Sec-Fetch-Mode': 'cors',
     'Sec-Fetch-Site': 'same-origin',
     'User-Agent':
-      'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Mobile Safari/537.36',
+      'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36',
+    Traceparent: '00-0000000000000000d8da331163a6ae06-787c7d13acb2558c-01',
+    Tracestate: 'dd=s:1;o:rum',
+    'X-Datadog-Origin': 'rum',
+    'X-Datadog-Parent-Id': '8681951705118692748',
+    'X-Datadog-Sampling-Priority': '1',
+    'X-Datadog-Trace-Id': '15625858006894685702',
   };
 
   return { payload, headers, mainURL };
@@ -193,4 +191,19 @@ export const freepikCookieCredentials = async (cookieDetails, url, type) => {
   };
 
   return { headers, mainURL };
+};
+
+// Credentials for envato puppetear
+export const EnvatoPuppeteerCredential = {
+  headless: 'new',
+  // executablePath: '/usr/bin/chromium-browser',
+
+  args: [
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
+    '--window-size=1920,1080',
+    '--disable-dev-shm-usage',
+  ],
+
+  defaultViewport: null,
 };

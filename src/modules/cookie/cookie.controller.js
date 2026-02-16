@@ -271,11 +271,11 @@ export const isCookieWorking = catchAsync(async (req, res) => {
 export const isCookieValid = async (cookieDetails) => {
   try {
     const urls = [
-      'https://elements.envato.com/fire-burning-GJNP8E9',
-      'https://elements.envato.com/t-shirt-mockup-GBU9EXS',
-      'https://elements.envato.com/menu-mockup-NYC839J',
-      'https://elements.envato.com/id-card-mockup-FC7V7M2',
-      'https://elements.envato.com/light-transitions-for-fcpx-HHM2A5B',
+      'https://app.envato.com/graphics/229c8d57-e02f-4632-a337-4f7058995a0c',
+      'https://app.envato.com/video-templates/08b1fc9f-5236-462c-bc58-5fb623969e5f',
+      'https://app.envato.com/photos/5d431fd0-adfb-4b6c-8128-6a470145e148',
+      'https://app.envato.com/photos/0c11ec80-6f16-4679-97c2-27f29ffe478e',
+      'https://app.envato.com/photos/d422f4df-af74-4a31-af1f-f433310d14fe',
     ];
 
     // Get a random URL
@@ -293,6 +293,7 @@ export const isCookieValid = async (cookieDetails) => {
       headers: headers,
       data: payload,
     });
+
     if (response) {
       return true;
     } else {

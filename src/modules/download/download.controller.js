@@ -26,6 +26,7 @@ import {
 } from './download.service.js';
 import {
   envatoCookieCredentials,
+  EnvatoPuppeteerCredential,
   freepikCookieCredentials,
   motionArrayCookieCredentials,
   StoryBlocksCookieCredentials,
@@ -743,6 +744,7 @@ export const updateDownloadById = catchAsync(async (req, res) => {
 // download request to envato official website
 export const handleEnvatoDownload = catchAsync(async (req, res) => {
   const { url } = req.body;
+
   const userId = req?.user?.id;
 
   if (!userId) {
@@ -851,6 +853,7 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
       data: null,
     });
   }
+
   // Delay download
   const restriction = await DownloadRestrict?.findOne({
     service: 'Envato Elements',
@@ -868,9 +871,25 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
     await delay(delayInMilliseconds); // Using the delay function
     // console.log('Task started after the delay.');
   }
+
+  let finalUrl = null;
+
+  const domain = new URL(url).hostname;
+
+  if (domain === 'app.envato.com') {
+    // Already redirected
+    finalUrl = url;
+  } else if (domain === 'elements.envato.com') {
+    // Needs redirect
+    finalUrl = await getRedirectEnvatoLink(url, cookieDetails);
+  } else {
+    // Invalid / unknown domain
+    finalUrl = null;
+  }
+
   const { payload, headers, mainURL } = await envatoCookieCredentials(
     cookieDetails,
-    url,
+    finalUrl,
   );
 
   if (!payload) {
@@ -903,15 +922,19 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
     return sendResponse(res, {
       success: false,
       statusCode: 400,
-      message: 'Item code is not valid',
+      message: 'Invalid link',
       data: null,
     });
   }
 
+  let downloadUrl = null;
   // Extract the download URL from the response
-  const downloadUrl = response?.data?.data?.attributes?.downloadUrl;
-  const textDownloadUrl = response?.data?.data?.attributes?.textDownloadUrl;
-  const licenseUrl = `https://elements.envato.com${textDownloadUrl}`;
+  const i = response?.data?.indexOf('downloadUrl');
+
+  if (i !== -1 && typeof response?.data[i + 1] === 'string') {
+    downloadUrl = response.data[i + 1];
+  }
+  const licenseUrl = null;
 
   if (downloadUrl) {
     const download = {
@@ -1763,5 +1786,61 @@ export const getFreepikVideoQuality = async (mainURL) => {
   } catch (error) {
     console.log('Error in getting data:', error);
     return false;
+  }
+};
+
+export const getRedirectEnvatoLink = async (url, cookieDetails) => {
+  let browser;
+
+  try {
+    browser = await puppeteer.launch(EnvatoPuppeteerCredential);
+    const page = await browser.newPage();
+
+    // Block heavy resources
+    await page.setRequestInterception(true);
+
+    page.on('request', (req) => {
+      const blocked = ['image', 'font', 'media', 'stylesheet'];
+
+      if (blocked.includes(req.resourceType())) {
+        req.abort();
+      } else {
+        req.continue();
+      }
+    });
+
+    // Set cookie BEFORE visiting
+    await page.setCookie({
+      name: 'envatosession',
+      value: cookieDetails?.csrfToken,
+      domain: '.envato.com',
+      path: '/',
+      secure: true,
+      httpOnly: true,
+    });
+
+    // Go directly to asset
+    await page.goto(url, {
+      waitUntil: 'domcontentloaded',
+      timeout: 15000,
+    });
+
+    //  Wait until URL becomes app.envato.com
+    await page.waitForFunction(() => location.hostname === 'app.envato.com', {
+      timeout: 10000,
+    });
+
+    const redirectUrl = page.url();
+
+    if (redirectUrl.includes('app.envato.com')) {
+      return redirectUrl;
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Envato redirect error:', error.message);
+    return null;
+  } finally {
+    if (browser) await browser.close();
   }
 };
