@@ -2,10 +2,13 @@ import { getFreepikVideoQuality } from './download.controller.js';
 
 // Envato cookie details
 export const envatoCookieCredentials = async (cookieDetails, url) => {
+  if (url?.split('/').length !== 5) {
+    return res.status(400).json({ isOk: false, message: 'Invalid url' });
+  }
   const mainURL = `https://app.envato.com/download.data`;
 
-  const itemUuid = url.split('/')[4];
-  const itemType = url.split('/')[3];
+  const itemUuid = url?.split('/')[4];
+  const itemType = url?.split('/')[3];
 
   if (!itemUuid || !itemType) {
     return res.status(400).json({ isOk: false, message: 'Invalid url' });
