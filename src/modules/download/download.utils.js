@@ -199,7 +199,7 @@ export const freepikCookieCredentials = async (cookieDetails, url, type) => {
 // Credentials for envato puppetear
 export const EnvatoPuppeteerCredential = {
   headless: 'new',
-  // executablePath: '/usr/bin/chromium-browser',
+  executablePath: '/usr/bin/chromium-browser',
 
   args: [
     '--no-sandbox',
