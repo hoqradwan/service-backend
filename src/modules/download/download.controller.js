@@ -1980,12 +1980,12 @@ export const getRedirectEnvatoLink = async (url, cookieDetails) => {
     // Go directly to asset
     await page.goto(url, {
       waitUntil: 'domcontentloaded',
-      timeout: 15000,
+      timeout: 60000,
     });
 
     //  Wait until URL becomes app.envato.com
     await page.waitForFunction(() => location.hostname === 'app.envato.com', {
-      timeout: 15000,
+      timeout: 60000,
     });
 
     const redirectUrl = page.url();
