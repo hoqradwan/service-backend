@@ -627,6 +627,8 @@ export const isDailyLimitExceed = async (licenseId) => {
 export const handleLicenseDownload = catchAsync(async (req, res) => {
   const downloadId = req?.params?.downloadId;
 
+  /* ------------------ Validate Download ID ------------------ */
+
   if (!downloadId) {
     return sendResponse(res, {
       success: false,
@@ -636,20 +638,11 @@ export const handleLicenseDownload = catchAsync(async (req, res) => {
     });
   }
 
-  // Check if Download Id is a valid MongoDB ObjectId
-  if (!mongoose?.Types?.ObjectId?.isValid(downloadId)) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: httpStatus.BAD_REQUEST,
-      message: 'Invalid Download Id format',
-      data: null,
-    });
-  }
+  /* ------------------ Get Download Info ------------------ */
 
-  const { contentLicense, downloadedBy, serviceId } =
-    await getDownloadById(downloadId);
+  const download = await getDownloadById(downloadId);
 
-  if (!contentLicense || !downloadedBy || !serviceId) {
+  if (!download) {
     return sendResponse(res, {
       success: false,
       statusCode: httpStatus.BAD_REQUEST,
@@ -657,6 +650,19 @@ export const handleLicenseDownload = catchAsync(async (req, res) => {
       data: null,
     });
   }
+
+  const { contentLicense, downloadedBy, serviceId } = download;
+
+  if (!contentLicense || !downloadedBy || !serviceId) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: httpStatus.BAD_REQUEST,
+      message: 'Invalid download data',
+      data: null,
+    });
+  }
+
+  /* ------------------ Authorization ------------------ */
 
   if (req?.user?.role === 'user' && req?.user?.email !== downloadedBy) {
     return sendResponse(res, {
@@ -667,9 +673,11 @@ export const handleLicenseDownload = catchAsync(async (req, res) => {
     });
   }
 
-  const { cookie } = await getCookieByIdService(serviceId);
+  /* ------------------ Get Cookie ------------------ */
 
-  if (!cookie) {
+  const cookieData = await getCookieByIdService(serviceId);
+
+  if (!cookieData?.cookie) {
     return sendResponse(res, {
       success: false,
       statusCode: httpStatus.BAD_REQUEST,
@@ -678,27 +686,80 @@ export const handleLicenseDownload = catchAsync(async (req, res) => {
     });
   }
 
-  const response = await fetch(contentLicense, {
+  const cookie = cookieData.cookie;
+
+  /* ------------------ Get License ID ------------------ */
+
+  const licenseLink = `https://app.envato.com/item-licenses.data?itemUuid=${contentLicense}&_routes=routes%2Fitem-licenses%2Froute`;
+
+  const licenseRes = await fetch(licenseLink, {
     method: 'GET',
     headers: {
-      Cookie: `_elements_session_4=${cookie}`,
+      Cookie: `envatoid=${cookie}`,
     },
   });
 
-  const body = await response?.text();
-
-  if (response?.ok) {
-    res.setHeader('Content-Type', 'text/plain');
-    res.setHeader('Content-Disposition', 'attachment; filename="license.txt"');
-    res.send(body);
-  } else {
+  if (!licenseRes.ok) {
     return sendResponse(res, {
       success: false,
-      statusCode: response.status,
-      message: 'Error fetching the license file.',
+      statusCode: licenseRes.status,
+      message: 'Failed to fetch license info',
       data: null,
     });
   }
+
+  const data = await licenseRes.json();
+
+  let licenseId = null;
+
+  if (Array.isArray(data)) {
+    const index = data.indexOf('id');
+
+    if (index !== -1 && typeof data[index + 1] === 'string') {
+      licenseId = data[index + 1];
+    }
+  }
+
+  if (!licenseId) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: httpStatus.BAD_REQUEST,
+      message: 'No license found',
+      data: null,
+    });
+  }
+
+  // console.log('License ID:', licenseId);
+
+  /* ------------------ Download License File ------------------ */
+
+  const downloadURL = `https://app.envato.com/license-certificate/${licenseId}/download`;
+
+  const fileRes = await fetch(downloadURL, {
+    method: 'GET',
+    headers: {
+      Cookie: `envatoid=${cookie}`,
+    },
+  });
+
+  if (!fileRes.ok) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: fileRes.status,
+      message: 'Error fetching the license file',
+      data: null,
+    });
+  }
+
+  const body = await fileRes.text();
+  // console.log('body -->', body);
+
+  /* ------------------ Send File ------------------ */
+
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', 'attachment; filename="license.pdf"');
+
+  return res.send(body);
 });
 
 // Update method for download with _id
@@ -1076,11 +1137,11 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
     isCookieWorking = true;
 
     /* ------------------ Save Download ------------------ */
-
+    const contentLicense = payload?.itemUuid || null;
     const download = {
       service: 'Envato Elements',
       content: url,
-      contentLicense: null,
+      contentLicense,
       serviceId: cookieDetails._id,
       licenseId,
       status: 'pending',
