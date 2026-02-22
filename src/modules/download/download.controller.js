@@ -1766,10 +1766,6 @@ export const getRedirectEnvatoLink = async (url, cookieDetails) => {
     await page.setDefaultTimeout(120000);
 
     // Safer blocking
-    await page.setDefaultNavigationTimeout(120000);
-    await page.setDefaultTimeout(120000);
-
-    // Safer blocking
     await page.setRequestInterception(true);
 
     page.on('request', (req) => {
@@ -1805,9 +1801,7 @@ export const getRedirectEnvatoLink = async (url, cookieDetails) => {
 
     const redirectUrl = page.url();
 
-    console.log('Redirect:', redirectUrl);
-
-    if (redirectUrl.includes('app.envato.com')) {
+    if (redirectUrl?.includes('app.envato.com')) {
       return redirectUrl;
     }
 
