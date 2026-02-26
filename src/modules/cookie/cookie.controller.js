@@ -305,9 +305,6 @@ export const isCookieValid = async (cookieDetails) => {
 };
 
 export const isStoryBlocksCookieValid = async (cookieDetails) => {
-  const browser = await puppeteer?.launch(StoryBlocksPuppeteerCredential);
-  const page = await browser?.newPage();
-
   const urls = [
     'https://www.storyblocks.com/video/download-ajax/3541468/HDMOV',
     'https://www.storyblocks.com/video/download-ajax/3541464/4KMOV',
@@ -321,54 +318,46 @@ export const isStoryBlocksCookieValid = async (cookieDetails) => {
     // Get a random URL
     const mainURL = urls[Math?.floor(Math?.random() * urls?.length)];
 
-    // Set User-Agent and Referer
-    await page?.setUserAgent(
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
-    );
+    const headers = {
+      Cookie: `login_session=${csrfToken}; VID=${cookie};`,
+      Accept: '*/*',
+      'Accept-Encoding': 'gzip, deflate, br, zstd',
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+      Origin: 'https://www.storyblocks.com',
+      Referer: mainURL,
+      'Sec-CH-UA': `"Not:A-Brand";v="99", "Google Chrome";v="145", "Chromium";v="145"`,
+      'Sec-CH-UA-Mobile': '?1',
+      'Sec-CH-UA-Platform': `"Android"`,
+      'Sec-Fetch-Dest': 'empty',
+      'Sec-Fetch-Mode': 'cors',
+      'Sec-Fetch-Site': 'same-origin',
+      'User-Agent':
+        'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36',
+      Traceparent: '00-0000000000000000d8da331163a6ae06-787c7d13acb2558c-01',
+      Tracestate: 'dd=s:1;o:rum',
+      'X-Datadog-Origin': 'rum',
+      'X-Datadog-Parent-Id': '8681951705118692748',
+      'X-Datadog-Sampling-Priority': '1',
+      'X-Datadog-Trace-Id': '15625858006894685702',
+    };
 
-    await page?.setExtraHTTPHeaders({
-      referer: 'https://www.storyblocks.com/',
+    // Make the HTTP request
+    const response = await axios({
+      method: 'GET',
+      url: mainURL,
+      headers: headers,
     });
 
-    // Set Cookies
-    await page.setCookie(
-      {
-        name: 'VID',
-        value: cookie,
-        domain: '.storyblocks.com',
-      },
-      {
-        name: 'login_session',
-        value: csrfToken,
-        domain: '.storyblocks.com',
-      },
-    );
-    // Now go to the download endpoint
-    await page.goto(mainURL, { waitUntil: 'networkidle2' });
+    // console.log('response -->', response?.data?.data?.downloadUrl);
 
-    // Try to get JSON content (if rendered)
-    const response = await page?.evaluate(() => {
-      const preElement = document?.querySelector('pre');
-      if (preElement) {
-        try {
-          return JSON?.parse(preElement.innerText);
-        } catch (e) {
-          return { error: 'Failed to parse JSON' };
-        }
-      }
-      return null;
-    });
-
-    await browser?.close();
-
-    if (response?.data?.downloadUrl) {
+    if (response?.data?.data?.downloadUrl) {
       return true;
     } else {
       return false;
     }
   } catch (error) {
     console.error('Error:', error?.message);
-    await browser?.close();
   }
 };
 

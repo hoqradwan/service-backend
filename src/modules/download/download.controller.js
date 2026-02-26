@@ -1085,9 +1085,14 @@ const getStoryBlockItemCode = async (url) => {
 
 // download request to storyBlocks official website
 export const handleStoryBlocksDownload = catchAsync(async (req, res) => {
+  /* ======================================================
+      Get request data and validate user
+  ====================================================== */
+
   const { url, type } = req?.body;
   const userId = req?.user?.id;
 
+  // Check if userId exists
   if (!userId) {
     return sendResponse(res, {
       success: false,
@@ -1096,16 +1101,10 @@ export const handleStoryBlocksDownload = catchAsync(async (req, res) => {
       data: null,
     });
   }
-  // Check if userId is a valid MongoDB ObjectId
-  if (!mongoose.Types.ObjectId.isValid(userId)) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: 'Invalid user Id format',
-      data: null,
-    });
-  }
+
+  // Find user from database
   const user = await findUserById(userId);
+
   if (!user) {
     return sendResponse(res, {
       success: false,
@@ -1114,8 +1113,14 @@ export const handleStoryBlocksDownload = catchAsync(async (req, res) => {
       data: null,
     });
   }
-  // current license of the user
+
+  /* ======================================================
+     Check user's StoryBlocks license
+  ====================================================== */
+
   const licenseId = user?.currentStoryBlocksLicense;
+
+  // If user has no active license
   if (!licenseId) {
     return sendResponse(res, {
       success: false,
@@ -1125,19 +1130,13 @@ export const handleStoryBlocksDownload = catchAsync(async (req, res) => {
     });
   }
 
-  // // Check if licenseId is a valid MongoDB ObjectId
-  if (!mongoose.Types.ObjectId.isValid(licenseId)) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: 'Invalid License Id format',
-      data: null,
-    });
-  }
+  /* ======================================================
+      Check daily download limit
+  ====================================================== */
 
-  // // checking if daily limit has been exceeded or not..
   const limitCheck = await isDailyLimitExceed(licenseId);
 
+  // If limit check failed
   if (!limitCheck?.isOk) {
     return sendResponse(res, {
       success: false,
@@ -1147,6 +1146,7 @@ export const handleStoryBlocksDownload = catchAsync(async (req, res) => {
     });
   }
 
+  // If daily limit exceeded
   if (limitCheck?.exceeded) {
     return sendResponse(res, {
       success: false,
@@ -1156,35 +1156,41 @@ export const handleStoryBlocksDownload = catchAsync(async (req, res) => {
     });
   }
 
+  /* ======================================================
+      Get a working StoryBlocks cookie account
+  ====================================================== */
+
   let cookieDetails = null;
-  // Getting random cookie details
+
+  // Try up to 3 times to get a valid cookie
   for (let i = 0; i < 3; i++) {
+    // Get random StoryBlocks account
     const cookie = await generateRandomAccount('story-blocks');
 
-    if (!cookie) {
-      break;
-    }
+    if (!cookie) break;
+
     let isCookieWorking;
-    // Loop for double check the cookie
+
+    // Double check cookie validity (2 attempts)
     for (let j = 0; j < 2; j++) {
       isCookieWorking = await isStoryBlocksCookieValid(cookie);
 
-      if (isCookieWorking) {
-        break;
-      }
+      if (isCookieWorking) break;
     }
 
+    // Mark cookie inactive if invalid
     if (!isCookieWorking) {
-      // if cookie is not valid then make it inactive
       await updateCookieByIdService(cookie?._id, { status: 'inactive' });
     }
 
+    // Save working cookie
     if (isCookieWorking) {
       cookieDetails = cookie;
       break;
     }
   }
 
+  // If no working account found
   if (!cookieDetails) {
     return sendResponse(res, {
       success: false,
@@ -1193,25 +1199,14 @@ export const handleStoryBlocksDownload = catchAsync(async (req, res) => {
       data: null,
     });
   }
-  const restriction = await DownloadRestrict?.findOne({
-    service: 'Story Blocks',
-  });
-  // console.log(restriction);
 
-  if (restriction?.isRestricted) {
-    const delayInMilliseconds = restriction?.delay * 1000;
-    // console.log(
-    //   `Task will start after a delay of ${
-    //     delayInMilliseconds / 1000
-    //   } seconds...`,
-    // );
+  /* ======================================================
+      Extract item code and content class from URL
+  ====================================================== */
 
-    // Await the delay before proceeding
-    await delay(delayInMilliseconds); // Using the delay function
-    // console.log('Task started after the delay.');
-  }
   const { itemCode, contentClass } = await getStoryBlockItemCode(url);
 
+  // Validate extracted data
   if (!itemCode || !contentClass) {
     return sendResponse(res, {
       success: false,
@@ -1220,6 +1215,10 @@ export const handleStoryBlocksDownload = catchAsync(async (req, res) => {
       data: null,
     });
   }
+
+  /* ======================================================
+      Generate main download URL
+  ====================================================== */
 
   const { mainURL } = await StoryBlocksCookieCredentials(
     contentClass.toLowerCase(),
@@ -1236,21 +1235,28 @@ export const handleStoryBlocksDownload = catchAsync(async (req, res) => {
     });
   }
 
-  // Make the first HTTP request
+  /* ======================================================
+     Send download request to StoryBlocks
+  ====================================================== */
+
   const response = await storyBlocksDownloadRequest(mainURL, cookieDetails);
-  // console.log(response?.data);
 
   if (!response) {
     return sendResponse(res, {
       success: false,
       statusCode: 400,
-      message: 'Item code or type is not valid',
+      message:
+        'Item link or type is not valid! Please provide correct link and type',
       data: null,
     });
   }
 
-  // Extract the download URL from the response
+  // Extract final download URL
   const downloadUrl = response;
+
+  /* ======================================================
+     Save download info into database
+  ====================================================== */
 
   if (downloadUrl) {
     const download = {
@@ -1261,84 +1267,80 @@ export const handleStoryBlocksDownload = catchAsync(async (req, res) => {
       licenseId: licenseId,
       status: 'pending',
     };
+
+    // Store download info
     const result = await addDownloadIntoDB(download, req.user);
 
+    // If successfully saved
     if (result) {
       return sendResponse(res, {
         success: true,
         statusCode: 200,
         message: 'Download request successful',
-        data: { downloadUrl, downloadId: result[0]?._id },
+        data: {
+          downloadUrl,
+          downloadId: result[0]?._id,
+        },
       });
     }
-  } else {
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: 'Download request is unsuccessful',
-      data: null,
-    });
   }
+
+  /* ======================================================
+     Fallback error response
+  ====================================================== */
+
+  return sendResponse(res, {
+    success: false,
+    statusCode: 400,
+    message: 'Download request is unsuccessful',
+    data: null,
+  });
 });
 
+// Function for getting the motion array download url
 const storyBlocksDownloadRequest = async (mainURL, cookieDetails) => {
-  const browser = await puppeteer?.launch(StoryBlocksPuppeteerCredential);
-
-  const page = await browser?.newPage();
-
   try {
-    // Set User-Agent and Referer
-    await page.setUserAgent(
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
-    );
+    const headers = {
+      Cookie: `login_session=${cookieDetails?.csrfToken}; VID=${cookieDetails?.cookie};`,
+      Accept: '*/*',
+      'Accept-Encoding': 'gzip, deflate, br, zstd',
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+      Origin: 'https://www.storyblocks.com',
+      Referer: mainURL,
+      'Sec-CH-UA': `"Not:A-Brand";v="99", "Google Chrome";v="145", "Chromium";v="145"`,
+      'Sec-CH-UA-Mobile': '?1',
+      'Sec-CH-UA-Platform': `"Android"`,
+      'Sec-Fetch-Dest': 'empty',
+      'Sec-Fetch-Mode': 'cors',
+      'Sec-Fetch-Site': 'same-origin',
+      'User-Agent':
+        'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36',
+      Traceparent: '00-0000000000000000d8da331163a6ae06-787c7d13acb2558c-01',
+      Tracestate: 'dd=s:1;o:rum',
+      'X-Datadog-Origin': 'rum',
+      'X-Datadog-Parent-Id': '8681951705118692748',
+      'X-Datadog-Sampling-Priority': '1',
+      'X-Datadog-Trace-Id': '15625858006894685702',
+    };
 
-    await page.setExtraHTTPHeaders({
-      referer: 'https://www.storyblocks.com/',
+    // Make the HTTP request
+    const response = await axios({
+      method: 'GET',
+      url: mainURL,
+      headers: headers,
     });
 
-    // Set Cookies
-    await page.setCookie(
-      {
-        name: 'VID',
-        value: cookieDetails?.cookie,
-        domain: '.storyblocks.com',
-      },
-      {
-        name: 'login_session',
-        value: cookieDetails?.csrfToken,
-        domain: '.storyblocks.com',
-      },
-    );
-
-    // Now go to the download endpoint
-    await page.goto(mainURL, { waitUntil: 'networkidle2' });
-
-    // Try to get JSON content (if rendered)
-    const response = await page?.evaluate(() => {
-      const preElement = document?.querySelector('pre');
-      if (preElement) {
-        try {
-          return JSON.parse(preElement.innerText);
-        } catch (e) {
-          return { error: 'Failed to parse JSON' };
-        }
-      }
-      return null;
-    });
-    await browser.close();
-
-    if (response?.data?.downloadUrl) {
-      return response?.data?.downloadUrl;
+    if (response?.data?.data?.downloadUrl) {
+      return response?.data?.data?.downloadUrl;
     } else {
       return null;
     }
   } catch (error) {
     console.error('Error in story blocks download request:', error.message);
-    await browser.close();
   }
 };
 
-// Function for getting the motion array download url
 const motionArrayDownloadRequest = async (headers, mainURL) => {
   const browser = await puppeteer?.launch({
     headless: true,
@@ -1844,111 +1846,3 @@ export const getRedirectEnvatoLink = async (url, cookieDetails) => {
     if (browser) await browser.close();
   }
 };
-
-// export const getRedirectEnvatoLink = async (url, cookieDetails) => {
-//   let browser;
-
-//   try {
-//     browser = await puppeteer.launch(EnvatoPuppeteerCredential);
-//     const page = await browser.newPage();
-
-//     // Global timeouts (important for production)
-//     await page.setDefaultNavigationTimeout(120000);
-//     await page.setDefaultTimeout(120000);
-
-//     // Set cookie before visiting
-//     await page.setCookie({
-//       name: 'envatosession',
-//       value: cookieDetails?.csrfToken,
-//       domain: '.envato.com',
-//       path: '/',
-//       secure: true,
-//       httpOnly: true,
-//     });
-
-//     // Go to asset page
-//     await page.goto(url, {
-//       waitUntil: 'domcontentloaded',
-//     });
-
-//     // Wait for redirect/navigation
-//     await page.waitForNavigation({
-//       waitUntil: 'networkidle2',
-//       timeout: 120000,
-//     });
-
-//     const redirectUrl = page.url();
-
-//     // console.log('Redirect URL:', redirectUrl);
-
-//     // Validate redirect
-//     if (redirectUrl?.includes('app.envato.com')) {
-//       return redirectUrl;
-//     }
-
-//     return null;
-//   } catch (error) {
-//     console.error('Envato redirect error:', error.message);
-//     return null;
-//   } finally {
-//     if (browser) {
-//       await browser.close();
-//     }
-//   }
-// };
-
-// export const getRedirectEnvatoLink = async (url, cookieDetails) => {
-//   let browser;
-
-//   try {
-//     browser = await puppeteer.launch(EnvatoPuppeteerCredential);
-//     const page = await browser.newPage();
-
-//     // Block heavy resources
-//     await page.setRequestInterception(true);
-
-//     page.on('request', (req) => {
-//       const blocked = ['image', 'font', 'media', 'stylesheet'];
-
-//       if (blocked.includes(req.resourceType())) {
-//         req.abort();
-//       } else {
-//         req.continue();
-//       }
-//     });
-
-//     // Set cookie BEFORE visiting
-//     await page.setCookie({
-//       name: 'envatosession',
-//       value: cookieDetails?.csrfToken,
-//       domain: '.envato.com',
-//       path: '/',
-//       secure: true,
-//       httpOnly: true,
-//     });
-
-//     // Go directly to asset
-//     await page.goto(url, {
-//       waitUntil: 'domcontentloaded',
-//       timeout: 60000,
-//     });
-
-//     //  Wait until URL becomes app.envato.com
-//     await page.waitForFunction(() => location.hostname === 'app.envato.com', {
-//       timeout: 60000,
-//     });
-
-//     const redirectUrl = page.url();
-
-//     if (redirectUrl?.includes('app.envato.com')) {
-//       return redirectUrl;
-//     }
-
-//     return null;
-//   } catch (error) {
-//     console.error('Envato redirect error:', error.message);
-//     return null;
-//   } finally {
-//     if (browser) await browser.close();
-//   }
-// };
