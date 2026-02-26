@@ -52,8 +52,8 @@ export const envatoCookieCredentials = async (cookieDetails, url) => {
 
 // Story-blocks cookie details
 export const StoryBlocksPuppeteerCredential = {
-  headless: true,
-  executablePath: '/usr/bin/chromium-browser',
+  headless: 'new',
+  // executablePath: '/usr/bin/chromium-browser', // only for deployed server
   args: [
     '--no-sandbox',
     '--disable-setuid-sandbox',

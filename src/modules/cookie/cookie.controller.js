@@ -304,60 +304,6 @@ export const isCookieValid = async (cookieDetails) => {
   }
 };
 
-// Check if the story-blocks cookie is expired or not
-// export const isStoryBlocksCookieValid = async (cookieDetails) => {
-//   try {
-//     const cookie = cookieDetails?.cookie;
-//     const csrfToken = cookieDetails?.csrfToken;
-
-//     const urls = [
-//       'https://www.storyblocks.com/video/download-ajax/3541468/HDMOV',
-//       'https://www.storyblocks.com/video/download-ajax/3541464/4KMOV',
-//       'https://www.storyblocks.com/video/download-ajax/348794725/4KMP4',
-//       'https://www.storyblocks.com/video/download-ajax/10937614/HDMOV',
-//     ];
-
-//     // Get a random URL
-//     const mainURL = urls[Math?.floor(Math?.random() * urls?.length)];
-
-//     // headers for download request
-//     const headers = {
-//       Cookie: `VID=${cookie}; login_session=${csrfToken};`,
-//       'sec-ch-ua':
-//         '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
-//       'sec-ch-ua-arch': '""',
-//       'sec-ch-ua-bitness': '"64"',
-//       'sec-ch-ua-full-version': '"131.0.6778.267"',
-//       'sec-ch-ua-full-version-list':
-//         '"Google Chrome";v="131.0.6778.267", "Chromium";v="131.0.6778.267", "Not_A Brand";v="24.0.0.0"',
-//       'sec-ch-ua-mobile': '?1',
-//       'sec-ch-ua-model': '"Nexus 5"',
-//       'sec-ch-ua-platform': '"Android"',
-//       'sec-ch-ua-platform-version': '"6.0"',
-//       'sec-fetch-dest': 'empty',
-//       'sec-fetch-mode': 'cors',
-//       'sec-fetch-site': 'same-origin',
-//       'user-agent':
-//         'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36',
-//     };
-
-//     // Make the HTTP request
-//     const response = await axios({
-//       method: 'GET',
-//       url: mainURL,
-//       headers: headers,
-//     });
-
-//     if (response?.data?.data?.downloadUrl) {
-//       return true;
-//     } else {
-//       return false;
-//     }
-//   } catch (error) {
-//     return false;
-//   }
-// };
-
 export const isStoryBlocksCookieValid = async (cookieDetails) => {
   const browser = await puppeteer?.launch(StoryBlocksPuppeteerCredential);
   const page = await browser?.newPage();

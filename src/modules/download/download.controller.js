@@ -802,6 +802,22 @@ export const updateDownloadById = catchAsync(async (req, res) => {
   });
 });
 
+let restrictionCache = null;
+let restrictionCacheTime = 0;
+const RESTRICTION_CACHE_TTL = 30_000;
+
+const getDownloadRestriction = async () => {
+  const now = Date.now();
+  if (restrictionCache && now - restrictionCacheTime < RESTRICTION_CACHE_TTL) {
+    return restrictionCache;
+  }
+  restrictionCache = await DownloadRestrict.findOne({
+    service: 'Envato Elements',
+  });
+  restrictionCacheTime = now;
+  return restrictionCache;
+};
+
 export const handleEnvatoDownload = catchAsync(async (req, res) => {
   const { url } = req.body;
   const userId = req?.user?.id;
@@ -852,11 +868,32 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
     });
   }
 
-  // /* ------------------ Delay (If Restricted) ------------------ */
+  /* ------------------ URL Validation (before cookie loop) ------------------ */
 
-  // const restriction = await DownloadRestrict.findOne({
-  //   service: 'Envato Elements',
-  // });
+  let domain;
+  try {
+    domain = new URL(url).hostname;
+  } catch {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Invalid URL',
+      data: null,
+    });
+  }
+
+  if (domain !== 'app.envato.com' && domain !== 'elements.envato.com') {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Invalid URL',
+      data: null,
+    });
+  }
+
+  /* ------------------ Delay (If Restricted) — cached ------------------ */
+
+  const restriction = await getDownloadRestriction();
 
   // if (restriction?.isRestricted) {
   //   await delay(restriction.delay * 1000);
@@ -864,35 +901,26 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
 
   /* ------------------ Cookie Loop ------------------ */
 
-  for (let i = 0; i < 3; i++) {
+  const MAX_ATTEMPTS = 3;
+
+  for (let i = 0; i < MAX_ATTEMPTS; i++) {
     const cookieDetails = await generateRandomAccount('envato');
 
     if (!cookieDetails) break;
 
-    let isCookieWorking = false;
-
     /* ------------------ URL Processing ------------------ */
 
     let finalUrl = null;
-    const domain = new URL(url).hostname;
 
     if (domain === 'app.envato.com') {
       finalUrl = url;
-    }
-
-    if (domain === 'elements.envato.com') {
+    } else if (domain === 'elements.envato.com') {
       finalUrl = await getRedirectEnvatoLink(url, cookieDetails);
     }
 
-    // console.log('final url -->', finalUrl);
-
+    // Validate finalUrl structure — skip this cookie, try next
     if (!finalUrl || finalUrl.split('/').length !== 5) {
-      return sendResponse(res, {
-        success: false,
-        statusCode: 400,
-        message: 'Invalid URL',
-        data: null,
-      });
+      continue; // FIX: was wrongly returning 400, killing all retries
     }
 
     /* ------------------ Generate Request Data ------------------ */
@@ -900,6 +928,8 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
     const credentials = await envatoCookieCredentials(cookieDetails, finalUrl);
 
     if (!credentials?.payload || !credentials?.headers) {
+      // Cookie likely invalid — mark inactive and try next
+      await updateCookieByIdService(cookieDetails._id, { status: 'inactive' });
       continue;
     }
 
@@ -915,35 +945,43 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
         url: mainURL,
         headers,
         data: payload,
+        timeout: 15_000, // FIX: prevent indefinite hangs
       });
     } catch (err) {
+      // Network/timeout failure — mark cookie inactive and try next
+      await updateCookieByIdService(cookieDetails._id, { status: 'inactive' });
       continue;
     }
 
     const data = response?.data;
-    // console.log('response data -->', data);
 
-    if (!Array.isArray(data)) continue;
+    if (!Array.isArray(data)) {
+      await updateCookieByIdService(cookieDetails._id, { status: 'inactive' });
+      continue;
+    }
 
     /* ------------------ Extract Download URL ------------------ */
 
     const index = data.indexOf('downloadUrl');
 
-    if (index === -1) continue;
+    if (index === -1) {
+      await updateCookieByIdService(cookieDetails._id, { status: 'inactive' });
+      continue;
+    }
 
     const downloadUrl = data[index + 1];
 
-    if (typeof downloadUrl !== 'string') continue;
-
-    isCookieWorking = true;
+    if (typeof downloadUrl !== 'string') {
+      await updateCookieByIdService(cookieDetails._id, { status: 'inactive' });
+      continue;
+    }
 
     /* ------------------ Save Download ------------------ */
     const contentLicense = payload?.itemUuid || null;
-
     const download = {
       service: 'Envato Elements',
       content: url,
-      contentLicense: contentLicense,
+      contentLicense,
       serviceId: cookieDetails._id,
       licenseId,
       status: 'pending',
@@ -951,29 +989,22 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
 
     const result = await addDownloadIntoDB(download, req.user);
 
-    if (result) {
-      return sendResponse(res, {
-        success: true,
-        statusCode: 200,
-        message: 'Download request successful',
-        data: {
-          downloadUrl,
-          downloadId: result[0]?._id,
-        },
-      });
+    if (!result) {
+      // DB save failed — mark cookie inactive and try next
+      await updateCookieByIdService(cookieDetails._id, { status: 'inactive' });
+      continue;
     }
 
-    /* ------------------ Inactive Cookie ------------------ */
-
-    if (!isCookieWorking) {
-      console.log('Inactive cookie:', cookieDetails._id);
-
-      await updateCookieByIdService(cookieDetails._id, {
-        status: 'inactive',
-      });
-    } else {
-      break;
-    }
+    // FIX: isCookieWorking flag removed — success/failure is handled inline per path above
+    return sendResponse(res, {
+      success: true,
+      statusCode: 200,
+      message: 'Download request successful',
+      data: {
+        downloadUrl,
+        downloadId: result[0]?._id,
+      },
+    });
   }
 
   /* ------------------ Final Fail ------------------ */
