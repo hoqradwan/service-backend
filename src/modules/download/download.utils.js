@@ -5,7 +5,6 @@ export const envatoCookieCredentials = async (cookieDetails, url) => {
   if (url?.split('/').length !== 5) {
     return res.status(400).json({ isOk: false, message: 'Invalid url' });
   }
-  const mainURL = `https://app.envato.com/download.data`;
 
   const itemUuid = url?.split('/')[4];
   const itemType = url?.split('/')[3];
@@ -14,13 +13,9 @@ export const envatoCookieCredentials = async (cookieDetails, url) => {
     return res.status(400).json({ isOk: false, message: 'Invalid url' });
   }
 
-  const cookie = cookieDetails?.cookie;
+  const mainURL = `https://app.envato.com/download.data?itemUuid=${itemUuid}&itemType=${itemType}&_routes=routes%2Fdownload%2Froute`;
 
-  // payload for download requestW
-  const payload = {
-    itemUuid,
-    itemType,
-  };
+  const cookie = cookieDetails?.cookie;
 
   // headers for download request
   const headers = {
@@ -47,7 +42,7 @@ export const envatoCookieCredentials = async (cookieDetails, url) => {
     'X-Datadog-Trace-Id': '15625858006894685702',
   };
 
-  return { payload, headers, mainURL };
+  return { itemUuid, headers, mainURL };
 };
 
 // Story-blocks cookie details

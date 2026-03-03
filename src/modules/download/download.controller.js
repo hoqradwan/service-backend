@@ -893,7 +893,7 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
 
   /* ------------------ Delay (If Restricted) — cached ------------------ */
 
-  const restriction = await getDownloadRestriction();
+  // const restriction = await getDownloadRestriction();
 
   // if (restriction?.isRestricted) {
   //   await delay(restriction.delay * 1000);
@@ -905,8 +905,16 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
 
   for (let i = 0; i < MAX_ATTEMPTS; i++) {
     const cookieDetails = await generateRandomAccount('envato');
+    // console.log('Cookie', cookieDetails);
 
-    if (!cookieDetails) break;
+    if (!cookieDetails) {
+      return sendResponse(res, {
+        success: false,
+        statusCode: 400,
+        message: 'No active accounts available! Try again later.',
+        data: null,
+      });
+    }
 
     /* ------------------ URL Processing ------------------ */
 
@@ -915,7 +923,10 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
     if (domain === 'app.envato.com') {
       finalUrl = url;
     } else if (domain === 'elements.envato.com') {
+      // console.log('Coming');
+
       finalUrl = await getRedirectEnvatoLink(url, cookieDetails);
+      // console.log('Final Url-->', finalUrl);
     }
 
     // Validate finalUrl structure — skip this cookie, try next
@@ -927,13 +938,13 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
 
     const credentials = await envatoCookieCredentials(cookieDetails, finalUrl);
 
-    if (!credentials?.payload || !credentials?.headers) {
+    if (!credentials?.mainURL || !credentials?.headers) {
       // Cookie likely invalid — mark inactive and try next
       await updateCookieByIdService(cookieDetails._id, { status: 'inactive' });
       continue;
     }
 
-    const { payload, headers, mainURL } = credentials;
+    const { itemUuid, headers, mainURL } = credentials;
 
     /* ------------------ Make Download Request ------------------ */
 
@@ -941,10 +952,9 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
 
     try {
       response = await axios({
-        method: 'POST',
+        method: 'GET',
         url: mainURL,
         headers,
-        data: payload,
         timeout: 15_000, // FIX: prevent indefinite hangs
       });
     } catch (err) {
@@ -954,6 +964,7 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
     }
 
     const data = response?.data;
+    // console.log('Data -->', data);
 
     if (!Array.isArray(data)) {
       await updateCookieByIdService(cookieDetails._id, { status: 'inactive' });
@@ -977,7 +988,7 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
     }
 
     /* ------------------ Save Download ------------------ */
-    const contentLicense = payload?.itemUuid || null;
+    const contentLicense = itemUuid || null;
     const download = {
       service: 'Envato Elements',
       content: url,
@@ -1069,7 +1080,7 @@ const getStoryBlockItemCode = async (url) => {
       await browser.close();
       return { itemCode, contentClass };
     } else {
-      console.log('❌ stockItem not found in any script tags.');
+      console.log('StockItem not found in any script tags.');
       await browser.close();
       return null;
     }
@@ -1833,6 +1844,7 @@ export const getRedirectEnvatoLink = async (url, cookieDetails) => {
     });
 
     const redirectUrl = page.url();
+    // console.log('redirect link--> ', redirectUrl);
 
     if (redirectUrl?.includes('app.envato.com')) {
       return redirectUrl;
