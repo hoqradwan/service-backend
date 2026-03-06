@@ -570,13 +570,13 @@ export const getTotalDownloadForCookie = catchAsync(async (req, res) => {
 export const generateRandomAccount = async (serviceName) => {
   try {
     const count = await getTotalDocumentCountService(serviceName);
+    // console.log('Total Documents:', count);
     // Ensure there's at least one active cookie
     if (count === 0) {
       return null;
     }
     // Generating a random number
     const randomIndex = Math?.floor(Math?.random() * count);
-
     // Getting the random account
     const randomAccount = await getRandomAccountService(
       serviceName,
@@ -931,6 +931,7 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
 
     // Validate finalUrl structure — skip this cookie, try next
     if (!finalUrl || finalUrl.split('/').length !== 5) {
+      await updateCookieByIdService(cookieDetails._id, { status: 'inactive' });
       continue; // FIX: was wrongly returning 400, killing all retries
     }
 
