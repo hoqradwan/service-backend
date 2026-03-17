@@ -17,21 +17,22 @@ const CookieSchema = new mongoose.Schema(
     },
     source: {
       type: String,
-      
     },
-    cookie: {   // Vid(story-blocks) || laravel_session(motion-array) || Whole cookie(Freepik)
+    cookie: {
+      // Vid(story-blocks) || laravel_session(motion-array) || GR_REFRESH (Freepik)
       type: String,
       required: true,
     },
-    csrfToken: {   // csrf token(envato) || login session token(story-blocks) || walletId(Freepik)
+    csrfToken: {
+      // csrf token(envato) || login session token(story-blocks) || walletId(Freepik)
       type: String,
-      required: true, 
+      required: true,
     },
     status: {
       type: String,
       required: true,
       enum: ['active', 'inactive'],
-      default: 'active'
+      default: 'active',
     },
   },
   { timestamps: true },

@@ -1,4 +1,7 @@
-import { getFreepikVideoQuality } from './download.controller.js';
+import {
+  getFreepikAudioId,
+  getFreepikVideoQuality,
+} from './download.controller.js';
 
 // Envato cookie details
 export const envatoCookieCredentials = async (cookieDetails, url) => {
@@ -130,7 +133,6 @@ export const freepikCookieCredentials = async (cookieDetails, url, type) => {
   // const token = cookieDetails?.csrfToken?.trim();
 
   if (!itemCode) {
-    // return res.status(400).json({ isOk: false, message: 'Invalid url' });
     return { headers: false, mainURL: false };
   }
 
@@ -161,11 +163,31 @@ export const freepikCookieCredentials = async (cookieDetails, url, type) => {
         mainURL = `https://www.freepik.com/api/video/${itemCode}/download?walletId=${walletId}&optionId=${optionId?.id}`;
       }
     }
+  } else if (content === 'audio') {
+    // console.log(content);
+    const category = itemList[4];
+    // For tune audios
+    if (category === 'tune') {
+      const track_id = await getFreepikAudioId(url);
+      if (track_id) {
+        mainURL = `https://audio-data.freepik.com/audio/download?track_id=${track_id}`;
+      }
+    }
+    // For  sound-effects --> category === "sound-effects"
+    else {
+      const id = itemList[6];
+      if (id) {
+        mainURL = `https://audio-data.freepik.com/audio/sound-effects/download/?id=${id}&source=web`;
+      }
+    }
   }
   // (content === "free-photo" || content === "premium-photo"  || content === "free-vector" || content === "premium-vector" || content === "free-psd" || content === "premium-psd")
   else {
-    mainURL = `https://www.freepik.com/api/regular/download?walletId=${walletId}&resource=${itemCode}&action=download`;
+    mainURL = `https://www.freepik.com/api/regular/download?walletId=${walletId}&resource=${itemCode}&action=download&locale=en`;
   }
+
+  // console.log('headers -->', headers);
+  // console.log('Main Url -->', mainURL);
 
   // headers for download request
   const headers = {
@@ -187,7 +209,8 @@ export const freepikCookieCredentials = async (cookieDetails, url, type) => {
     'user-agent':
       'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36',
   };
-
+  // console.log('headers -->', headers);
+  // console.log('Main Url -->', mainURL);
   return { headers, mainURL };
 };
 

@@ -468,6 +468,8 @@ export const isMotionArrayCookieValid = async (cookieDetails) => {
 
 export const isFreepikCookieValid = async (cookieDetails) => {
   try {
+    // console.log('hit');
+
     const cookie = cookieDetails?.cookie?.trim();
 
     const { GR_TOKEN } = await generateGRToken(cookie);
@@ -526,9 +528,9 @@ export const isFreepikCookieValid = async (cookieDetails) => {
 };
 
 export const generateGRToken = async (cookie) => {
+  // console.log('coming');
   try {
-    const mainURL =
-      'https://www.freepik.com/api/social/like?type=photo&id=32637779';
+    const mainURL = 'https://www.freepik.com/';
 
     const headers = {
       Cookie: `GR_REFRESH=${cookie};`,
@@ -557,6 +559,8 @@ export const generateGRToken = async (cookie) => {
       headers: headers,
     });
 
+    // console.log('response -->', response);
+
     if (response?.headers) {
       const setCookieArray = response?.headers['set-cookie'];
       const cookies = Object?.fromEntries(
@@ -565,8 +569,9 @@ export const generateGRToken = async (cookie) => {
           return [key, value];
         }),
       );
-      // const csrf_freepik = cookies['csrf_freepik'];
       const GR_TOKEN = cookies['GR_TOKEN'];
+
+      // console.log('GR_Token -->', GR_TOKEN);
 
       if (GR_TOKEN) {
         return { GR_TOKEN };
