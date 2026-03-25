@@ -901,7 +901,7 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
 
   /* ------------------ Cookie Loop ------------------ */
 
-  const MAX_ATTEMPTS = 3;
+  const MAX_ATTEMPTS = 1;
 
   for (let i = 0; i < MAX_ATTEMPTS; i++) {
     const cookieDetails = await generateRandomAccount('envato');
@@ -924,9 +924,19 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
       finalUrl = url;
     } else if (domain === 'elements.envato.com') {
       // console.log('Coming');
+      const envatoSessionToken = await getEnvatoSessionToken(cookieDetails);
+      // console.log('session-->', envatoSessionToken);
 
-      finalUrl = await getRedirectEnvatoLink(url, cookieDetails);
-      // console.log('Final Url-->', finalUrl);
+      if (envatoSessionToken) {
+        // Update current token
+        cookieDetails.csrfToken = envatoSessionToken;
+        // Update in DB
+        await updateCookieByIdService(cookieDetails._id, {
+          csrfToken: envatoSessionToken,
+        });
+        finalUrl = await getRedirectEnvatoLink(url, cookieDetails);
+      }
+      console.log('Final Url-->', finalUrl);
     }
 
     // Validate finalUrl structure — skip this cookie, try next
@@ -2083,5 +2093,62 @@ export const getFreepikAudioId = async (mainURL) => {
   } catch (error) {
     console.log('Error in getting audio id', error);
     return false;
+  }
+};
+
+export const getEnvatoSessionToken = async (cookieDetails) => {
+  try {
+    const mainURL = 'https://account.envato.com/api/public/refresh_id_token';
+    // console.log('cerf-->', cookieDetails?.csrfToken);
+
+    const headers = {
+      Cookie: `envatosession=${cookieDetails?.csrfToken}`,
+      Accept: 'application/json',
+      'Accept-Encoding': 'gzip, deflate, br, zstd',
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Content-Type': 'application/json',
+      'Content-Length': '0',
+      Origin: 'https://app.envato.com',
+      Referer: 'https://app.envato.com/',
+      'User-Agent':
+        'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Mobile Safari/537.36',
+
+      'Sec-CH-UA': `"Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"`,
+      'Sec-CH-UA-Mobile': '?1',
+      'Sec-CH-UA-Platform': `"Android"`,
+
+      'Sec-Fetch-Dest': 'empty',
+      'Sec-Fetch-Mode': 'cors',
+      'Sec-Fetch-Site': 'same-site',
+      'X-Client-Version': '3.6.0',
+    };
+
+    const response = await axios({
+      method: 'POST',
+      url: mainURL,
+      data: {},
+      headers: headers,
+    });
+    // console.log('response-->', response);
+
+    // 🔥 Extract cookies
+    const cookies = response.headers['set-cookie'];
+    // console.log('cookies-->', cookies);
+
+    let envatoSessionToken = null;
+
+    if (cookies) {
+      const envatoCookie = cookies.find((c) => c.startsWith('envatosession='));
+
+      if (envatoCookie) {
+        envatoSessionToken = envatoCookie.split(';')[0].split('=')[1];
+      }
+    }
+
+    // console.log('Token:', envatoSessionToken);
+    return envatoSessionToken;
+  } catch (error) {
+    console.error('Error:', error);
+    return null;
   }
 };
