@@ -901,141 +901,296 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
 
   /* ------------------ Cookie Loop ------------------ */
 
-  const MAX_ATTEMPTS = 1;
+  // const MAX_ATTEMPTS = 3;
 
-  for (let i = 0; i < MAX_ATTEMPTS; i++) {
-    const cookieDetails = await generateRandomAccount('envato');
-    // console.log('Cookie', cookieDetails);
+  // for (let i = 0; i < MAX_ATTEMPTS; i++) {
+  //   const cookieDetails = await generateRandomAccount('envato');
+  //   // console.log('Cookie', cookieDetails);
 
-    if (!cookieDetails) {
+  //   if (!cookieDetails) {
+  //     return sendResponse(res, {
+  //       success: false,
+  //       statusCode: 400,
+  //       message: 'No active accounts available! Try again later.',
+  //       data: null,
+  //     });
+  //   }
+
+  //   /* ------------------ URL Processing ------------------ */
+
+  //   let finalUrl = null;
+
+  //   if (domain === 'app.envato.com') {
+  //     finalUrl = url;
+  //   } else if (domain === 'elements.envato.com') {
+  //     // console.log('Coming');
+  //     const envatoSessionToken = await getEnvatoSessionToken(cookieDetails);
+  //     // console.log('session-->', envatoSessionToken);
+
+  //     if (envatoSessionToken) {
+  //       // Update current token
+  //       cookieDetails.csrfToken = envatoSessionToken;
+  //       // Update in DB
+  //       await updateCookieByIdService(cookieDetails._id, {
+  //         csrfToken: envatoSessionToken,
+  //       });
+  //       finalUrl = await getRedirectEnvatoLink(url, cookieDetails);
+  //     }
+  //     console.log('Final Url-->', finalUrl);
+  //   }
+
+  //   // Validate finalUrl structure — skip this cookie, try next
+  //   if (!finalUrl || finalUrl.split('/').length !== 5) {
+  //     await updateCookieByIdService(cookieDetails._id, { status: 'inactive' });
+  //     continue; // FIX: was wrongly returning 400, killing all retries
+  //   }
+
+  //   /* ------------------ Generate Request Data ------------------ */
+
+  //   const credentials = await envatoCookieCredentials(cookieDetails, finalUrl);
+
+  //   if (!credentials?.mainURL || !credentials?.headers) {
+  //     // Cookie likely invalid — mark inactive and try next
+  //     await updateCookieByIdService(cookieDetails._id, { status: 'inactive' });
+  //     continue;
+  //   }
+
+  //   const { itemUuid, headers, mainURL } = credentials;
+
+  //   /* ------------------ Make Download Request ------------------ */
+
+  //   let response;
+
+  //   try {
+  //     response = await axios({
+  //       method: 'GET',
+  //       url: mainURL,
+  //       headers,
+  //       timeout: 15_000, // FIX: prevent indefinite hangs
+  //     });
+  //   } catch (err) {
+  //     // Network/timeout failure — mark cookie inactive and try next
+  //     await updateCookieByIdService(cookieDetails._id, { status: 'inactive' });
+  //     continue;
+  //   }
+
+  //   const data = response?.data;
+  //   // console.log('Data -->', data);
+
+  //   if (!Array.isArray(data)) {
+  //     await updateCookieByIdService(cookieDetails._id, { status: 'inactive' });
+  //     continue;
+  //   }
+
+  //   /* ------------------ Extract Download URL ------------------ */
+
+  //   const index = data.indexOf('downloadUrl');
+
+  //   if (index === -1) {
+  //     await updateCookieByIdService(cookieDetails._id, { status: 'inactive' });
+  //     continue;
+  //   }
+
+  //   const downloadUrl = data[index + 1];
+
+  //   if (typeof downloadUrl !== 'string') {
+  //     await updateCookieByIdService(cookieDetails._id, { status: 'inactive' });
+  //     continue;
+  //   }
+
+  //   /* ------------------ Save Download ------------------ */
+  //   const contentLicense = itemUuid || null;
+  //   const download = {
+  //     service: 'Envato Elements',
+  //     content: url,
+  //     contentLicense,
+  //     serviceId: cookieDetails._id,
+  //     licenseId,
+  //     status: 'pending',
+  //   };
+
+  //   const result = await addDownloadIntoDB(download, req.user);
+
+  //   if (!result) {
+  //     // DB save failed — mark cookie inactive and try next
+  //     await updateCookieByIdService(cookieDetails._id, { status: 'inactive' });
+  //     continue;
+  //   }
+
+  //   // FIX: isCookieWorking flag removed — success/failure is handled inline per path above
+  //   return sendResponse(res, {
+  //     success: true,
+  //     statusCode: 200,
+  //     message: 'Download request successful',
+  //     data: {
+  //       downloadUrl,
+  //       downloadId: result[0]?._id,
+  //     },
+  //   });
+  // }
+  //////////////////////Start
+
+  const cookieDetails = await generateRandomAccount('envato');
+  if (!cookieDetails) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'No active accounts available! Try again later.',
+      data: null,
+    });
+  }
+  /* ------------------ URL Processing ------------------ */
+  let finalUrl = null;
+  let envatoSessionToken = null;
+  if (domain === 'app.envato.com') {
+    finalUrl = url;
+  } else if (domain === 'elements.envato.com') {
+    const MAX_ATTEMPTS = 3;
+    for (let i = 0; i < MAX_ATTEMPTS; i++) {
+      envatoSessionToken = await getEnvatoSessionToken(cookieDetails);
+      // console.log('session-->', envatoSessionToken);
+      if (envatoSessionToken) {
+        break;
+      }
+    }
+    if (envatoSessionToken) {
+      cookieDetails.csrfToken = envatoSessionToken;
+      // Update in DB
+      await updateCookieByIdService(cookieDetails._id, {
+        csrfToken: envatoSessionToken,
+      });
+    } else {
+      await updateCookieByIdService(cookieDetails._id, { status: 'inactive' });
       return sendResponse(res, {
         success: false,
         statusCode: 400,
-        message: 'No active accounts available! Try again later.',
+        message: 'There was a problem downloading the file! Please try again.',
         data: null,
       });
     }
+    finalUrl = await getRedirectEnvatoLink(url, cookieDetails);
+    // console.log('Final Url-->', finalUrl);
 
-    /* ------------------ URL Processing ------------------ */
-
-    let finalUrl = null;
-
-    if (domain === 'app.envato.com') {
-      finalUrl = url;
-    } else if (domain === 'elements.envato.com') {
-      // console.log('Coming');
-      const envatoSessionToken = await getEnvatoSessionToken(cookieDetails);
-      // console.log('session-->', envatoSessionToken);
-
-      if (envatoSessionToken) {
-        // Update current token
-        cookieDetails.csrfToken = envatoSessionToken;
-        // Update in DB
-        await updateCookieByIdService(cookieDetails._id, {
-          csrfToken: envatoSessionToken,
-        });
-        finalUrl = await getRedirectEnvatoLink(url, cookieDetails);
-      }
-      console.log('Final Url-->', finalUrl);
-    }
-
-    // Validate finalUrl structure — skip this cookie, try next
     if (!finalUrl || finalUrl.split('/').length !== 5) {
-      await updateCookieByIdService(cookieDetails._id, { status: 'inactive' });
-      continue; // FIX: was wrongly returning 400, killing all retries
-    }
-
-    /* ------------------ Generate Request Data ------------------ */
-
-    const credentials = await envatoCookieCredentials(cookieDetails, finalUrl);
-
-    if (!credentials?.mainURL || !credentials?.headers) {
-      // Cookie likely invalid — mark inactive and try next
-      await updateCookieByIdService(cookieDetails._id, { status: 'inactive' });
-      continue;
-    }
-
-    const { itemUuid, headers, mainURL } = credentials;
-
-    /* ------------------ Make Download Request ------------------ */
-
-    let response;
-
-    try {
-      response = await axios({
-        method: 'GET',
-        url: mainURL,
-        headers,
-        timeout: 15_000, // FIX: prevent indefinite hangs
+      return sendResponse(res, {
+        success: false,
+        statusCode: 400,
+        message: 'There was a getting the file! Please try again.',
+        data: null,
       });
-    } catch (err) {
-      // Network/timeout failure — mark cookie inactive and try next
-      await updateCookieByIdService(cookieDetails._id, { status: 'inactive' });
-      continue;
     }
-
-    const data = response?.data;
-    // console.log('Data -->', data);
-
-    if (!Array.isArray(data)) {
-      await updateCookieByIdService(cookieDetails._id, { status: 'inactive' });
-      continue;
-    }
-
-    /* ------------------ Extract Download URL ------------------ */
-
-    const index = data.indexOf('downloadUrl');
-
-    if (index === -1) {
-      await updateCookieByIdService(cookieDetails._id, { status: 'inactive' });
-      continue;
-    }
-
-    const downloadUrl = data[index + 1];
-
-    if (typeof downloadUrl !== 'string') {
-      await updateCookieByIdService(cookieDetails._id, { status: 'inactive' });
-      continue;
-    }
-
-    /* ------------------ Save Download ------------------ */
-    const contentLicense = itemUuid || null;
-    const download = {
-      service: 'Envato Elements',
-      content: url,
-      contentLicense,
-      serviceId: cookieDetails._id,
-      licenseId,
-      status: 'pending',
-    };
-
-    const result = await addDownloadIntoDB(download, req.user);
-
-    if (!result) {
-      // DB save failed — mark cookie inactive and try next
-      await updateCookieByIdService(cookieDetails._id, { status: 'inactive' });
-      continue;
-    }
-
-    // FIX: isCookieWorking flag removed — success/failure is handled inline per path above
+  } else {
     return sendResponse(res, {
-      success: true,
-      statusCode: 200,
-      message: 'Download request successful',
-      data: {
-        downloadUrl,
-        downloadId: result[0]?._id,
-      },
+      success: false,
+      statusCode: 400,
+      message: 'Invalid URL! Please provide correct url from envato',
+      data: null,
     });
   }
 
-  /* ------------------ Final Fail ------------------ */
+  /* ------------------ Generate Request Data ------------------ */
+
+  const credentials = envatoCookieCredentials(cookieDetails, finalUrl);
+
+  if (!credentials?.mainURL || !credentials?.headers) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Credentials failed! Try again later',
+      data: null,
+    });
+  }
+
+  const { itemUuid, headers, mainURL } = credentials;
+
+  /* ------------------ Make Download Request ------------------ */
+
+  let response;
+
+  try {
+    response = await axios({
+      method: 'GET',
+      url: mainURL,
+      headers,
+      timeout: 15_000, // FIX: prevent indefinite hangs
+    });
+  } catch (err) {
+    // Network/timeout failure — mark cookie inactive and try next
+    await updateCookieByIdService(cookieDetails._id, { status: 'inactive' });
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Something went wrong! Please try again',
+      data: null,
+    });
+  }
+
+  const data = response?.data;
+  // console.log('Data -->', data);
+
+  if (!Array.isArray(data)) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Something went wrong! Please try again',
+      data: null,
+    });
+  }
+
+  /* ------------------ Extract Download URL ------------------ */
+
+  const index = data.indexOf('downloadUrl');
+
+  if (index === -1) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Something went wrong! Please try again',
+      data: null,
+    });
+  }
+
+  const downloadUrl = data[index + 1];
+
+  if (typeof downloadUrl !== 'string') {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Something went wrong! Please try again',
+      data: null,
+    });
+  }
+
+  /* ------------------ Save Download ------------------ */
+  const contentLicense = itemUuid || null;
+  const download = {
+    service: 'Envato Elements',
+    content: url,
+    contentLicense,
+    serviceId: cookieDetails._id,
+    licenseId,
+    status: 'pending',
+  };
+
+  const result = await addDownloadIntoDB(download, req.user);
+
+  if (!result) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Download request is unsuccessful',
+      data: null,
+    });
+  }
 
   return sendResponse(res, {
-    success: false,
-    statusCode: 400,
-    message: 'Download request is unsuccessful',
-    data: null,
+    success: true,
+    statusCode: 200,
+    message: 'Download request successful',
+    data: {
+      downloadUrl,
+      downloadId: result[0]?._id,
+    },
   });
 });
 

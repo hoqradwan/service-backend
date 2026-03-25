@@ -4,7 +4,7 @@ import {
 } from './download.controller.js';
 
 // Envato cookie details
-export const envatoCookieCredentials = async (cookieDetails, url) => {
+export const envatoCookieCredentials = (cookieDetails, url) => {
   if (url?.split('/').length !== 5) {
     return res.status(400).json({ isOk: false, message: 'Invalid url' });
   }
