@@ -143,6 +143,7 @@ export const freepikCookieCredentials = async (cookieDetails, url, type) => {
     mainURL = `https://www.freepik.com/api/icon/download?walletId=${walletId}&optionId=${itemCode}&format=${type}&type=original`;
   } else if (content === 'free-video' || content === 'premium-video') {
     const options = await getFreepikVideoQuality(url);
+    // console.log('options-->', options);
 
     if (type === 'original') {
       const optionId = options?.find((option) => option?.isOriginal === true);
