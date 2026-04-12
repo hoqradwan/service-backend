@@ -1,5 +1,6 @@
 import {
   getFreepikAudioId,
+  getFreepikFontId,
   getFreepikVideoQuality,
 } from './download.controller.js';
 
@@ -131,6 +132,7 @@ export const freepikCookieCredentials = async (cookieDetails, url, type) => {
   const walletId = cookieDetails?.csrfToken?.trim();
 
   // const token = cookieDetails?.csrfToken?.trim();
+  // console.log(itemCode, content);
 
   if (!itemCode) {
     return { headers: false, mainURL: false };
@@ -181,6 +183,17 @@ export const freepikCookieCredentials = async (cookieDetails, url, type) => {
         mainURL = `https://audio-data.freepik.com/audio/sound-effects/download/?id=${id}&source=web`;
       }
     }
+  } else if (content === '3d-model') {
+    mainURL = `https://www.freepik.com/api/model3d/${itemCode}/download?walletId=${walletId}&fileType=${'blend'}`;
+  } else if (content === 'font') {
+    // https://www.freepik.com/api/fonts/download?id=42&walletId=3bce1eef-1e1e-4070-bbe7-db9d673848cf
+    const resource = await getFreepikFontId(url);
+    // console.log('id', resource.id);
+
+    if (!resource?.id) {
+      return { headers: false, mainURL: false };
+    }
+    mainURL = `https://www.freepik.com/api/fonts/download?id=${resource?.id}&walletId=${walletId}`;
   }
   // (content === "free-photo" || content === "premium-photo"  || content === "free-vector" || content === "premium-vector" || content === "free-psd" || content === "premium-psd")
   else {

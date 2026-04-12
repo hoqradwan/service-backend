@@ -2295,3 +2295,97 @@ export const getEnvatoSessionToken = async (cookieDetails) => {
     return null;
   }
 };
+
+// Request for getting Freepik Video Quality
+// export const getFreepikVideoQuality = async (mainURL) => {
+//   try {
+//     const browser = await puppeteer.launch({
+//       headless: 'new',
+//       args: [
+//         '--no-sandbox',
+//         '--disable-setuid-sandbox',
+//         '--disable-dev-shm-usage',
+//         '--disable-gpu',
+//       ],
+//     });
+
+//     const page = await browser.newPage();
+
+//     await page.goto(mainURL, {
+//       waitUntil: 'networkidle2',
+//       timeout: 0,
+//     });
+
+//     // Wait for Next.js data to load
+//     await page.waitForSelector('#__NEXT_DATA__');
+
+//     const nextData = await page.evaluate(() => {
+//       const el = document.querySelector('#__NEXT_DATA__');
+//       return el ? JSON.parse(el.textContent) : null;
+//     });
+
+//     await browser.close();
+
+//     const options = nextData?.props?.pageProps?.options;
+
+//     return options || false;
+//   } catch (error) {
+//     console.log('Error:', error);
+//     return false;
+//   }
+// };
+
+// Request for getting Freepik Video Quality
+export const getFreepikFontId = async (mainURL) => {
+  try {
+    const headers = {
+      'sec-ch-ua':
+        '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+      'sec-ch-ua-arch': '""',
+      'sec-ch-ua-bitness': '"64"',
+      'sec-ch-ua-full-version': '"131.0.6778.267"',
+      'sec-ch-ua-full-version-list':
+        '"Google Chrome";v="131.0.6778.267", "Chromium";v="131.0.6778.267", "Not_A Brand";v="24.0.0.0"',
+      'sec-ch-ua-mobile': '?1',
+      'sec-ch-ua-model': '"Nexus 5"',
+      'sec-ch-ua-platform': '"Android"',
+      'sec-ch-ua-platform-version': '"6.0"',
+      'sec-fetch-dest': 'empty',
+      'sec-fetch-mode': 'cors',
+      'sec-fetch-site': 'same-origin',
+      'user-agent':
+        'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36',
+    };
+    // Make the HTTP request
+    const response = await axios({
+      method: 'GET',
+      url: mainURL,
+      headers: headers,
+    });
+    // const response = await axios.get(mainURL);
+    const $ = cheerio?.load(response?.data);
+    // console.log('response-->', response?.data);
+    // Locate the __NEXT_DATA__ script tag and extract its JSON content
+    const nextDataScript = $('#__NEXT_DATA__')?.html();
+    // console.log('next-->', nextDataScript);
+
+    // 12418805
+    if (nextDataScript) {
+      const nextData = JSON.parse(nextDataScript);
+      // Access the options object
+      const resource = nextData?.props?.pageProps?.resource;
+      // console.log('resource', resource);
+      if (resource) {
+        return resource;
+      } else {
+        return false;
+      }
+    } else {
+      console.log('__NEXT_DATA__ script tag not found.');
+      return false;
+    }
+  } catch (error) {
+    console.log('Error in getting data:', error);
+    return false;
+  }
+};
