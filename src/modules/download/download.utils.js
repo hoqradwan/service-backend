@@ -140,9 +140,10 @@ export const freepikCookieCredentials = async (cookieDetails, url, type) => {
 
   // Main URL for download request
   let mainURL;
+  const domain = 'https://www.magnific.com/';
 
   if (content === 'icon' || content === 'animated-icon') {
-    mainURL = `https://www.freepik.com/api/icon/download?walletId=${walletId}&optionId=${itemCode}&format=${type}&type=original`;
+    mainURL = `${domain}api/icon/download?walletId=${walletId}&optionId=${itemCode}&format=${type}&type=original`;
   } else if (content === 'free-video' || content === 'premium-video') {
     const options = await getFreepikVideoQuality(url);
     // console.log('options-->', options);
@@ -153,7 +154,7 @@ export const freepikCookieCredentials = async (cookieDetails, url, type) => {
         // return res.status(400).json({ isOk: false, message: 'Invalid url' });
         return { headers: false, mainURL: false };
       } else {
-        mainURL = `https://www.freepik.com/api/video/${itemCode}/download?walletId=${walletId}&optionId=${optionId?.id}`;
+        mainURL = `${domain}api/video/${itemCode}/download?walletId=${walletId}&optionId=${optionId?.id}`;
       }
     } else {
       const optionId = options?.find(
@@ -163,7 +164,7 @@ export const freepikCookieCredentials = async (cookieDetails, url, type) => {
         // return res.status(400).json({ isOk: false, message: 'Invalid url' });
         return { headers: false, mainURL: false };
       } else {
-        mainURL = `https://www.freepik.com/api/video/${itemCode}/download?walletId=${walletId}&optionId=${optionId?.id}`;
+        mainURL = `${domain}api/video/${itemCode}/download?walletId=${walletId}&optionId=${optionId?.id}`;
       }
     }
   } else if (content === 'audio') {
@@ -184,20 +185,20 @@ export const freepikCookieCredentials = async (cookieDetails, url, type) => {
       }
     }
   } else if (content === '3d-model') {
-    mainURL = `https://www.freepik.com/api/model3d/${itemCode}/download?walletId=${walletId}&fileType=${'blend'}`;
+    mainURL = `${domain}api/model3d/${itemCode}/download?walletId=${walletId}&fileType=${'blend'}`;
   } else if (content === 'font') {
-    // https://www.freepik.com/api/fonts/download?id=42&walletId=3bce1eef-1e1e-4070-bbe7-db9d673848cf
+    // ${domain}api/fonts/download?id=42&walletId=3bce1eef-1e1e-4070-bbe7-db9d673848cf
     const resource = await getFreepikFontId(url);
     // console.log('id', resource.id);
 
     if (!resource?.id) {
       return { headers: false, mainURL: false };
     }
-    mainURL = `https://www.freepik.com/api/fonts/download?id=${resource?.id}&walletId=${walletId}`;
+    mainURL = `${domain}api/fonts/download?id=${resource?.id}&walletId=${walletId}`;
   }
   // (content === "free-photo" || content === "premium-photo"  || content === "free-vector" || content === "premium-vector" || content === "free-psd" || content === "premium-psd")
   else {
-    mainURL = `https://www.freepik.com/api/regular/download?walletId=${walletId}&resource=${itemCode}&action=download&locale=en`;
+    mainURL = `${domain}api/regular/download?walletId=${walletId}&resource=${itemCode}&action=download&locale=en`;
   }
 
   // console.log('headers -->', headers);

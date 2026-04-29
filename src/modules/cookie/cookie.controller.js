@@ -530,7 +530,7 @@ export const isFreepikCookieValid = async (cookieDetails) => {
 export const generateGRToken = async (cookie) => {
   // console.log('coming');
   try {
-    const mainURL = 'https://www.freepik.com/';
+    const mainURL = 'https://www.magnific.com/';
 
     const headers = {
       Cookie: `GR_REFRESH=${cookie};`,
