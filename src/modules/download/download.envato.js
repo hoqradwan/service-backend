@@ -34,7 +34,8 @@ const CONFIG = {
     timeoutMs: 30000,
   },
   navigation: {
-    timeoutMs: 20000,
+    timeoutMs: 120000, // ← Max time for the whole goto() call
+    redirectTimeoutMs: 80000, // ← Max time to wait for app.envato.com redirect
   },
 };
 
@@ -80,12 +81,12 @@ const browserPool = genericPool.createPool(
         } catch (_) {}
       });
 
-      //   console.log('Browser ready');
+      console.log('Browser ready');
       return browser;
     },
 
     destroy: async (browser) => {
-      //   console.log('Destroying browser');
+      console.log('Destroying browser');
       browser._isBeingDestroyed = true;
       await browser.close().catch(() => {});
     },
@@ -231,9 +232,11 @@ const createEnvatoTask = (url, cookieDetails) => async (browser) => {
     }
 
     const redirectUrl = await new Promise((resolve, reject) => {
+      // ✅ This is the ONLY timeout that matters — how long to wait for
+      // the redirect to app.envato.com, not for the page to fully load
       const timeout = setTimeout(
-        () => reject(new Error('Redirect timeout')),
-        CONFIG.navigation.timeoutMs,
+        () => reject(new Error('Redirect timeout: app.envato.com not reached')),
+        CONFIG.navigation.redirectTimeoutMs, // 30s — plenty for any file type
       );
 
       const cleanup = (result) => {
@@ -245,6 +248,8 @@ const createEnvatoTask = (url, cookieDetails) => async (browser) => {
       const onNav = (frame) => {
         if (frame === page.mainFrame()) {
           const currentUrl = frame.url();
+          // ✅ Resolves the moment redirect fires — doesn't wait for
+          // video/audio player, thumbnails, or any heavy content to load
           if (currentUrl.includes('app.envato.com')) cleanup(currentUrl);
         }
       };
@@ -254,7 +259,7 @@ const createEnvatoTask = (url, cookieDetails) => async (browser) => {
       page
         .goto(url, {
           waitUntil: 'domcontentloaded',
-          timeout: CONFIG.navigation.timeoutMs,
+          timeout: CONFIG.navigation.timeoutMs, // 60s nav timeout (safety net)
         })
         .catch((err) => {
           const ignored = [
