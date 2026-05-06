@@ -624,143 +624,143 @@ export const isDailyLimitExceed = async (licenseId) => {
 };
 
 // download request for license
-export const handleLicenseDownload = catchAsync(async (req, res) => {
-  const downloadId = req?.params?.downloadId;
+// export const handleLicenseDownload = catchAsync(async (req, res) => {
+//   const downloadId = req?.params?.downloadId;
 
-  /* ------------------ Validate Download ID ------------------ */
+//   /* ------------------ Validate Download ID ------------------ */
 
-  if (!downloadId) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: httpStatus.BAD_REQUEST,
-      message: 'Download Id is not provided',
-      data: null,
-    });
-  }
+//   if (!downloadId) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: httpStatus.BAD_REQUEST,
+//       message: 'Download Id is not provided',
+//       data: null,
+//     });
+//   }
 
-  /* ------------------ Get Download Info ------------------ */
+//   /* ------------------ Get Download Info ------------------ */
 
-  const download = await getDownloadById(downloadId);
+//   const download = await getDownloadById(downloadId);
 
-  if (!download) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: httpStatus.BAD_REQUEST,
-      message: 'This file does not exist',
-      data: null,
-    });
-  }
+//   if (!download) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: httpStatus.BAD_REQUEST,
+//       message: 'This file does not exist',
+//       data: null,
+//     });
+//   }
 
-  const { contentLicense, downloadedBy, serviceId } = download;
+//   const { contentLicense, downloadedBy, serviceId } = download;
 
-  if (!contentLicense || !downloadedBy || !serviceId) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: httpStatus.BAD_REQUEST,
-      message: 'Invalid download data',
-      data: null,
-    });
-  }
+//   if (!contentLicense || !downloadedBy || !serviceId) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: httpStatus.BAD_REQUEST,
+//       message: 'Invalid download data',
+//       data: null,
+//     });
+//   }
 
-  /* ------------------ Authorization ------------------ */
+//   /* ------------------ Authorization ------------------ */
 
-  if (req?.user?.role === 'user' && req?.user?.email !== downloadedBy) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: httpStatus.FORBIDDEN,
-      message: 'You are not authorized for this license',
-      data: null,
-    });
-  }
+//   if (req?.user?.role === 'user' && req?.user?.email !== downloadedBy) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: httpStatus.FORBIDDEN,
+//       message: 'You are not authorized for this license',
+//       data: null,
+//     });
+//   }
 
-  /* ------------------ Get Cookie ------------------ */
+//   /* ------------------ Get Cookie ------------------ */
 
-  const cookieData = await getCookieByIdService(serviceId);
+//   const cookieData = await getCookieByIdService(serviceId);
 
-  if (!cookieData?.cookie) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: httpStatus.BAD_REQUEST,
-      message: "Couldn't find cookie for this download",
-      data: null,
-    });
-  }
+//   if (!cookieData?.cookie) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: httpStatus.BAD_REQUEST,
+//       message: "Couldn't find cookie for this download",
+//       data: null,
+//     });
+//   }
 
-  const cookie = cookieData.cookie;
+//   const cookie = cookieData.cookie;
 
-  /* ------------------ Get License ID ------------------ */
+//   /* ------------------ Get License ID ------------------ */
 
-  const licenseLink = `https://app.envato.com/item-licenses.data?itemUuid=${contentLicense}&_routes=routes%2Fitem-licenses%2Froute`;
+//   const licenseLink = `https://app.envato.com/item-licenses.data?itemUuid=${contentLicense}&_routes=routes%2Fitem-licenses%2Froute`;
 
-  const licenseRes = await fetch(licenseLink, {
-    method: 'GET',
-    headers: {
-      Cookie: `envatoid=${cookie}`,
-    },
-  });
+//   const licenseRes = await fetch(licenseLink, {
+//     method: 'GET',
+//     headers: {
+//       Cookie: `envatoid=${cookie}`,
+//     },
+//   });
 
-  if (!licenseRes.ok) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: licenseRes.status,
-      message: 'Failed to fetch license info',
-      data: null,
-    });
-  }
+//   if (!licenseRes.ok) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: licenseRes.status,
+//       message: 'Failed to fetch license info',
+//       data: null,
+//     });
+//   }
 
-  const data = await licenseRes.json();
+//   const data = await licenseRes.json();
 
-  let licenseId = null;
+//   let licenseId = null;
 
-  if (Array.isArray(data)) {
-    const index = data.indexOf('id');
+//   if (Array.isArray(data)) {
+//     const index = data.indexOf('id');
 
-    if (index !== -1 && typeof data[index + 1] === 'string') {
-      licenseId = data[index + 1];
-    }
-  }
+//     if (index !== -1 && typeof data[index + 1] === 'string') {
+//       licenseId = data[index + 1];
+//     }
+//   }
 
-  if (!licenseId) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: httpStatus.BAD_REQUEST,
-      message: 'No license found',
-      data: null,
-    });
-  }
+//   if (!licenseId) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: httpStatus.BAD_REQUEST,
+//       message: 'No license found',
+//       data: null,
+//     });
+//   }
 
-  // console.log('License ID:', licenseId);
+//   // console.log('License ID:', licenseId);
 
-  /* ------------------ Download License File ------------------ */
+//   /* ------------------ Download License File ------------------ */
 
-  const downloadURL = `https://app.envato.com/license-certificate/${licenseId}/download`;
+//   const downloadURL = `https://app.envato.com/license-certificate/${licenseId}/download`;
 
-  const fileRes = await fetch(downloadURL, {
-    method: 'GET',
-    headers: {
-      Cookie: `envatoid=${cookie}`,
-    },
-  });
+//   const fileRes = await fetch(downloadURL, {
+//     method: 'GET',
+//     headers: {
+//       Cookie: `envatoid=${cookie}`,
+//     },
+//   });
 
-  if (!fileRes.ok) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: fileRes.status,
-      message: 'Error fetching the license file',
-      data: null,
-    });
-  }
+//   if (!fileRes.ok) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: fileRes.status,
+//       message: 'Error fetching the license file',
+//       data: null,
+//     });
+//   }
 
-  const body = await fileRes.text();
-  // console.log('body -->', body);
+//   const body = await fileRes.text();
+//   // console.log('body -->', body);
 
-  /* ------------------ Send File ------------------ */
+//   /* ------------------ Send File ------------------ */
 
-  res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', 'attachment; filename="license.pdf"');
+//   res.setHeader('Content-Type', 'application/pdf');
+//   res.setHeader('Content-Disposition', 'attachment; filename="license.pdf"');
 
-  return res.send(body);
-});
+//   return res.send(body);
+// });
 
 // Update method for download with _id
 export const updateDownloadById = catchAsync(async (req, res) => {
@@ -818,257 +818,257 @@ const getDownloadRestriction = async () => {
   return restrictionCache;
 };
 
-export const handleEnvatoDownload = catchAsync(async (req, res) => {
-  const { url } = req.body;
-  const userId = req?.user?.id;
+// export const handleEnvatoDownload = catchAsync(async (req, res) => {
+//   const { url } = req.body;
+//   const userId = req?.user?.id;
 
-  /* ------------------ User Validation ------------------ */
+//   /* ------------------ User Validation ------------------ */
 
-  if (!userId) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: "Couldn't generate user id",
-      data: null,
-    });
-  }
+//   if (!userId) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: "Couldn't generate user id",
+//       data: null,
+//     });
+//   }
 
-  const user = await findUserById(userId);
+//   const user = await findUserById(userId);
 
-  if (!user) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: "Couldn't find the user",
-      data: null,
-    });
-  }
+//   if (!user) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: "Couldn't find the user",
+//       data: null,
+//     });
+//   }
 
-  const licenseId = user.currentLicense;
+//   const licenseId = user.currentLicense;
 
-  if (!licenseId) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: 'You do not have a license activated',
-      data: null,
-    });
-  }
+//   if (!licenseId) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: 'You do not have a license activated',
+//       data: null,
+//     });
+//   }
 
-  /* ------------------ Limit Check ------------------ */
+//   /* ------------------ Limit Check ------------------ */
 
-  const limitCheck = await isDailyLimitExceed(licenseId);
+//   const limitCheck = await isDailyLimitExceed(licenseId);
 
-  if (!limitCheck.isOk || limitCheck.exceeded) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: limitCheck.message || 'Download limit exceeded',
-      data: null,
-    });
-  }
+//   if (!limitCheck.isOk || limitCheck.exceeded) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: limitCheck.message || 'Download limit exceeded',
+//       data: null,
+//     });
+//   }
 
-  /* ------------------ URL Validation (before cookie loop) ------------------ */
+//   /* ------------------ URL Validation (before cookie loop) ------------------ */
 
-  let domain;
-  try {
-    domain = new URL(url).hostname;
-  } catch {
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: 'Invalid URL',
-      data: null,
-    });
-  }
+//   let domain;
+//   try {
+//     domain = new URL(url).hostname;
+//   } catch {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: 'Invalid URL',
+//       data: null,
+//     });
+//   }
 
-  if (domain !== 'app.envato.com' && domain !== 'elements.envato.com') {
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: 'Invalid URL',
-      data: null,
-    });
-  }
+//   if (domain !== 'app.envato.com' && domain !== 'elements.envato.com') {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: 'Invalid URL',
+//       data: null,
+//     });
+//   }
 
-  const cookieDetails = await generateRandomAccount('envato');
-  if (!cookieDetails) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: 'No active accounts available! Try again later.',
-      data: null,
-    });
-  }
-  /* ------------------ URL Processing ------------------ */
-  let finalUrl = null;
-  let envatoSessionToken = null;
-  if (domain === 'app.envato.com') {
-    finalUrl = url;
-  } else if (domain === 'elements.envato.com') {
-    //  Get Session
+//   const cookieDetails = await generateRandomAccount('envato');
+//   if (!cookieDetails) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: 'No active accounts available! Try again later.',
+//       data: null,
+//     });
+//   }
+//   /* ------------------ URL Processing ------------------ */
+//   let finalUrl = null;
+//   let envatoSessionToken = null;
+//   if (domain === 'app.envato.com') {
+//     finalUrl = url;
+//   } else if (domain === 'elements.envato.com') {
+//     //  Get Session
 
-    // Check if session is 30 minutes old
-    const THIRTY_MINUTES = 30 * 60 * 1000;
-    const now = Date.now();
-    const updatedAt = new Date(cookieDetails.updatedAt).getTime();
-    const isExpired = now - updatedAt > THIRTY_MINUTES;
-    console.log('Time-->', cookieDetails.account, ' = ', isExpired);
-    // Request for new session if isExpired
-    if (isExpired) {
-      const MAX_ATTEMPTS = 3;
-      for (let i = 0; i < MAX_ATTEMPTS; i++) {
-        envatoSessionToken = await getEnvatoSessionToken(cookieDetails);
-        console.log('session-->', envatoSessionToken);
-        if (envatoSessionToken) {
-          break;
-        }
-      }
-      if (envatoSessionToken) {
-        cookieDetails.csrfToken = envatoSessionToken;
-        // Update in DB
-        await updateCookieByIdService(cookieDetails._id, {
-          csrfToken: envatoSessionToken,
-        });
-      } else {
-        await updateCookieByIdService(cookieDetails._id, {
-          status: 'inactive',
-        });
-        return sendResponse(res, {
-          success: false,
-          statusCode: 400,
-          message:
-            'There was a problem downloading the file! Please try again.',
-          data: null,
-        });
-      }
-    }
+//     // Check if session is 30 minutes old
+//     const THIRTY_MINUTES = 30 * 60 * 1000;
+//     const now = Date.now();
+//     const updatedAt = new Date(cookieDetails.updatedAt).getTime();
+//     const isExpired = now - updatedAt > THIRTY_MINUTES;
+//     console.log('Time-->', cookieDetails.account, ' = ', isExpired);
+//     // Request for new session if isExpired
+//     if (isExpired) {
+//       const MAX_ATTEMPTS = 3;
+//       for (let i = 0; i < MAX_ATTEMPTS; i++) {
+//         envatoSessionToken = await getEnvatoSessionToken(cookieDetails);
+//         console.log('session-->', envatoSessionToken);
+//         if (envatoSessionToken) {
+//           break;
+//         }
+//       }
+//       if (envatoSessionToken) {
+//         cookieDetails.csrfToken = envatoSessionToken;
+//         // Update in DB
+//         await updateCookieByIdService(cookieDetails._id, {
+//           csrfToken: envatoSessionToken,
+//         });
+//       } else {
+//         await updateCookieByIdService(cookieDetails._id, {
+//           status: 'inactive',
+//         });
+//         return sendResponse(res, {
+//           success: false,
+//           statusCode: 400,
+//           message:
+//             'There was a problem downloading the file! Please try again.',
+//           data: null,
+//         });
+//       }
+//     }
 
-    finalUrl = await getRedirectEnvatoLink(url, cookieDetails);
-    console.log('Final Url-->', finalUrl);
+//     finalUrl = await getRedirectEnvatoLink(url, cookieDetails);
+//     console.log('Final Url-->', finalUrl);
 
-    if (!finalUrl || finalUrl.split('/').length !== 5) {
-      return sendResponse(res, {
-        success: false,
-        statusCode: 400,
-        message: 'There was a problem getting the file! Please try again.',
-        data: null,
-      });
-    }
-  } else {
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: 'Invalid URL! Please provide correct url from envato',
-      data: null,
-    });
-  }
+//     if (!finalUrl || finalUrl.split('/').length !== 5) {
+//       return sendResponse(res, {
+//         success: false,
+//         statusCode: 400,
+//         message: 'There was a problem getting the file! Please try again.',
+//         data: null,
+//       });
+//     }
+//   } else {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: 'Invalid URL! Please provide correct url from envato',
+//       data: null,
+//     });
+//   }
 
-  /* ------------------ Generate Request Data ------------------ */
+//   /* ------------------ Generate Request Data ------------------ */
 
-  const credentials = envatoCookieCredentials(cookieDetails, finalUrl);
+//   const credentials = envatoCookieCredentials(cookieDetails, finalUrl);
 
-  if (!credentials?.mainURL || !credentials?.headers) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: 'Credentials failed! Try again later',
-      data: null,
-    });
-  }
+//   if (!credentials?.mainURL || !credentials?.headers) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: 'Credentials failed! Try again later',
+//       data: null,
+//     });
+//   }
 
-  const { itemUuid, headers, mainURL } = credentials;
+//   const { itemUuid, headers, mainURL } = credentials;
 
-  /* ------------------ Make Download Request ------------------ */
+//   /* ------------------ Make Download Request ------------------ */
 
-  let response;
+//   let response;
 
-  try {
-    response = await axios({
-      method: 'GET',
-      url: mainURL,
-      headers,
-      timeout: 15_000, // FIX: prevent indefinite hangs
-    });
-  } catch (err) {
-    // Network/timeout failure — mark cookie inactive and try next
-    await updateCookieByIdService(cookieDetails._id, { status: 'inactive' });
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: 'Something went wrong! Please try again',
-      data: null,
-    });
-  }
+//   try {
+//     response = await axios({
+//       method: 'GET',
+//       url: mainURL,
+//       headers,
+//       timeout: 15_000, // FIX: prevent indefinite hangs
+//     });
+//   } catch (err) {
+//     // Network/timeout failure — mark cookie inactive and try next
+//     await updateCookieByIdService(cookieDetails._id, { status: 'inactive' });
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: 'Something went wrong! Please try again',
+//       data: null,
+//     });
+//   }
 
-  const data = response?.data;
-  // console.log('Data -->', data);
+//   const data = response?.data;
+//   // console.log('Data -->', data);
 
-  if (!Array.isArray(data)) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: 'Something went wrong! Please try again',
-      data: null,
-    });
-  }
+//   if (!Array.isArray(data)) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: 'Something went wrong! Please try again',
+//       data: null,
+//     });
+//   }
 
-  /* ------------------ Extract Download URL ------------------ */
+//   /* ------------------ Extract Download URL ------------------ */
 
-  const index = data.indexOf('downloadUrl');
+//   const index = data.indexOf('downloadUrl');
 
-  if (index === -1) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: 'Something went wrong! Please try again',
-      data: null,
-    });
-  }
+//   if (index === -1) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: 'Something went wrong! Please try again',
+//       data: null,
+//     });
+//   }
 
-  const downloadUrl = data[index + 1];
+//   const downloadUrl = data[index + 1];
 
-  if (typeof downloadUrl !== 'string') {
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: 'Something went wrong! Please try again',
-      data: null,
-    });
-  }
+//   if (typeof downloadUrl !== 'string') {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: 'Something went wrong! Please try again',
+//       data: null,
+//     });
+//   }
 
-  /* ------------------ Save Download ------------------ */
-  const contentLicense = itemUuid || null;
-  const download = {
-    service: 'Envato Elements',
-    content: url,
-    contentLicense,
-    serviceId: cookieDetails._id,
-    licenseId,
-    status: 'pending',
-  };
+//   /* ------------------ Save Download ------------------ */
+//   const contentLicense = itemUuid || null;
+//   const download = {
+//     service: 'Envato Elements',
+//     content: url,
+//     contentLicense,
+//     serviceId: cookieDetails._id,
+//     licenseId,
+//     status: 'pending',
+//   };
 
-  const result = await addDownloadIntoDB(download, req.user);
+//   const result = await addDownloadIntoDB(download, req.user);
 
-  if (!result) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: 'Download request is unsuccessful',
-      data: null,
-    });
-  }
+//   if (!result) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: 'Download request is unsuccessful',
+//       data: null,
+//     });
+//   }
 
-  return sendResponse(res, {
-    success: true,
-    statusCode: 200,
-    message: 'Download request successful',
-    data: {
-      downloadUrl,
-      downloadId: result[0]?._id,
-    },
-  });
-});
+//   return sendResponse(res, {
+//     success: true,
+//     statusCode: 200,
+//     message: 'Download request successful',
+//     data: {
+//       downloadUrl,
+//       downloadId: result[0]?._id,
+//     },
+//   });
+// });
 
 // Request for getting Story-Blocks Item Code
 
@@ -1611,167 +1611,6 @@ export const handleMotionArrayDownload = catchAsync(async (req, res) => {
   }
 });
 
-// download request to freepik official website
-// export const handleFreePikDownload = catchAsync(async (req, res) => {
-//   const { url, type } = req?.body;
-//   const userId = req?.user?.id;
-
-//   if (!userId) {
-//     return sendResponse(res, {
-//       success: false,
-//       statusCode: 400,
-//       message: "Couldn't generate user id",
-//       data: null,
-//     });
-//   }
-
-//   const user = await findUserById(userId);
-
-//   if (!user) {
-//     return sendResponse(res, {
-//       success: false,
-//       statusCode: 400,
-//       message: "Couldn't find the user",
-//       data: null,
-//     });
-//   }
-//   // current freepik license of the user
-//   const licenseId = user?.currentFreepikLicense;
-//   if (!licenseId) {
-//     return sendResponse(res, {
-//       success: false,
-//       statusCode: 400,
-//       message: 'You do not have a license activated',
-//       data: null,
-//     });
-//   }
-
-//   // // checking if daily limit has been exceeded or not..
-//   const limitCheck = await isDailyLimitExceed(licenseId);
-
-//   if (!limitCheck?.isOk) {
-//     return sendResponse(res, {
-//       success: false,
-//       statusCode: 400,
-//       message: limitCheck?.message,
-//       data: null,
-//     });
-//   }
-
-//   if (limitCheck?.exceeded) {
-//     return sendResponse(res, {
-//       success: false,
-//       statusCode: 400,
-//       message: 'Download limit is exceeded',
-//       data: null,
-//     });
-//   }
-
-//   let cookieDetails = null;
-//   // Getting random cookie details
-//   for (let i = 0; i < 3; i++) {
-//     const cookie = await generateRandomAccount('freepik');
-//     // console.log('cookie', cookie);
-
-//     if (!cookie) {
-//       break;
-//     }
-//     let isCookieWorking;
-//     // Loop for double check the cookie
-//     for (let j = 0; j < 2; j++) {
-//       isCookieWorking = await isFreepikCookieValid(cookie);
-
-//       if (isCookieWorking) {
-//         break;
-//       }
-//     }
-
-//     if (!isCookieWorking) {
-//       // if cookie is not valid then make it inactive
-//       await updateCookieByIdService(cookie?._id, { status: 'inactive' });
-//     }
-
-//     if (isCookieWorking) {
-//       cookieDetails = isCookieWorking;
-//       break;
-//     }
-//   }
-
-//   if (!cookieDetails) {
-//     return sendResponse(res, {
-//       success: false,
-//       statusCode: 400,
-//       message: 'No working account found',
-//       data: null,
-//     });
-//   }
-
-//   const { headers, mainURL } = await freepikCookieCredentials(
-//     cookieDetails,
-//     url,
-//     type,
-//   );
-
-//   // console.log("url ==> ", mainURL);
-//   // console.log('headersssss ==> ', headers);
-
-//   if (!headers) {
-//     return sendResponse(res, {
-//       success: false,
-//       statusCode: 400,
-//       message: 'Headers are required',
-//       data: null,
-//     });
-//   }
-
-//   if (!mainURL) {
-//     return sendResponse(res, {
-//       success: false,
-//       statusCode: 400,
-//       message: 'MainUrl is required',
-//       data: null,
-//     });
-//   }
-//   // console.log('main url', mainURL);
-//   // console.log('header => ', headers);
-
-//   // Make the first HTTP request
-//   const response = await axios({
-//     method: 'GET',
-//     url: mainURL,
-//     headers: headers,
-//   });
-//   console.log(response?.data);
-
-//   if (response?.data?.url) {
-//     const download = {
-//       service: 'Freepik',
-//       content: url,
-//       contentLicense: null,
-//       serviceId: cookieDetails?._id,
-//       licenseId: licenseId,
-//       status: 'pending',
-//     };
-//     const result = await addDownloadIntoDB(download, req.user);
-
-//     if (result) {
-//       return sendResponse(res, {
-//         success: true,
-//         statusCode: 200,
-//         message: 'Download request successful',
-//         data: { downloadUrl: response?.data?.url, downloadId: result[0]?._id },
-//       });
-//     }
-//   } else {
-//     return sendResponse(res, {
-//       success: false,
-//       statusCode: 400,
-//       message: 'Download request is unsuccessful',
-//       data: null,
-//     });
-//   }
-// });
-
 export const handleFreePikDownload = catchAsync(async (req, res) => {
   const { url, type } = req?.body;
   const userId = req?.user?.id;
@@ -2137,66 +1976,6 @@ export const getRedirectEnvatoLink = async (url, cookieDetails) => {
   }
 };
 
-// export const getRedirectEnvatoLink = async (url, cookieDetails) => {
-//   let browser;
-
-//   try {
-//     browser = await puppeteer.launch(EnvatoPuppeteerCredential);
-//     const page = await browser.newPage();
-
-//     await page.setDefaultNavigationTimeout(120000);
-//     await page.setDefaultTimeout(120000);
-
-//     // Safer blocking
-//     await page.setRequestInterception(true);
-
-//     page.on('request', (req) => {
-//       const blocked = ['image', 'media', 'font'];
-
-//       if (blocked.includes(req.resourceType())) {
-//         req.abort();
-//       } else {
-//         req.continue();
-//       }
-//     });
-
-//     // Set cookie
-//     await page.setCookie({
-//       name: 'envatosession',
-//       value: cookieDetails?.csrfToken,
-//       domain: '.envato.com',
-//       path: '/',
-//       secure: true,
-//       httpOnly: true,
-//     });
-
-//     // Go to asset
-//     await page.goto(url, {
-//       waitUntil: 'domcontentloaded',
-//     });
-
-//     // Wait for redirect
-//     await page.waitForNavigation({
-//       waitUntil: 'networkidle2',
-//       timeout: 120000,
-//     });
-
-//     const redirectUrl = page.url();
-//     // console.log('redirect link--> ', redirectUrl);
-
-//     if (redirectUrl?.includes('app.envato.com')) {
-//       return redirectUrl;
-//     }
-
-//     return null;
-//   } catch (error) {
-//     console.error('Envato redirect error:', error.message);
-//     return null;
-//   } finally {
-//     if (browser) await browser.close();
-//   }
-// };
-
 // Request for getting Freepik audio id
 export const getFreepikAudioId = async (mainURL) => {
   try {
@@ -2241,99 +2020,60 @@ export const getFreepikAudioId = async (mainURL) => {
   }
 };
 
-export const getEnvatoSessionToken = async (cookieDetails) => {
-  try {
-    const mainURL = 'https://account.envato.com/api/public/refresh_id_token';
-    // console.log('cerf-->', cookieDetails?.csrfToken);
-
-    const headers = {
-      Cookie: `envatosession=${cookieDetails?.csrfToken}`,
-      Accept: 'application/json',
-      'Accept-Encoding': 'gzip, deflate, br, zstd',
-      'Accept-Language': 'en-US,en;q=0.9',
-      'Content-Type': 'application/json',
-      'Content-Length': '0',
-      Origin: 'https://app.envato.com',
-      Referer: 'https://app.envato.com/',
-      'User-Agent':
-        'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Mobile Safari/537.36',
-
-      'Sec-CH-UA': `"Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"`,
-      'Sec-CH-UA-Mobile': '?1',
-      'Sec-CH-UA-Platform': `"Android"`,
-
-      'Sec-Fetch-Dest': 'empty',
-      'Sec-Fetch-Mode': 'cors',
-      'Sec-Fetch-Site': 'same-site',
-      'X-Client-Version': '3.6.0',
-    };
-
-    const response = await axios({
-      method: 'POST',
-      url: mainURL,
-      data: {},
-      headers: headers,
-    });
-    // console.log('response-->', response);
-
-    // 🔥 Extract cookies
-    const cookies = response.headers['set-cookie'];
-    // console.log('cookies-->', cookies);
-
-    let envatoSessionToken = null;
-
-    if (cookies) {
-      const envatoCookie = cookies.find((c) => c.startsWith('envatosession='));
-
-      if (envatoCookie) {
-        envatoSessionToken = envatoCookie.split(';')[0].split('=')[1];
-      }
-    }
-
-    // console.log('Token:', envatoSessionToken);
-    return envatoSessionToken;
-  } catch (error) {
-    console.error('Error:', error);
-    return null;
-  }
-};
-
-// Request for getting Freepik Video Quality
-// export const getFreepikVideoQuality = async (mainURL) => {
+// export const getEnvatoSessionToken = async (cookieDetails) => {
 //   try {
-//     const browser = await puppeteer.launch({
-//       headless: 'new',
-//       args: [
-//         '--no-sandbox',
-//         '--disable-setuid-sandbox',
-//         '--disable-dev-shm-usage',
-//         '--disable-gpu',
-//       ],
+//     const mainURL = 'https://account.envato.com/api/public/refresh_id_token';
+//     // console.log('cerf-->', cookieDetails?.csrfToken);
+
+//     const headers = {
+//       Cookie: `envatosession=${cookieDetails?.csrfToken}`,
+//       Accept: 'application/json',
+//       'Accept-Encoding': 'gzip, deflate, br, zstd',
+//       'Accept-Language': 'en-US,en;q=0.9',
+//       'Content-Type': 'application/json',
+//       'Content-Length': '0',
+//       Origin: 'https://app.envato.com',
+//       Referer: 'https://app.envato.com/',
+//       'User-Agent':
+//         'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Mobile Safari/537.36',
+
+//       'Sec-CH-UA': `"Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"`,
+//       'Sec-CH-UA-Mobile': '?1',
+//       'Sec-CH-UA-Platform': `"Android"`,
+
+//       'Sec-Fetch-Dest': 'empty',
+//       'Sec-Fetch-Mode': 'cors',
+//       'Sec-Fetch-Site': 'same-site',
+//       'X-Client-Version': '3.6.0',
+//     };
+
+//     const response = await axios({
+//       method: 'POST',
+//       url: mainURL,
+//       data: {},
+//       headers: headers,
 //     });
+//     // console.log('response-->', response);
 
-//     const page = await browser.newPage();
+//     // 🔥 Extract cookies
+//     const cookies = response.headers['set-cookie'];
+//     // console.log('cookies-->', cookies);
 
-//     await page.goto(mainURL, {
-//       waitUntil: 'networkidle2',
-//       timeout: 0,
-//     });
+//     let envatoSessionToken = null;
 
-//     // Wait for Next.js data to load
-//     await page.waitForSelector('#__NEXT_DATA__');
+//     if (cookies) {
+//       const envatoCookie = cookies.find((c) => c.startsWith('envatosession='));
 
-//     const nextData = await page.evaluate(() => {
-//       const el = document.querySelector('#__NEXT_DATA__');
-//       return el ? JSON.parse(el.textContent) : null;
-//     });
+//       if (envatoCookie) {
+//         envatoSessionToken = envatoCookie.split(';')[0].split('=')[1];
+//       }
+//     }
 
-//     await browser.close();
-
-//     const options = nextData?.props?.pageProps?.options;
-
-//     return options || false;
+//     // console.log('Token:', envatoSessionToken);
+//     return envatoSessionToken;
 //   } catch (error) {
-//     console.log('Error:', error);
-//     return false;
+//     console.error('Error:', error);
+//     return null;
 //   }
 // };
 

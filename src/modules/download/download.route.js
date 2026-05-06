@@ -17,9 +17,7 @@ import {
   getTotalFreepikDownloadForUser,
   getTotalMotionArrayDownloadForUser,
   getTotalStoryBlocksDownloadForUser,
-  handleEnvatoDownload,
   handleFreePikDownload,
-  handleLicenseDownload,
   handleMotionArrayDownload,
   handleStoryBlocksDownload,
   updateDownloadById,
@@ -28,6 +26,10 @@ import {
   downloadValidationSchema,
   storeDownloadValidationSchema,
 } from './download.validation.js';
+import {
+  handleEnvatoDownload,
+  handleLicenseDownload,
+} from './download.envato.js';
 
 const router = express.Router();
 
