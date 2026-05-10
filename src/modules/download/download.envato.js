@@ -410,7 +410,7 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
       const MAX_ATTEMPTS = 3;
       for (let i = 0; i < MAX_ATTEMPTS; i++) {
         envatoSessionToken = await getEnvatoSessionToken(cookieDetails);
-        // console.log('session-->', envatoSessionToken);
+        console.log('session-->', envatoSessionToken);
         if (envatoSessionToken) {
           break;
         }
@@ -436,7 +436,7 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
     }
 
     finalUrl = await getRedirectEnvatoLink(url, cookieDetails);
-    // console.log('Final Url-->', finalUrl);
+    console.log('Final Url-->', finalUrl);
 
     if (!finalUrl || finalUrl.split('/').length !== 5) {
       return sendResponse(res, {

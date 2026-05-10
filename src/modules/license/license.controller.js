@@ -26,30 +26,47 @@ export const createLicense = catchAsync(async (req, res) => {
       data: null,
     });
   }
-
 });
 
 export const allLicenses = catchAsync(async (req, res) => {
-  const { page, limit, sortBy, sortOrder, status, serviceName, expiryDate } =
-    req.query;
+  const {
+    page,
+    limit,
+    sortBy,
+    sortOrder,
+    status,
+    serviceName,
+    expiryDate,
+    search, // ✅ ADD THIS
+  } = req.query;
 
   const filters = {};
+
   if (status) filters.status = status;
   if (serviceName) filters.serviceName = serviceName;
   if (expiryDate) filters.expiryDate = { $gte: new Date(expiryDate) };
 
-  // Build pagination options only if page and limit are provided
+  // 🔥 SEARCH FIX (IMPORTANT)
+  if (search) {
+    filters.$or = [
+      { licenseKey: { $regex: search, $options: 'i' } },
+      { serviceName: { $regex: search, $options: 'i' } },
+      { userEmail: { $regex: search, $options: 'i' } },
+    ];
+  }
+
   let paginationOptions = {};
   if (page && limit) {
     paginationOptions = {
       page: parseInt(page, 10),
       limit: parseInt(limit, 10),
       sortBy: sortBy || 'createdAt',
-      sortOrder: sortOrder || 'asc',
+      sortOrder: sortOrder || 'desc',
     };
   }
 
   const result = await getLicensesFromDB(filters, paginationOptions);
+
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
@@ -57,6 +74,35 @@ export const allLicenses = catchAsync(async (req, res) => {
     data: result,
   });
 });
+
+// export const allLicenses = catchAsync(async (req, res) => {
+//   const { page, limit, sortBy, sortOrder, status, serviceName, expiryDate } =
+//     req.query;
+
+//   const filters = {};
+//   if (status) filters.status = status;
+//   if (serviceName) filters.serviceName = serviceName;
+//   if (expiryDate) filters.expiryDate = { $gte: new Date(expiryDate) };
+
+//   // Build pagination options only if page and limit are provided
+//   let paginationOptions = {};
+//   if (page && limit) {
+//     paginationOptions = {
+//       page: parseInt(page, 10),
+//       limit: parseInt(limit, 10),
+//       sortBy: sortBy || 'createdAt',
+//       sortOrder: sortOrder || 'asc',
+//     };
+//   }
+
+//   const result = await getLicensesFromDB(filters, paginationOptions);
+//   sendResponse(res, {
+//     success: true,
+//     statusCode: httpStatus.OK,
+//     message: 'Licenses retrieved successfully',
+//     data: result,
+//   });
+// });
 
 export const licenseByUser = catchAsync(async (req, res) => {
   const userId = req?.params?.id;
@@ -92,7 +138,7 @@ export const currentLicensesByUser = catchAsync(async (req, res) => {
     success: true,
     statusCode: httpStatus.OK,
     message: 'User Current Licenses retrieved successfully',
-    data: {data: result},
+    data: { data: result },
   });
 });
 
@@ -151,7 +197,6 @@ export const deleteLicense = catchAsync(async (req, res) => {
   });
 });
 
-
 export const suspendLicense = catchAsync(async (req, res) => {
   const licenseId = req?.params?.id;
   const { result, message } = await suspendLicenseIntoDB(licenseId);
@@ -163,72 +208,82 @@ export const suspendLicense = catchAsync(async (req, res) => {
       data: result,
     });
   }
-
 });
 
 // Envato stats
-export const getDailyStatisticsForEnvatoForUsedLicenses = catchAsync(async (req, res) => {
-  const totalLimit = await getDailyStatisticsForUsedLicensesService("Envato");
-  const { dailyDownloads, totalDownloads } = await getTotalAndDailyDownloadsService("Envato Elements");
-  sendResponse(res, {
-    success: true,
-    statusCode: httpStatus.OK,
-    message: "Retrieved daily stats for envato successfully",
-    data: {
-      totalLimit,
-      dailyDownloads,
-      totalDownloads
-    },
-  });
-
-});
+export const getDailyStatisticsForEnvatoForUsedLicenses = catchAsync(
+  async (req, res) => {
+    const totalLimit = await getDailyStatisticsForUsedLicensesService('Envato');
+    const { dailyDownloads, totalDownloads } =
+      await getTotalAndDailyDownloadsService('Envato Elements');
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: 'Retrieved daily stats for envato successfully',
+      data: {
+        totalLimit,
+        dailyDownloads,
+        totalDownloads,
+      },
+    });
+  },
+);
 // Story Blocks stats
-export const getDailyStatisticsForStoryBlocksForUsedLicenses = catchAsync(async (req, res) => {
-  const totalLimit = await getDailyStatisticsForUsedLicensesService("Story-blocks");
-  const { dailyDownloads, totalDownloads } = await getTotalAndDailyDownloadsService("Story Blocks");
-  sendResponse(res, {
-    success: true,
-    statusCode: httpStatus.OK,
-    message: "Retrieved daily stats for story blocks successfully",
-    data: {
-      totalLimit,
-      dailyDownloads,
-      totalDownloads
-    },
-  });
-
-});
+export const getDailyStatisticsForStoryBlocksForUsedLicenses = catchAsync(
+  async (req, res) => {
+    const totalLimit =
+      await getDailyStatisticsForUsedLicensesService('Story-blocks');
+    const { dailyDownloads, totalDownloads } =
+      await getTotalAndDailyDownloadsService('Story Blocks');
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: 'Retrieved daily stats for story blocks successfully',
+      data: {
+        totalLimit,
+        dailyDownloads,
+        totalDownloads,
+      },
+    });
+  },
+);
 
 // Motion array stats
-export const getDailyStatisticsForMotionArrayForUsedLicenses = catchAsync(async (req, res) => {
-  const totalLimit = await getDailyStatisticsForUsedLicensesService("Motion-array");
-  const { dailyDownloads, totalDownloads } = await getTotalAndDailyDownloadsService("Motion Array");
-  sendResponse(res, {
-    success: true,
-    statusCode: httpStatus.OK,
-    message: "Retrieved daily stats for motion array successfully",
-    data: {
-      totalLimit,
-      dailyDownloads,
-      totalDownloads
-    },
-  });
-
-});
+export const getDailyStatisticsForMotionArrayForUsedLicenses = catchAsync(
+  async (req, res) => {
+    const totalLimit =
+      await getDailyStatisticsForUsedLicensesService('Motion-array');
+    const { dailyDownloads, totalDownloads } =
+      await getTotalAndDailyDownloadsService('Motion Array');
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: 'Retrieved daily stats for motion array successfully',
+      data: {
+        totalLimit,
+        dailyDownloads,
+        totalDownloads,
+      },
+    });
+  },
+);
 
 // Story Blocks stats
-export const getDailyStatisticsForFreepikForUsedLicenses = catchAsync(async (req, res) => {
-  const totalLimit = await getDailyStatisticsForUsedLicensesService("Freepik");
-  const { dailyDownloads, totalDownloads } = await getTotalAndDailyDownloadsService("Freepik");
-  sendResponse(res, {
-    success: true,
-    statusCode: httpStatus.OK,
-    message: "Retrieved daily stats for freepik successfully",
-    data: {
-      totalLimit,
-      dailyDownloads,
-      totalDownloads
-    },
-  });
-
-});
+export const getDailyStatisticsForFreepikForUsedLicenses = catchAsync(
+  async (req, res) => {
+    const totalLimit =
+      await getDailyStatisticsForUsedLicensesService('Freepik');
+    const { dailyDownloads, totalDownloads } =
+      await getTotalAndDailyDownloadsService('Freepik');
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: 'Retrieved daily stats for freepik successfully',
+      data: {
+        totalLimit,
+        dailyDownloads,
+        totalDownloads,
+      },
+    });
+  },
+);

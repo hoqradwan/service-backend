@@ -3,7 +3,6 @@ import { UserModel } from '../user/user.model.js';
 import { LicenseModel } from './license.model.js';
 
 export const createLicenseIntoDB = async (payload) => {
-
   const result = await LicenseModel.create(payload);
   return result;
 };
@@ -11,29 +10,49 @@ export const createLicenseIntoDB = async (payload) => {
 export const getLicensesFromDB = async (
   filters = {},
   paginationOptions = {},
+  search = '',
 ) => {
   const {
     page = 1,
     limit = 10,
     sortBy = 'createdAt',
-    sortOrder = 'asc',
+    sortOrder = 'desc',
   } = paginationOptions;
-
-  const query = { ...filters };
-
-  const sortOptions = [
-    'dayLimit',
-    'dailyLimit',
-    'totalLimit',
-    'createdAt',
-  ].includes(sortBy)
-    ? { [sortBy]: sortOrder === 'asc' ? -1 : 1 }
-    : { createdAt: -1 }; // Default sorting
 
   const skip = (page - 1) * limit;
 
-  const result = await LicenseModel.aggregate([
-    { $match: query },
+  // ---------------------------
+  // SORT CONFIG
+  // ---------------------------
+  const sortOptions = {
+    [sortBy]: sortOrder === 'asc' ? 1 : -1,
+  };
+
+  // ---------------------------
+  // SEARCH FILTER (FIXED)
+  // ---------------------------
+  const searchFilter = search
+    ? {
+        $or: [
+          { licenseKey: { $regex: search, $options: 'i' } },
+          { serviceName: { $regex: search, $options: 'i' } },
+          { 'userDetails.email': { $regex: search, $options: 'i' } },
+        ],
+      }
+    : {};
+
+  // ---------------------------
+  // BASE PIPELINE
+  // ---------------------------
+  const basePipeline = [
+    // 🔥 FILTER FIRST (safe filters only)
+    {
+      $match: {
+        ...filters,
+      },
+    },
+
+    // JOIN USER
     {
       $lookup: {
         from: 'users',
@@ -42,48 +61,78 @@ export const getLicensesFromDB = async (
         as: 'userDetails',
       },
     },
+
     {
       $unwind: {
         path: '$userDetails',
-        preserveNullAndEmptyArrays: true, // Keep licenses with no associated user
+        preserveNullAndEmptyArrays: true,
       },
     },
+
+    // ADD EMAIL FIELD
     {
       $addFields: {
-        userEmail: '$userDetails.email', // Add userEmail field
+        userEmail: '$userDetails.email',
       },
     },
+
+    // 🔥 SEARCH AFTER JOIN (IMPORTANT FIX)
     {
-      $sort: sortOptions, // Sort before assigning serial numbers
+      $match: searchFilter,
     },
+
+    // SORT
     {
-      $setWindowFields: {
-        sortBy: sortOptions,
-        output: {
-          serial: {
-            $documentNumber: {}, // Generates a sequential number for each document
-          },
-        },
-      },
+      $sort: sortOptions,
     },
+  ];
+
+  // ---------------------------
+  // TOTAL COUNT (WITH SEARCH)
+  // ---------------------------
+  const totalResult = await LicenseModel.aggregate([
+    ...basePipeline,
+    { $count: 'total' },
+  ]);
+
+  const total = totalResult[0]?.total || 0;
+
+  // ---------------------------
+  // MAIN DATA PIPELINE
+  // ---------------------------
+  const result = await LicenseModel.aggregate([
+    ...basePipeline,
+
+    // PAGINATION
+    { $skip: skip },
+    { $limit: limit },
+
+    // CLEAN OUTPUT
     {
       $project: {
-        createdAt: 0, // Exclude these fields from each license document
+        createdAt: 0,
         updatedAt: 0,
         __v: 0,
         userDetails: 0,
       },
     },
+
+    // SERIAL NUMBER AFTER PAGINATION
     {
-      $skip: skip,
-    },
-    {
-      $limit: limit,
+      $setWindowFields: {
+        sortBy: sortOptions,
+        output: {
+          serial: {
+            $documentNumber: {},
+          },
+        },
+      },
     },
   ]);
 
-  const total = await LicenseModel.countDocuments(query);
-
+  // ---------------------------
+  // RESPONSE FORMAT
+  // ---------------------------
   return {
     meta: {
       total,
@@ -94,6 +143,93 @@ export const getLicensesFromDB = async (
     data: result,
   };
 };
+
+// export const getLicensesFromDB = async (
+//   filters = {},
+//   paginationOptions = {},
+// ) => {
+//   const {
+//     page = 1,
+//     limit = 10,
+//     sortBy = 'createdAt',
+//     sortOrder = 'asc',
+//   } = paginationOptions;
+
+//   const query = { ...filters };
+
+//   const sortOptions = [
+//     'dayLimit',
+//     'dailyLimit',
+//     'totalLimit',
+//     'createdAt',
+//   ].includes(sortBy)
+//     ? { [sortBy]: sortOrder === 'asc' ? -1 : 1 }
+//     : { createdAt: -1 }; // Default sorting
+
+//   const skip = (page - 1) * limit;
+
+//   const result = await LicenseModel.aggregate([
+//     { $match: query },
+//     {
+//       $lookup: {
+//         from: 'users',
+//         localField: 'user',
+//         foreignField: '_id',
+//         as: 'userDetails',
+//       },
+//     },
+//     {
+//       $unwind: {
+//         path: '$userDetails',
+//         preserveNullAndEmptyArrays: true, // Keep licenses with no associated user
+//       },
+//     },
+//     {
+//       $addFields: {
+//         userEmail: '$userDetails.email', // Add userEmail field
+//       },
+//     },
+//     {
+//       $sort: sortOptions, // Sort before assigning serial numbers
+//     },
+//     {
+//       $setWindowFields: {
+//         sortBy: sortOptions,
+//         output: {
+//           serial: {
+//             $documentNumber: {}, // Generates a sequential number for each document
+//           },
+//         },
+//       },
+//     },
+//     {
+//       $project: {
+//         createdAt: 0, // Exclude these fields from each license document
+//         updatedAt: 0,
+//         __v: 0,
+//         userDetails: 0,
+//       },
+//     },
+//     {
+//       $skip: skip,
+//     },
+//     {
+//       $limit: limit,
+//     },
+//   ]);
+
+//   const total = await LicenseModel.countDocuments(query);
+
+//   return {
+//     meta: {
+//       total,
+//       page,
+//       limit,
+//       totalPages: Math.ceil(total / limit),
+//     },
+//     data: result,
+//   };
+// };
 
 // need to modify
 export const licenseByUserFromDB = async (
@@ -127,8 +263,7 @@ export const licenseByUserFromDB = async (
     .skip((page - 1) * limit)
     .limit(limit);
 
-    // console.log("result", result);
-    
+  // console.log("result", result);
 
   // Add serial numbers to the results
   const resultWithSerial = result.map((item, index) => ({
@@ -156,7 +291,6 @@ export const updateLicenseIntoDB = async (licenseid, data) => {
   const licenseToUpdate = await LicenseModel.findById(licenseid);
 
   // Log the license fetched from the database
-
 
   // Initialize result variable
   let result;
@@ -209,17 +343,26 @@ export const activateLicenseIntoDB = async (licenseKey, user) => {
 
     // Update the user's isActive status
     let updateCurrentLicenseOfUser;
-    if (licenseToUpdate?.serviceName.toLowerCase() === "envato") {
-      updateCurrentLicenseOfUser = { isActive: true, currentLicense: licenseToUpdate._id };
-    }
-    else if (licenseToUpdate?.serviceName.toLowerCase() === "story-blocks") {
-      updateCurrentLicenseOfUser = { isActive: true, currentStoryBlocksLicense: licenseToUpdate._id };
-    }
-    else if (licenseToUpdate?.serviceName.toLowerCase() === "motion-array") {
-      updateCurrentLicenseOfUser = { isActive: true, currentMotionArrayLicense: licenseToUpdate._id };
-    }
-    else if (licenseToUpdate?.serviceName.toLowerCase() === "freepik") {
-      updateCurrentLicenseOfUser = { isActive: true, currentFreepikLicense: licenseToUpdate._id };
+    if (licenseToUpdate?.serviceName.toLowerCase() === 'envato') {
+      updateCurrentLicenseOfUser = {
+        isActive: true,
+        currentLicense: licenseToUpdate._id,
+      };
+    } else if (licenseToUpdate?.serviceName.toLowerCase() === 'story-blocks') {
+      updateCurrentLicenseOfUser = {
+        isActive: true,
+        currentStoryBlocksLicense: licenseToUpdate._id,
+      };
+    } else if (licenseToUpdate?.serviceName.toLowerCase() === 'motion-array') {
+      updateCurrentLicenseOfUser = {
+        isActive: true,
+        currentMotionArrayLicense: licenseToUpdate._id,
+      };
+    } else if (licenseToUpdate?.serviceName.toLowerCase() === 'freepik') {
+      updateCurrentLicenseOfUser = {
+        isActive: true,
+        currentFreepikLicense: licenseToUpdate._id,
+      };
     }
 
     const updatedUser = await UserModel.findByIdAndUpdate(
@@ -248,7 +391,6 @@ export const getLicenseByIdService = async (licenseId) => {
   return await LicenseModel.findById(licenseId);
 };
 
-
 export const suspendLicenseIntoDB = async (licenseId) => {
   const license = await LicenseModel.findById(licenseId);
   if (license.status === 'used') {
@@ -257,7 +399,7 @@ export const suspendLicenseIntoDB = async (licenseId) => {
     });
     return {
       result,
-      message: "License updated to suspended "
+      message: 'License updated to suspended ',
     };
   }
   const result = await LicenseModel.findByIdAndUpdate(licenseId, {
@@ -265,21 +407,21 @@ export const suspendLicenseIntoDB = async (licenseId) => {
   });
   return {
     result,
-    message: "License updated to Used"
+    message: 'License updated to Used',
   };
 };
 
 export const getDailyStatisticsForUsedLicensesService = async (serviceName) => {
   const result = await LicenseModel.aggregate([
     {
-      $match: { status: 'used', serviceName: serviceName }
+      $match: { status: 'used', serviceName: serviceName },
     },
     {
       $group: {
         _id: null,
-        totalDailyLimit: { $sum: '$dailyLimit' } // Sum the dailyLimit field
-      }
-    }
+        totalDailyLimit: { $sum: '$dailyLimit' }, // Sum the dailyLimit field
+      },
+    },
   ]);
 
   return result[0]?.totalDailyLimit || 0;
