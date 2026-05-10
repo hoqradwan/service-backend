@@ -1,4 +1,4 @@
-import { Cookie } from "./cookie.model.js";
+import { Cookie } from './cookie.model.js';
 
 // create cookie service
 export const createCookieService = async (data) => {
@@ -9,13 +9,93 @@ export const createCookieService = async (data) => {
 };
 
 // Get all cookie service
-export const getAllCookiesService = async (page, limit) => {
+export const getAllCookiesService = async ({
+  page = 1,
+  limit = 10,
+  search = '',
+  serviceName = '',
+}) => {
   const skip = (page - 1) * limit;
 
-  return await Cookie.aggregate([
+  // ---------------------------
+  // MATCH FILTER
+  // ---------------------------
+  const matchQuery = {};
+
+  // SEARCH
+  if (search) {
+    matchQuery.$or = [
+      {
+        serviceName: {
+          $regex: search,
+          $options: 'i',
+        },
+      },
+
+      {
+        account: {
+          $regex: search,
+          $options: 'i',
+        },
+      },
+
+      {
+        email: {
+          $regex: search,
+          $options: 'i',
+        },
+      },
+
+      {
+        source: {
+          $regex: search,
+          $options: 'i',
+        },
+      },
+    ];
+  }
+
+  // SERVICE FILTER
+  if (serviceName && serviceName !== 'All') {
+    matchQuery.serviceName = serviceName;
+  }
+
+  // ---------------------------
+  // TOTAL
+  // ---------------------------
+  const total = await Cookie.countDocuments(matchQuery);
+
+  // ---------------------------
+  // COOKIES
+  // ---------------------------
+  const cookies = await Cookie.aggregate([
+    {
+      $match: matchQuery,
+    },
+
+    // SORT FIRST
+    {
+      $sort: {
+        createdAt: -1,
+      },
+    },
+
+    // PAGINATION
+    {
+      $skip: skip,
+    },
+
+    {
+      $limit: limit,
+    },
+
+    // SERIAL AFTER PAGINATION
     {
       $setWindowFields: {
-        sortBy: { createdAt: -1 },
+        sortBy: {
+          createdAt: -1,
+        },
+
         output: {
           serial: {
             $documentNumber: {},
@@ -23,19 +103,53 @@ export const getAllCookiesService = async (page, limit) => {
         },
       },
     },
+
+    // REMOVE FIELDS
     {
       $project: {
-        __v: 0, // Exclude __v field
-      }
+        __v: 0,
+      },
     },
-    {
-      $skip: skip,
-    },
-    {
-      $limit: limit,
-    }
   ]);
+
+  return {
+    cookies,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
 };
+
+// export const getAllCookiesService = async (page, limit) => {
+//   const skip = (page - 1) * limit;
+
+//   return await Cookie.aggregate([
+//     {
+//       $setWindowFields: {
+//         sortBy: { createdAt: -1 },
+//         output: {
+//           serial: {
+//             $documentNumber: {},
+//           },
+//         },
+//       },
+//     },
+//     {
+//       $project: {
+//         __v: 0, // Exclude __v field
+//       }
+//     },
+//     {
+//       $skip: skip,
+//     },
+//     {
+//       $limit: limit,
+//     }
+//   ]);
+// };
 
 // find single cookie service with id
 export const getCookieByIdService = async (id) => {
@@ -43,7 +157,7 @@ export const getCookieByIdService = async (id) => {
 };
 
 // Find single cookie service with account email
-export const getCookieByAccountEmailService = async (account,serviceName) => {
+export const getCookieByAccountEmailService = async (account, serviceName) => {
   return await Cookie?.findOne({ account, serviceName });
 };
 
@@ -52,7 +166,7 @@ export const updateCookieByIdService = async (id, updateData) => {
   // update the cookie
   return await Cookie?.findByIdAndUpdate(id, updateData, {
     new: true,
-    runValidators: true // Ensure that the update data conforms to the schema
+    runValidators: true, // Ensure that the update data conforms to the schema
   });
 };
 
@@ -68,6 +182,6 @@ export const getTotalDocumentCountService = async (serviceName) => {
 };
 
 // get the total number of cookies service
-export const getRandomAccountService = async (serviceName,randomIndex) => {
+export const getRandomAccountService = async (serviceName, randomIndex) => {
   return Cookie?.findOne({ serviceName, status: 'active' })?.skip(randomIndex);
 };

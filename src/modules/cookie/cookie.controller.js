@@ -67,37 +67,49 @@ export const createCookie = catchAsync(async (req, res) => {
 
 // Get method for cookie
 export const getAllCookies = catchAsync(async (req, res) => {
-  const page = parseInt(req?.query?.page) || 1;
-  const limit = parseInt(req?.query?.limit) || 10;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const search = req.query.search?.trim() || '';
+  const serviceName = req.query.serviceName || '';
 
-  const cookies = await getAllCookiesService(page, limit);
-
-  // if (cookies.length === 0) {
-  //   return sendResponse(res, {
-  //     success: false,
-  //     statusCode: httpStatus.NOT_FOUND,
-  //     message: 'No cookies found',
-  //     data: null,
-  //   });
-  // }
-
-  const totalCookies = await getTotalDocumentCountService();
-  const totalPages = Math.ceil(totalCookies / limit);
-  const currentPageCookies = cookies?.length;
+  const result = await getAllCookiesService({
+    page,
+    limit,
+    search,
+    serviceName,
+  });
 
   return sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
     message: 'Cookies retrieved successfully!',
-    data: {
-      cookies,
-      totalCookies,
-      currentPage: page,
-      totalPages,
-      currentPageCookies,
-    },
+    data: result,
   });
 });
+
+// export const getAllCookies = catchAsync(async (req, res) => {
+//   const page = parseInt(req?.query?.page) || 1;
+//   const limit = parseInt(req?.query?.limit) || 10;
+
+//   const cookies = await getAllCookiesService(page, limit);
+
+//   const totalCookies = await getTotalDocumentCountService();
+//   const totalPages = Math.ceil(totalCookies / limit);
+//   const currentPageCookies = cookies?.length;
+
+//   return sendResponse(res, {
+//     success: true,
+//     statusCode: httpStatus.OK,
+//     message: 'Cookies retrieved successfully!',
+//     data: {
+//       cookies,
+//       totalCookies,
+//       currentPage: page,
+//       totalPages,
+//       currentPageCookies,
+//     },
+//   });
+// });
 
 // Get method for single cookie with _id
 export const getCookieById = catchAsync(async (req, res) => {
