@@ -219,31 +219,72 @@ export const getUserInfo = catchAsync(async (req, res) => {
     });
   }
 
-  const page = parseInt(req?.query?.page) || 1;
-  const limit = parseInt(req?.query?.limit) || 10;
+  const page = parseInt(req.query.page) || 1;
+
+  const limit = parseInt(req.query.limit) || 10;
+
+  const search = req.query.search?.trim() || '';
+
   const skip = (page - 1) * limit;
 
-  const users = await UserModel.aggregate([
-    {
-      $match: {
-        _id: { $ne: req.user.id },
-        role: { $ne: 'admin' },
-      },
-    },
-    {
-      $setWindowFields: {
-        sortBy: { createdAt: -1 }, // Sort by createdAt or any other field you prefer
-        output: {
-          serial: {
-            $documentNumber: {}, // Generates a sequential number for each document
-          },
+  // ---------------------------
+  // FILTERS
+  // ---------------------------
+  const matchQuery = {
+    _id: { $ne: req.user.id },
+    role: { $ne: 'admin' },
+  };
+
+  // SEARCH
+  if (search) {
+    matchQuery.$or = [
+      {
+        name: {
+          $regex: search,
+          $options: 'i',
         },
       },
+      {
+        email: {
+          $regex: search,
+          $options: 'i',
+        },
+      },
+      {
+        phone: {
+          $regex: search,
+          $options: 'i',
+        },
+      },
+    ];
+  }
+
+  // ---------------------------
+  // TOTAL USERS
+  // ---------------------------
+  const totalUsers = await UserModel.countDocuments(matchQuery);
+
+  // ---------------------------
+  // USERS
+  // ---------------------------
+  const users = await UserModel.aggregate([
+    {
+      $match: matchQuery,
     },
+
+    // SORT FIRST
+    {
+      $sort: {
+        createdAt: -1,
+      },
+    },
+
+    // LOOKUP LICENSES
     {
       $lookup: {
         from: 'licenses',
         let: { userId: '$_id' },
+
         pipeline: [
           {
             $match: {
@@ -252,20 +293,30 @@ export const getUserInfo = catchAsync(async (req, res) => {
               },
             },
           },
+
           {
             $count: 'totalLicenses',
           },
         ],
+
         as: 'licenses',
       },
     },
+
+    // ADD TOTAL LICENSE
     {
       $addFields: {
         totalLicenses: {
-          $ifNull: [{ $arrayElemAt: ['$licenses.totalLicenses', 0] }, 0],
+          $ifNull: [
+            {
+              $arrayElemAt: ['$licenses.totalLicenses', 0],
+            },
+            0,
+          ],
         },
       },
     },
+    // REMOVE SENSITIVE FIELDS
     {
       $project: {
         password: 0,
@@ -273,6 +324,7 @@ export const getUserInfo = catchAsync(async (req, res) => {
         licenses: 0,
       },
     },
+    // PAGINATION
     {
       $skip: skip,
     },
@@ -280,36 +332,136 @@ export const getUserInfo = catchAsync(async (req, res) => {
       $limit: limit,
     },
   ]);
-
-  const totalUsers = await UserModel.countDocuments({
-    _id: { $ne: req.user.id },
-    role: { $ne: 'admin' },
-  });
-
+  // ---------------------------
+  // ADMINS
+  // ---------------------------
   const admins = await UserModel.find(
-    { role: 'admin' },
+    {
+      role: 'admin',
+    },
     '-password -adminPassword',
   );
   const totalAdmins = admins.length;
-
-  const totalPages = Math.ceil(totalUsers / limit);
-  const currentPageUsers = users.length;
-
+  // ---------------------------
+  // RESPONSE
+  // ---------------------------
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: 'User information retrieved successfully',
     data: {
       users,
-      currentPage: page,
-      totalPages,
-      totalUsers,
-      currentPageUsers,
+      meta: {
+        currentPage: page,
+        totalPages: Math.ceil(totalUsers / limit),
+        totalUsers,
+        currentPageUsers: users.length,
+        limit,
+      },
       admins,
       totalAdmins,
     },
   });
 });
+
+// export const getUserInfo = catchAsync(async (req, res) => {
+//   if (req.user.role !== 'admin') {
+//     return sendError(res, httpStatus.FORBIDDEN, {
+//       message: 'Only admin can access all user list.',
+//     });
+//   }
+
+//   const page = parseInt(req?.query?.page) || 1;
+//   const limit = parseInt(req?.query?.limit) || 10;
+//   const skip = (page - 1) * limit;
+
+//   const users = await UserModel.aggregate([
+//     {
+//       $match: {
+//         _id: { $ne: req.user.id },
+//         role: { $ne: 'admin' },
+//       },
+//     },
+//     {
+//       $setWindowFields: {
+//         sortBy: { createdAt: -1 }, // Sort by createdAt or any other field you prefer
+//         output: {
+//           serial: {
+//             $documentNumber: {}, // Generates a sequential number for each document
+//           },
+//         },
+//       },
+//     },
+//     {
+//       $lookup: {
+//         from: 'licenses',
+//         let: { userId: '$_id' },
+//         pipeline: [
+//           {
+//             $match: {
+//               $expr: {
+//                 $eq: ['$user', '$$userId'],
+//               },
+//             },
+//           },
+//           {
+//             $count: 'totalLicenses',
+//           },
+//         ],
+//         as: 'licenses',
+//       },
+//     },
+//     {
+//       $addFields: {
+//         totalLicenses: {
+//           $ifNull: [{ $arrayElemAt: ['$licenses.totalLicenses', 0] }, 0],
+//         },
+//       },
+//     },
+//     {
+//       $project: {
+//         password: 0,
+//         adminPassword: 0,
+//         licenses: 0,
+//       },
+//     },
+//     {
+//       $skip: skip,
+//     },
+//     {
+//       $limit: limit,
+//     },
+//   ]);
+
+//   const totalUsers = await UserModel.countDocuments({
+//     _id: { $ne: req.user.id },
+//     role: { $ne: 'admin' },
+//   });
+
+//   const admins = await UserModel.find(
+//     { role: 'admin' },
+//     '-password -adminPassword',
+//   );
+//   const totalAdmins = admins.length;
+
+//   const totalPages = Math.ceil(totalUsers / limit);
+//   const currentPageUsers = users.length;
+
+//   sendResponse(res, {
+//     statusCode: httpStatus.OK,
+//     success: true,
+//     message: 'User information retrieved successfully',
+//     data: {
+//       users,
+//       currentPage: page,
+//       totalPages,
+//       totalUsers,
+//       currentPageUsers,
+//       admins,
+//       totalAdmins,
+//     },
+//   });
+// });
 
 export const getSelfInfo = catchAsync(async (req, res) => {
   // Find the user by their ID, excluding the password and adminPassword fields
