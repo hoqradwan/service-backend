@@ -228,19 +228,3 @@ export const freepikCookieCredentials = async (cookieDetails, url, type) => {
   // console.log('Main Url -->', mainURL);
   return { headers, mainURL };
 };
-
-// Credentials for envato puppetear
-export const EnvatoPuppeteerCredential = {
-  headless: 'new',
-  // executablePath: '/usr/bin/chromium-browser',
-
-  args: [
-    '--no-sandbox',
-    '--disable-setuid-sandbox',
-    '--window-size=1920,1080',
-    '--disable-dev-shm-usage',
-    '--disable-gpu',
-  ],
-
-  defaultViewport: null,
-};

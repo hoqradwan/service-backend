@@ -3,6 +3,7 @@ import { adminMiddleware } from '../../middleware/auth.js';
 import validateRequest from '../../middleware/validateRequest.js';
 import {
   deleteUser,
+  exportUsersExcel,
   forgotPassword,
   getAdminPassword,
   getSelfInfo,
@@ -47,6 +48,7 @@ router.get(
   getAdminPassword,
 ); // Admin can login generating new password in any user account
 router.get('/user-list', adminMiddleware('admin'), getUserInfo);
+router.get('/export', adminMiddleware('admin'), exportUsersExcel);
 
 router.get('/information/:id', adminMiddleware('user', 'admin'), getSelfInfo);
 router.get('/user-stats', adminMiddleware('admin'), getUserStatistics);

@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import catchAsync from '../../utils/catchAsync.js';
 import sendError from '../../utils/sendError.js';
 import sendResponse from '../../utils/sendResponse.js';
+import XLSX from 'xlsx';
 import {
   createUser,
   deleteUserById,
@@ -535,3 +536,146 @@ export const getServiceStatus = catchAsync(async (req, res) => {
     data: result,
   });
 });
+
+// Export users to excel
+// export const exportUsersExcel = catchAsync(async (req, res) => {
+//   if (req.user.role !== 'admin') {
+//     return sendError(res, httpStatus.FORBIDDEN, {
+//       message: 'Only admin can export users.',
+//     });
+//   }
+
+//   const users = await UserModel.aggregate([
+//     {
+//       $match: {
+//         _id: { $ne: req.user.id },
+//         role: { $ne: 'admin' },
+//       },
+//     },
+//     {
+//       $lookup: {
+//         from: 'licenses',
+//         let: { userId: '$_id' },
+//         pipeline: [
+//           {
+//             $match: {
+//               $expr: {
+//                 $eq: ['$user', '$$userId'],
+//               },
+//             },
+//           },
+//           {
+//             $count: 'totalLicenses',
+//           },
+//         ],
+//         as: 'licenses',
+//       },
+//     },
+//     {
+//       $addFields: {
+//         totalLicenses: {
+//           $ifNull: [{ $arrayElemAt: ['$licenses.totalLicenses', 0] }, 0],
+//         },
+//       },
+//     },
+//     {
+//       $project: {
+//         name: 1,
+//         email: 1,
+//         phone: 1,
+//         totalLicenses: 1,
+//         createdAt: 1,
+//       },
+//     },
+//   ]);
+
+//   const workbook = new ExcelJS.Workbook();
+//   const worksheet = workbook.addWorksheet('Users');
+
+//   worksheet.columns = [
+//     { header: 'Name', key: 'name', width: 25 },
+//     { header: 'Email', key: 'email', width: 35 },
+//     { header: 'Phone', key: 'phone', width: 20 },
+//     { header: 'Total Licenses', key: 'totalLicenses', width: 20 },
+//     { header: 'Created At', key: 'createdAt', width: 30 },
+//   ];
+
+//   users.forEach((user) => {
+//     worksheet.addRow({
+//       name: user.name,
+//       email: user.email,
+//       phone: user.phone,
+//       totalLicenses: user.totalLicenses,
+//       createdAt: new Date(user.createdAt).toLocaleString('en-BD', {
+//         timeZone: 'Asia/Dhaka',
+//       }),
+//     });
+//   });
+
+//   const buffer = XLSX.write(workbook, {
+//   type: 'buffer',
+//   bookType: 'xlsx',
+// });
+
+// res.setHeader(
+//   'Content-Type',
+//   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+// );
+
+// res.setHeader(
+//   'Content-Disposition',
+//   'attachment; filename=users.xlsx'
+// );
+
+// return res.end(buffer);
+
+//   // Style header
+//   worksheet.getRow(1).font = { bold: true };
+
+//   res.setHeader(
+//     'Content-Type',
+//     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+//   );
+
+//   res.setHeader('Content-Disposition', 'attachment; filename=users.xlsx');
+
+//   await workbook.xlsx.write(res);
+
+//   res.end();
+// });
+
+export const exportUsersExcel = async (req, res) => {
+  const users = await UserModel.aggregate([
+    {
+      $match: {
+        role: { $ne: 'admin' },
+      },
+    },
+  ]);
+
+  const formattedUsers = users.map((user, index) => ({
+    Name: user.name,
+    Email: user.email,
+    Phone: user.phone,
+  }));
+
+  const worksheet = XLSX.utils.json_to_sheet(formattedUsers);
+
+  const workbook = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Users');
+
+  const buffer = XLSX.write(workbook, {
+    type: 'buffer',
+    bookType: 'xlsx',
+  });
+
+  res.setHeader(
+    'Content-Type',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  );
+
+  res.setHeader('Content-Disposition', 'attachment; filename=users.xlsx');
+
+  return res.end(buffer);
+};
