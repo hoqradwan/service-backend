@@ -16,6 +16,7 @@ import {
 } from '../cookie/cookie.service.js';
 import { envatoCookieCredentials } from './download.utils.js';
 import { addDownloadIntoDB, getDownloadById } from './download.service.js';
+import { DownloadRestrict } from '../downloadDelay/downloadDelay.model.js';
 
 puppeteer.use(StealthPlugin());
 
@@ -391,6 +392,18 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
       data: null,
     });
   }
+
+  /* ------------------ Download Restrict ------------------ */
+  const restriction = await DownloadRestrict.findOne({
+    service: 'Envato Elements',
+  });
+
+  if (restriction?.isRestricted) {
+    await new Promise((resolve) =>
+      setTimeout(resolve, restriction.delay * 1000),
+    );
+  }
+
   /* ------------------ URL Processing ------------------ */
   let finalUrl = null;
   let envatoSessionToken = null;
