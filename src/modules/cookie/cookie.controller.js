@@ -485,6 +485,7 @@ export const isFreepikCookieValid = async (cookieDetails) => {
     const cookie = cookieDetails?.cookie?.trim();
 
     const { GR_TOKEN } = await generateGRToken(cookie);
+    // console.log('GR Token-->', GR_TOKEN);
 
     let updatedCookieDetails;
     if (GR_TOKEN) {
@@ -542,7 +543,7 @@ export const isFreepikCookieValid = async (cookieDetails) => {
 export const generateGRToken = async (cookie) => {
   // console.log('coming');
   try {
-    const mainURL = 'https://www.magnific.com/';
+    const mainURL = 'https://www.magnific.com/app';
 
     const headers = {
       Cookie: `GR_REFRESH=${cookie};`,
@@ -571,7 +572,7 @@ export const generateGRToken = async (cookie) => {
       headers: headers,
     });
 
-    // console.log('response -->', response);
+    // console.log('response -->', response?.headers);
 
     if (response?.headers) {
       const setCookieArray = response?.headers['set-cookie'];
