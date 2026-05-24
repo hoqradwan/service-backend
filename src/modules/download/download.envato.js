@@ -21,6 +21,7 @@ import { DownloadRestrict } from '../downloadDelay/downloadDelay.model.js';
 puppeteer.use(StealthPlugin());
 
 // -----------------------download request for license----------------------------------------------------------------------
+
 export const handleLicenseDownload = catchAsync(async (req, res) => {
   const downloadId = req?.params?.downloadId;
 
@@ -126,9 +127,7 @@ export const handleLicenseDownload = catchAsync(async (req, res) => {
     });
   }
 
-  // console.log('License ID:', licenseId);
-
-  /* ------------------ Download License File ------------------ */
+  /* ------------------ Download License PDF ------------------ */
 
   const downloadURL = `https://app.envato.com/license-certificate/${licenseId}/download`;
 
@@ -148,16 +147,174 @@ export const handleLicenseDownload = catchAsync(async (req, res) => {
     });
   }
 
-  const body = await fileRes.text();
-  // console.log('body -->', body);
+  /* ------------------ Get PDF Binary ------------------ */
 
-  /* ------------------ Send File ------------------ */
+  const body = await fileRes.arrayBuffer();
+
+  /* ------------------ Dynamic Filename ------------------ */
+
+  const disposition = fileRes.headers.get('content-disposition');
+
+  let filename = 'license.pdf';
+
+  if (disposition && disposition.includes('filename=')) {
+    filename = disposition.split('filename=')[1].replace(/"/g, '');
+  }
+
+  /* ------------------ Response Headers ------------------ */
 
   res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', 'attachment; filename="license.pdf"');
 
-  return res.send(body);
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+  //  VERY IMPORTANT
+  res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
+
+  /* ------------------ Send PDF ------------------ */
+
+  return res.send(Buffer.from(body));
 });
+
+// export const handleLicenseDownload = catchAsync(async (req, res) => {
+//   const downloadId = req?.params?.downloadId;
+
+//   /* ------------------ Validate Download ID ------------------ */
+
+//   if (!downloadId) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: httpStatus.BAD_REQUEST,
+//       message: 'Download Id is not provided',
+//       data: null,
+//     });
+//   }
+
+//   /* ------------------ Get Download Info ------------------ */
+
+//   const download = await getDownloadById(downloadId);
+
+//   if (!download) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: httpStatus.BAD_REQUEST,
+//       message: 'This file does not exist',
+//       data: null,
+//     });
+//   }
+
+//   const { contentLicense, downloadedBy, serviceId } = download;
+
+//   if (!contentLicense || !downloadedBy || !serviceId) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: httpStatus.BAD_REQUEST,
+//       message: 'Invalid download data',
+//       data: null,
+//     });
+//   }
+
+//   /* ------------------ Authorization ------------------ */
+
+//   if (req?.user?.role === 'user' && req?.user?.email !== downloadedBy) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: httpStatus.FORBIDDEN,
+//       message: 'You are not authorized for this license',
+//       data: null,
+//     });
+//   }
+
+//   /* ------------------ Get Cookie ------------------ */
+
+//   const cookieData = await getCookieByIdService(serviceId);
+
+//   if (!cookieData?.cookie) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: httpStatus.BAD_REQUEST,
+//       message: "Couldn't find cookie for this download",
+//       data: null,
+//     });
+//   }
+
+//   const cookie = cookieData.cookie;
+
+//   /* ------------------ Get License ID ------------------ */
+
+//   const licenseLink = `https://app.envato.com/item-licenses.data?itemUuid=${contentLicense}&_routes=routes%2Fitem-licenses%2Froute`;
+
+//   const licenseRes = await fetch(licenseLink, {
+//     method: 'GET',
+//     headers: {
+//       Cookie: `envatoid=${cookie}`,
+//     },
+//   });
+
+//   if (!licenseRes.ok) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: licenseRes.status,
+//       message: 'Failed to fetch license info',
+//       data: null,
+//     });
+//   }
+
+//   const data = await licenseRes.json();
+
+//   let licenseId = null;
+
+//   if (Array.isArray(data)) {
+//     const index = data.indexOf('id');
+
+//     if (index !== -1 && typeof data[index + 1] === 'string') {
+//       licenseId = data[index + 1];
+//     }
+//   }
+
+//   if (!licenseId) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: httpStatus.BAD_REQUEST,
+//       message: 'No license found',
+//       data: null,
+//     });
+//   }
+
+//   // console.log('License ID:', licenseId);
+
+//   /* ------------------ Download License File ------------------ */
+
+//   const downloadURL = `https://app.envato.com/license-certificate/${licenseId}/download`;
+//   // https://app.envato.com/license-certificate/d1e026b3-8efd-4069-8914-350534ec4575/download
+
+//   const fileRes = await fetch(downloadURL, {
+//     method: 'GET',
+//     headers: {
+//       Cookie: `envatoid=${cookie}`,
+//     },
+//   });
+
+//   console.log('Data-->', fileRes);
+
+//   if (!fileRes.ok) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: fileRes.status,
+//       message: 'Error fetching the license file',
+//       data: null,
+//     });
+//   }
+
+//   const body = await fileRes.text();
+//   // console.log('body -->', body);
+
+//   /* ------------------ Send File ------------------ */
+
+//   res.setHeader('Content-Type', 'application/pdf');
+//   res.setHeader('Content-Disposition', 'attachment; filename="license.pdf"');
+
+//   return res.send(body);
+// });
 // ---------------------------------------------------------------
 
 // ---------------Envato Session Token-------------
