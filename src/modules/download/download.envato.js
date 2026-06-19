@@ -727,7 +727,8 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
     return sendResponse(res, {
       success: false,
       statusCode: 400,
-      message: 'Something went wrong! Please try again',
+      message:
+        ' Something went wrong! Failed to generate download link! Please try again',
       data: null,
     });
   }
@@ -739,7 +740,8 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
     return sendResponse(res, {
       success: false,
       statusCode: 400,
-      message: 'Something went wrong! Please try again',
+      message:
+        'Something went wrong! Could not find download link! Please try again',
       data: null,
     });
   }
