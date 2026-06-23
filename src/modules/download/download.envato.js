@@ -737,6 +737,10 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
   // console.log('Data -->', data);
 
   if (!Array.isArray(data)) {
+    await updateCookieByIdService(cookieDetails._id, {
+      status: 'inactive',
+    });
+
     return sendResponse(res, {
       success: false,
       statusCode: 400,
@@ -751,6 +755,10 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
   const index = data.indexOf('downloadUrl');
 
   if (index === -1) {
+    await updateCookieByIdService(cookieDetails._id, {
+      status: 'inactive',
+    });
+
     return sendResponse(res, {
       success: false,
       statusCode: 400,
