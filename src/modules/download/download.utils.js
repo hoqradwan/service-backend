@@ -173,15 +173,18 @@ export const freepikCookieCredentials = async (cookieDetails, url, type) => {
     // For tune audios
     if (category === 'tune') {
       const track_id = await getFreepikAudioId(url);
+
       if (track_id) {
-        mainURL = `https://audio-data.freepik.com/audio/download?track_id=${track_id}`;
+        // https://www.magnific.com/audio/check-download-access/?id=829&view_name=track-detail
+        // mainURL = `https://audio-data.freepik.com/audio/download?track_id=${track_id}`;
+        mainURL = `https://www.magnific.com/audio/check-download-access/?id=${track_id}`;
       }
     }
     // For  sound-effects --> category === "sound-effects"
     else {
       const id = itemList[6];
       if (id) {
-        mainURL = `https://audio-data.freepik.com/audio/sound-effects/download/?id=${id}&source=web`;
+        mainURL = `https://www.magnific.com/audio/sound-effects/check-download-access/?id=${id}&source=web`;
       }
     }
   } else if (content === '3d-model') {
