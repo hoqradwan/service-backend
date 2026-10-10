@@ -65,7 +65,10 @@ export const updateLicenseStatus = async () => {
       `${updateUsersResult.modifiedCount} users were deactivated due to expired licenses.`,
     );
   } catch (error) {
-    console.error('Error updating license status and user activity:', error);
+    console.error(
+      'Error updating license status and user activity:',
+      error.message,
+    );
   }
 };
 

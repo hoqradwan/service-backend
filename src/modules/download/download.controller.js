@@ -1324,7 +1324,7 @@ export const handleFreePikDownload = catchAsync(async (req, res) => {
   );
 
   // console.log('headers -->', headers);
-  // console.log('Main Url -->', mainURL);
+  console.log('Main Url -->', mainURL);
 
   if (!headers || !mainURL) {
     return sendResponse(res, {
@@ -1379,49 +1379,67 @@ export const handleFreePikDownload = catchAsync(async (req, res) => {
   // =========================
   // IMAGE / VIDEO DOWNLOAD
   // =========================
-  const response = await axios({
-    method: 'GET',
-    url: mainURL,
-    headers: headers,
-    maxRedirects: 5,
-  });
-  // console.log('res data -->', response.data);
 
-  if (response?.data?.url) {
-    const download = {
-      service: 'Freepik',
-      content: url,
-      contentLicense: null,
-      serviceId: cookieDetails?._id,
-      licenseId: licenseId,
-      status: 'pending',
-    };
+  try {
+    const response = await axios({
+      method: 'GET',
+      url: mainURL,
+      headers: headers,
+      maxRedirects: 5,
+    });
+    // console.log('res data -->', response.data);
 
-    const result = await addDownloadIntoDB(download, req.user);
+    if (response?.data?.url) {
+      const download = {
+        service: 'Freepik',
+        content: url, // Make sure 'url' is defined in your scope
+        contentLicense: null,
+        serviceId: cookieDetails?._id,
+        licenseId: licenseId,
+        status: 'pending',
+      };
+
+      const result = await addDownloadIntoDB(download, req.user);
+
+      return sendResponse(res, {
+        success: true,
+        statusCode: 200,
+        message: 'Download request successful',
+        data: {
+          downloadUrl: response?.data?.url,
+          downloadId: result?.[0]?._id,
+        },
+      });
+    }
 
     return sendResponse(res, {
-      success: true,
-      statusCode: 200,
-      message: 'Download request successful',
-      data: {
-        downloadUrl: response?.data?.url,
-        downloadId: result?.[0]?._id,
-      },
+      success: false,
+      statusCode: 400,
+      message: 'Download request unsuccessful',
+      data: null,
+    });
+  } catch (error) {
+    // Log a clean, concise error message to the console
+    console.error(
+      'Download request error:',
+      error.response?.status || error.message,
+    );
+
+    // Send a clean "Invalid URL" or request failure response back to the client
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Invalid URL or failed to fetch download link',
+      data: null,
     });
   }
-
-  return sendResponse(res, {
-    success: false,
-    statusCode: 400,
-    message: 'Download request unsuccessful',
-    data: null,
-  });
 });
 
 // Request for getting Freepik Video Quality
 export const getFreepikVideoQuality = async (mainURL) => {
+  let browser;
   try {
-    const browser = await puppeteer.launch({
+    browser = await puppeteer.launch({
       headless: 'new',
       args: [
         '--no-sandbox',
@@ -1446,14 +1464,17 @@ export const getFreepikVideoQuality = async (mainURL) => {
       return el ? JSON.parse(el.textContent) : null;
     });
 
-    await browser.close();
-
     const options = nextData?.props?.pageProps?.options;
-
     return options || false;
   } catch (error) {
-    console.log('Error:', error);
+    // Log only a clean, readable message instead of the massive stack trace
+    console.error('Error fetching Freepik video quality:', error.message);
     return false;
+  } finally {
+    // Always close the browser, success or failure
+    if (browser) {
+      await browser.close();
+    }
   }
 };
 
@@ -1495,7 +1516,7 @@ export const getFreepikAudioId = async (mainURL) => {
       return false;
     }
   } catch (error) {
-    console.log('Error in getting audio id', error);
+    console.log('Error in getting audio id', error.message);
     return false;
   }
 };
@@ -1549,7 +1570,7 @@ export const getFreepikFontId = async (mainURL) => {
       return false;
     }
   } catch (error) {
-    console.log('Error in getting data:', error);
+    console.log('Error in getting data:', error.message);
     return false;
   }
 };

@@ -545,7 +545,9 @@ export const generateGRToken = async (cookie) => {
       );
       const GR_TOKEN = cookies['GR_TOKEN'];
 
-      // console.log('GR_Token -->', GR_TOKEN);
+      if (!GR_TOKEN) {
+        console.log('GR_Token --> Failed');
+      }
 
       if (GR_TOKEN) {
         return { GR_TOKEN };
@@ -556,7 +558,18 @@ export const generateGRToken = async (cookie) => {
       return false;
     }
   } catch (error) {
-    // console.log(error);
+    // Check if the error came from the server response (e.g., 403, 404, 500)
+    if (error.response) {
+      console.error(
+        `Request failed with status ${error.response.status}: ${error.response.statusText}`,
+      );
+    } else if (error.request) {
+      // The request was made but no response was received
+      console.error('No response received from server:', error.message);
+    } else {
+      // Something happened in setting up the request
+      console.error('Error setting up request:', error.message);
+    }
 
     return false;
   }
