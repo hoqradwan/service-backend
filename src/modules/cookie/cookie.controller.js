@@ -495,45 +495,6 @@ export const isFreepikCookieValid = async (cookieDetails) => {
     } else {
       return false;
     }
-
-    // const urls = [
-    //   `https://www.freepik.com/api/video/3762321/download?optionId=19242183`,
-    // ];
-    // Get a random URL
-    // const mainURL = urls[Math?.floor(Math?.random() * urls?.length)];
-
-    // const headers = {
-    //   Cookie: `GR_REFRESH=${cookie}; GR_TOKEN=${GR_TOKEN};`,
-    //   'sec-ch-ua':
-    //     '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
-    //   'sec-ch-ua-arch': '""',
-    //   'sec-ch-ua-bitness': '"64"',
-    //   'sec-ch-ua-full-version': '"131.0.6778.267"',
-    //   'sec-ch-ua-full-version-list':
-    //     '"Google Chrome";v="131.0.6778.267", "Chromium";v="131.0.6778.267", "Not_A Brand";v="24.0.0.0"',
-    //   'sec-ch-ua-mobile': '?1',
-    //   'sec-ch-ua-model': '"Nexus 5"',
-    //   'sec-ch-ua-platform': '"Android"',
-    //   'sec-ch-ua-platform-version': '"6.0"',
-    //   'sec-fetch-dest': 'empty',
-    //   'sec-fetch-mode': 'cors',
-    //   'sec-fetch-site': 'same-origin',
-    //   'user-agent':
-    //     'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36',
-    // };
-
-    // Make the HTTP request
-    // const response = await axios({
-    //   method: 'GET',
-    //   url: mainURL,
-    //   headers: headers,
-    // });
-
-    // if (response?.data?.url) {
-    //   return updatedCookieDetails;
-    // } else {
-    //   return false;
-    // }
   } catch (error) {
     // console.log(error);
     return false;

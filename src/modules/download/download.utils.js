@@ -175,8 +175,6 @@ export const freepikCookieCredentials = async (cookieDetails, url, type) => {
       const track_id = await getFreepikAudioId(url);
 
       if (track_id) {
-        // https://www.magnific.com/audio/check-download-access/?id=829&view_name=track-detail
-        // mainURL = `https://audio-data.freepik.com/audio/download?track_id=${track_id}`;
         mainURL = `https://www.magnific.com/audio/check-download-access/?id=${track_id}`;
       }
     }

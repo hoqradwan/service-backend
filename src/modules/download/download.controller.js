@@ -1287,7 +1287,7 @@ export const handleFreePikDownload = catchAsync(async (req, res) => {
 
     let isCookieWorking;
 
-    for (let j = 0; j < 2; j++) {
+    for (let j = 0; j < 3; j++) {
       isCookieWorking = await isFreepikCookieValid(cookie);
       // console.log('working cookie', isCookieWorking);
 
