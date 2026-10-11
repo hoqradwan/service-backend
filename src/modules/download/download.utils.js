@@ -127,18 +127,13 @@ export const freepikCookieCredentials = async (cookieDetails, url, type) => {
   const itemSplit3 = itemSplit2[0]?.split('_');
   const itemCode = itemSplit3[itemSplit3?.length - 1];
   const cookie = cookieDetails?.cookie?.trim();
-  // const csrf_freepik = cookieDetails?.csrf_freepik?.trim();
   const GR_TOKEN = cookieDetails?.GR_TOKEN?.trim();
   const walletId = cookieDetails?.csrfToken?.trim();
-
-  // const token = cookieDetails?.csrfToken?.trim();
-  // console.log(itemCode, content);
 
   if (!itemCode) {
     return { headers: false, mainURL: false };
   }
 
-  // Main URL for download request
   let mainURL;
   const domain = 'https://www.magnific.com/';
 
@@ -146,12 +141,10 @@ export const freepikCookieCredentials = async (cookieDetails, url, type) => {
     mainURL = `${domain}api/icon/download?walletId=${walletId}&optionId=${itemCode}&format=${type}&type=original`;
   } else if (content === 'free-video' || content === 'premium-video') {
     const options = await getFreepikVideoQuality(url);
-    // console.log('options-->', options);
 
     if (type === 'original') {
       const optionId = options?.find((option) => option?.isOriginal === true);
       if (!optionId) {
-        // return res.status(400).json({ isOk: false, message: 'Invalid url' });
         return { headers: false, mainURL: false };
       } else {
         mainURL = `${domain}api/video/${itemCode}/download?walletId=${walletId}&optionId=${optionId?.id}`;
@@ -161,25 +154,20 @@ export const freepikCookieCredentials = async (cookieDetails, url, type) => {
         (option) => option?.quality === type && option?.isOriginal === false,
       );
       if (!optionId) {
-        // return res.status(400).json({ isOk: false, message: 'Invalid url' });
         return { headers: false, mainURL: false };
       } else {
         mainURL = `${domain}api/video/${itemCode}/download?walletId=${walletId}&optionId=${optionId?.id}`;
       }
     }
   } else if (content === 'audio') {
-    // console.log(content);
     const category = itemList[4];
-    // For tune audios
     if (category === 'tune') {
       const track_id = await getFreepikAudioId(url);
 
       if (track_id) {
         mainURL = `https://www.magnific.com/audio/check-download-access/?id=${track_id}`;
       }
-    }
-    // For  sound-effects --> category === "sound-effects"
-    else {
+    } else {
       const id = itemList[6];
       if (id) {
         mainURL = `https://www.magnific.com/audio/sound-effects/check-download-access/?id=${id}&source=web`;
@@ -188,24 +176,27 @@ export const freepikCookieCredentials = async (cookieDetails, url, type) => {
   } else if (content === '3d-model') {
     mainURL = `${domain}api/model3d/${itemCode}/download?walletId=${walletId}&fileType=${'blend'}`;
   } else if (content === 'font') {
-    // ${domain}api/fonts/download?id=42&walletId=3bce1eef-1e1e-4070-bbe7-db9d673848cf
     const resource = await getFreepikFontId(url);
-    // console.log('id', resource.id);
 
     if (!resource?.id) {
       return { headers: false, mainURL: false };
     }
     mainURL = `${domain}api/fonts/download?id=${resource?.id}&walletId=${walletId}`;
-  }
-  // (content === "free-photo" || content === "premium-photo"  || content === "free-vector" || content === "premium-vector" || content === "free-psd" || content === "premium-psd")
-  else {
+  } else if (
+    content === 'free-photo' ||
+    content === 'premium-photo' ||
+    content === 'free-vector' ||
+    content === 'premium-vector' ||
+    content === 'free-psd' ||
+    content === 'premium-psd'
+  ) {
     mainURL = `${domain}api/regular/download?walletId=${walletId}&resource=${itemCode}&action=download&locale=en`;
   }
 
-  // console.log('headers -->', headers);
-  // console.log('Main Url -->', mainURL);
+  if (!mainURL) {
+    return { headers: false, mainURL: false };
+  }
 
-  // headers for download request
   const headers = {
     Cookie: `GR_REFRESH=${cookie}; GR_TOKEN=${GR_TOKEN};`,
     'sec-ch-ua':
@@ -225,7 +216,118 @@ export const freepikCookieCredentials = async (cookieDetails, url, type) => {
     'user-agent':
       'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36',
   };
-  // console.log('headers -->', headers);
-  // console.log('Main Url -->', mainURL);
+
   return { headers, mainURL };
 };
+
+// export const freepikCookieCredentials = async (cookieDetails, url, type) => {
+//   const itemList = url?.trim()?.split('/');
+//   const content = itemList[3];
+//   let item = itemList?.[itemList?.length - 1];
+//   const itemSplit1 = item?.split('#');
+//   const itemSplit2 = itemSplit1[0]?.split('.htm');
+//   const itemSplit3 = itemSplit2[0]?.split('_');
+//   const itemCode = itemSplit3[itemSplit3?.length - 1];
+//   const cookie = cookieDetails?.cookie?.trim();
+//   // const csrf_freepik = cookieDetails?.csrf_freepik?.trim();
+//   const GR_TOKEN = cookieDetails?.GR_TOKEN?.trim();
+//   const walletId = cookieDetails?.csrfToken?.trim();
+
+//   // const token = cookieDetails?.csrfToken?.trim();
+//   // console.log(itemCode, content);
+
+//   if (!itemCode) {
+//     return { headers: false, mainURL: false };
+//   }
+
+//   // Main URL for download request
+//   let mainURL;
+//   const domain = 'https://www.magnific.com/';
+
+//   if (content === 'icon' || content === 'animated-icon') {
+//     mainURL = `${domain}api/icon/download?walletId=${walletId}&optionId=${itemCode}&format=${type}&type=original`;
+//   } else if (content === 'free-video' || content === 'premium-video') {
+//     const options = await getFreepikVideoQuality(url);
+//     // console.log('options-->', options);
+
+//     if (type === 'original') {
+//       const optionId = options?.find((option) => option?.isOriginal === true);
+//       if (!optionId) {
+//         // return res.status(400).json({ isOk: false, message: 'Invalid url' });
+//         return { headers: false, mainURL: false };
+//       } else {
+//         mainURL = `${domain}api/video/${itemCode}/download?walletId=${walletId}&optionId=${optionId?.id}`;
+//       }
+//     } else {
+//       const optionId = options?.find(
+//         (option) => option?.quality === type && option?.isOriginal === false,
+//       );
+//       if (!optionId) {
+//         // return res.status(400).json({ isOk: false, message: 'Invalid url' });
+//         return { headers: false, mainURL: false };
+//       } else {
+//         mainURL = `${domain}api/video/${itemCode}/download?walletId=${walletId}&optionId=${optionId?.id}`;
+//       }
+//     }
+//   } else if (content === 'audio') {
+//     // console.log(content);
+//     const category = itemList[4];
+//     // For tune audios
+//     if (category === 'tune') {
+//       const track_id = await getFreepikAudioId(url);
+
+//       if (track_id) {
+//         mainURL = `https://www.magnific.com/audio/check-download-access/?id=${track_id}`;
+//       }
+//     }
+//     // For  sound-effects --> category === "sound-effects"
+//     else {
+//       const id = itemList[6];
+//       if (id) {
+//         mainURL = `https://www.magnific.com/audio/sound-effects/check-download-access/?id=${id}&source=web`;
+//       }
+//     }
+//   } else if (content === '3d-model') {
+//     mainURL = `${domain}api/model3d/${itemCode}/download?walletId=${walletId}&fileType=${'blend'}`;
+//   } else if (content === 'font') {
+//     // ${domain}api/fonts/download?id=42&walletId=3bce1eef-1e1e-4070-bbe7-db9d673848cf
+//     const resource = await getFreepikFontId(url);
+//     // console.log('id', resource.id);
+
+//     if (!resource?.id) {
+//       return { headers: false, mainURL: false };
+//     }
+//     mainURL = `${domain}api/fonts/download?id=${resource?.id}&walletId=${walletId}`;
+//   }
+//   // (content === "free-photo" || content === "premium-photo"  || content === "free-vector" || content === "premium-vector" || content === "free-psd" || content === "premium-psd")
+//   else {
+//     mainURL = `${domain}api/regular/download?walletId=${walletId}&resource=${itemCode}&action=download&locale=en`;
+//   }
+
+//   // console.log('headers -->', headers);
+//   // console.log('Main Url -->', mainURL);
+
+//   // headers for download request
+//   const headers = {
+//     Cookie: `GR_REFRESH=${cookie}; GR_TOKEN=${GR_TOKEN};`,
+//     'sec-ch-ua':
+//       '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+//     'sec-ch-ua-arch': '""',
+//     'sec-ch-ua-bitness': '"64"',
+//     'sec-ch-ua-full-version': '"131.0.6778.267"',
+//     'sec-ch-ua-full-version-list':
+//       '"Google Chrome";v="131.0.6778.267", "Chromium";v="131.0.6778.267", "Not_A Brand";v="24.0.0.0"',
+//     'sec-ch-ua-mobile': '?1',
+//     'sec-ch-ua-model': '"Nexus 5"',
+//     'sec-ch-ua-platform': '"Android"',
+//     'sec-ch-ua-platform-version': '"6.0"',
+//     'sec-fetch-dest': 'empty',
+//     'sec-fetch-mode': 'cors',
+//     'sec-fetch-site': 'same-origin',
+//     'user-agent':
+//       'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36',
+//   };
+//   // console.log('headers -->', headers);
+//   // console.log('Main Url -->', mainURL);
+//   return { headers, mainURL };
+// };

@@ -478,99 +478,270 @@ export const isMotionArrayCookieValid = async (cookieDetails) => {
 
 // Check if the Freepik cookie is expired or not
 
+// export const isFreepikCookieValid = async (cookieDetails) => {
+//   try {
+//     // console.log('hit');
+
+//     const cookie = cookieDetails?.cookie?.trim();
+
+//     const { GR_TOKEN } = await generateGRToken(cookie);
+//     // console.log('GR Token-->', GR_TOKEN);
+
+//     let updatedCookieDetails;
+//     if (GR_TOKEN) {
+//       cookieDetails = cookieDetails.toObject();
+//       updatedCookieDetails = { ...cookieDetails, GR_TOKEN };
+//       return updatedCookieDetails;
+//     } else {
+//       return false;
+//     }
+//   } catch (error) {
+//     // console.log(error);
+//     return false;
+//   }
+// };
+
+// export const generateGRToken = async (cookie) => {
+//   // console.log('coming');
+//   try {
+//     const mainURL = 'https://www.magnific.com/app';
+
+//     const headers = {
+//       Cookie: `GR_REFRESH=${cookie};`,
+//       'sec-ch-ua':
+//         '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+//       'sec-ch-ua-arch': '""',
+//       'sec-ch-ua-bitness': '"64"',
+//       'sec-ch-ua-full-version': '"131.0.6778.267"',
+//       'sec-ch-ua-full-version-list':
+//         '"Google Chrome";v="131.0.6778.267", "Chromium";v="131.0.6778.267", "Not_A Brand";v="24.0.0.0"',
+//       'sec-ch-ua-mobile': '?1',
+//       'sec-ch-ua-model': '"Nexus 5"',
+//       'sec-ch-ua-platform': '"Android"',
+//       'sec-ch-ua-platform-version': '"6.0"',
+//       'sec-fetch-dest': 'empty',
+//       'sec-fetch-mode': 'cors',
+//       'sec-fetch-site': 'same-origin',
+//       'user-agent':
+//         'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36',
+//     };
+
+//     // Make the HTTP request
+//     const response = await axios({
+//       method: 'GET',
+//       url: mainURL,
+//       headers: headers,
+//     });
+
+//     // console.log('response -->', response?.headers);
+
+//     if (response?.headers) {
+//       const setCookieArray = response?.headers['set-cookie'];
+//       const cookies = Object?.fromEntries(
+//         setCookieArray?.map((cookie) => {
+//           const [key, value] = cookie.split(';')[0].split('=');
+//           return [key, value];
+//         }),
+//       );
+//       const GR_TOKEN = cookies['GR_TOKEN'];
+
+//       if (!GR_TOKEN) {
+//         console.log('GR_Token --> Failed');
+//       }
+
+//       if (GR_TOKEN) {
+//         return { GR_TOKEN };
+//       } else {
+//         return false;
+//       }
+//     } else {
+//       return false;
+//     }
+//   } catch (error) {
+//     // Check if the error came from the server response (e.g., 403, 404, 500)
+//     if (error.response) {
+//       console.error(
+//         `Request failed with status ${error.response.status}: ${error.response.statusText}`,
+//       );
+//     } else if (error.request) {
+//       // The request was made but no response was received
+//       console.error('No response received from server:', error.message);
+//     } else {
+//       // Something happened in setting up the request
+//       console.error('Error setting up request:', error.message);
+//     }
+
+//     return false;
+//   }
+// };
+
+// export const generateGRToken = async (cookie) => {
+//   let browser;
+//   try {
+//     browser = await puppeteer.launch({
+//       headless: 'new',
+//       args: [
+//         '--no-sandbox',
+//         '--disable-setuid-sandbox',
+//         '--disable-dev-shm-usage',
+//         '--disable-gpu',
+//       ],
+//     });
+
+//     const page = await browser.newPage();
+
+//     // Set a realistic User-Agent
+//     await page.setUserAgent(
+//       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+//     );
+
+//     // Set the GR_REFRESH cookie before visiting the page
+//     await page.setCookie({
+//       name: 'GR_REFRESH',
+//       value: cookie,
+//       url: 'https://www.magnific.com',
+//     });
+
+//     // Navigate to the app page
+//     const response = await page.goto('https://www.magnific.com/app', {
+//       waitUntil: 'networkidle2',
+//       timeout: 60000,
+//     });
+
+//     // Check if the page itself hit a 403 block
+//     if (response && response.status() === 403) {
+//       console.error(
+//         'Security filter blocked the Puppeteer request (403 Forbidden)',
+//       );
+//       return false;
+//     }
+
+//     // Retrieve all cookies from the page session
+//     const cookies = await page.cookies();
+//     const grTokenCookie = cookies.find((c) => c.name === 'GR_TOKEN');
+
+//     if (grTokenCookie?.value) {
+//       return { GR_TOKEN: grTokenCookie.value };
+//     }
+
+//     console.log('GR_Token --> Failed to find GR_TOKEN in cookies');
+//     return false;
+//   } catch (error) {
+//     console.error('Puppeteer generateGRToken error:', error.message);
+//     return false;
+//   } finally {
+//     if (browser) {
+//       await browser.close();
+//     }
+//   }
+// };
+
 export const isFreepikCookieValid = async (cookieDetails) => {
   try {
-    // console.log('hit');
-
     const cookie = cookieDetails?.cookie?.trim();
+    const existingExtraCookie = cookieDetails?.extra_cookie;
+    const updatedAt = cookieDetails?.updatedAt;
 
-    const { GR_TOKEN } = await generateGRToken(cookie);
-    // console.log('GR Token-->', GR_TOKEN);
+    // Check if GR_TOKEN exists and is less than 15 minutes old
+    const fifteenMinutes = 15 * 60 * 1000;
+    const isTokenRecent =
+      existingExtraCookie &&
+      updatedAt &&
+      Date.now() - new Date(updatedAt).getTime() < fifteenMinutes;
+
+    let GR_TOKEN;
+
+    if (isTokenRecent) {
+      // console.log('Using existing valid GR_TOKEN (less than 15 minutes old)');
+      GR_TOKEN = existingExtraCookie;
+    } else {
+      // console.log(
+      //   'GR_TOKEN is missing or older than 15 minutes. Generating new one...',
+      // );
+      const tokenResult = await generateGRToken(cookie);
+      GR_TOKEN = tokenResult?.GR_TOKEN;
+
+      if (GR_TOKEN) {
+        // Save the newly generated extra_cookie in DB immediately
+        await updateCookieByIdService(cookieDetails._id, {
+          extra_cookie: GR_TOKEN,
+        });
+      }
+    }
 
     let updatedCookieDetails;
     if (GR_TOKEN) {
-      cookieDetails = cookieDetails.toObject();
-      updatedCookieDetails = { ...cookieDetails, GR_TOKEN };
+      const plainCookieObj =
+        typeof cookieDetails.toObject === 'function'
+          ? cookieDetails.toObject()
+          : cookieDetails;
+      updatedCookieDetails = {
+        ...plainCookieObj,
+        extra_cookie: GR_TOKEN,
+        GR_TOKEN,
+      };
       return updatedCookieDetails;
     } else {
       return false;
     }
   } catch (error) {
-    // console.log(error);
+    console.error('isFreepikCookieValid error:', error.message);
     return false;
   }
 };
 
 export const generateGRToken = async (cookie) => {
-  // console.log('coming');
+  let browser;
   try {
-    const mainURL = 'https://www.magnific.com/app';
-
-    const headers = {
-      Cookie: `GR_REFRESH=${cookie};`,
-      'sec-ch-ua':
-        '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
-      'sec-ch-ua-arch': '""',
-      'sec-ch-ua-bitness': '"64"',
-      'sec-ch-ua-full-version': '"131.0.6778.267"',
-      'sec-ch-ua-full-version-list':
-        '"Google Chrome";v="131.0.6778.267", "Chromium";v="131.0.6778.267", "Not_A Brand";v="24.0.0.0"',
-      'sec-ch-ua-mobile': '?1',
-      'sec-ch-ua-model': '"Nexus 5"',
-      'sec-ch-ua-platform': '"Android"',
-      'sec-ch-ua-platform-version': '"6.0"',
-      'sec-fetch-dest': 'empty',
-      'sec-fetch-mode': 'cors',
-      'sec-fetch-site': 'same-origin',
-      'user-agent':
-        'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36',
-    };
-
-    // Make the HTTP request
-    const response = await axios({
-      method: 'GET',
-      url: mainURL,
-      headers: headers,
+    browser = await puppeteer.launch({
+      headless: 'new',
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+      ],
     });
 
-    // console.log('response -->', response?.headers);
+    const page = await browser.newPage();
 
-    if (response?.headers) {
-      const setCookieArray = response?.headers['set-cookie'];
-      const cookies = Object?.fromEntries(
-        setCookieArray?.map((cookie) => {
-          const [key, value] = cookie.split(';')[0].split('=');
-          return [key, value];
-        }),
+    await page.setUserAgent(
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+    );
+
+    await page.setCookie({
+      name: 'GR_REFRESH',
+      value: cookie,
+      url: 'https://www.magnific.com',
+    });
+
+    const response = await page.goto('https://www.magnific.com/app', {
+      waitUntil: 'networkidle2',
+      timeout: 60000,
+    });
+
+    if (response && response.status() === 403) {
+      console.error(
+        'Security filter blocked the Puppeteer request (403 Forbidden)',
       );
-      const GR_TOKEN = cookies['GR_TOKEN'];
-
-      if (!GR_TOKEN) {
-        console.log('GR_Token --> Failed');
-      }
-
-      if (GR_TOKEN) {
-        return { GR_TOKEN };
-      } else {
-        return false;
-      }
-    } else {
       return false;
     }
-  } catch (error) {
-    // Check if the error came from the server response (e.g., 403, 404, 500)
-    if (error.response) {
-      console.error(
-        `Request failed with status ${error.response.status}: ${error.response.statusText}`,
-      );
-    } else if (error.request) {
-      // The request was made but no response was received
-      console.error('No response received from server:', error.message);
-    } else {
-      // Something happened in setting up the request
-      console.error('Error setting up request:', error.message);
+
+    const cookies = await page.cookies();
+    const grTokenCookie = cookies.find((c) => c.name === 'GR_TOKEN');
+
+    if (grTokenCookie?.value) {
+      return { GR_TOKEN: grTokenCookie.value };
     }
 
+    console.log('GR_Token --> Failed to find GR_TOKEN in cookies');
     return false;
+  } catch (error) {
+    console.error('Puppeteer generateGRToken error:', error.message);
+    return false;
+  } finally {
+    if (browser) {
+      await browser.close();
+    }
   }
 };

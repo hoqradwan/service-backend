@@ -34,6 +34,7 @@ import {
 import { findUserById } from '../user/user.service.js';
 import fetch from 'node-fetch';
 import {
+  generateGRToken,
   isCookieValid,
   isFreepikCookieValid,
   isMotionArrayCookieValid,
@@ -1217,6 +1218,226 @@ export const handleMotionArrayDownload = catchAsync(async (req, res) => {
   }
 });
 
+// export const handleFreePikDownload = catchAsync(async (req, res) => {
+//   const { url, type } = req?.body;
+//   const userId = req?.user?.id;
+
+//   if (!userId) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: "Couldn't generate user id",
+//       data: null,
+//     });
+//   }
+
+//   const user = await findUserById(userId);
+
+//   if (!user) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: "Couldn't find the user",
+//       data: null,
+//     });
+//   }
+
+//   // Current license
+//   const licenseId = user?.currentFreepikLicense;
+
+//   if (!licenseId) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: 'You do not have a license activated',
+//       data: null,
+//     });
+//   }
+
+//   // Daily limit check
+//   const limitCheck = await isDailyLimitExceed(licenseId);
+
+//   if (!limitCheck?.isOk) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: limitCheck?.message,
+//       data: null,
+//     });
+//   }
+
+//   if (limitCheck?.exceeded) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: 'Download limit is exceeded',
+//       data: null,
+//     });
+//   }
+
+//   // =========================
+//   // Find working cookie
+//   // =========================
+
+//   let cookieDetails = null;
+
+//   for (let i = 0; i < 3; i++) {
+//     const cookie = await generateRandomAccount('freepik');
+
+//     if (!cookie) break;
+
+//     let isCookieWorking;
+
+//     for (let j = 0; j < 3; j++) {
+//       isCookieWorking = await isFreepikCookieValid(cookie);
+//       // console.log('working cookie', isCookieWorking);
+
+//       if (isCookieWorking) break;
+//     }
+
+//     if (!isCookieWorking) {
+//       await updateCookieByIdService(cookie?._id, { status: 'inactive' });
+//     }
+
+//     if (isCookieWorking) {
+//       cookieDetails = isCookieWorking;
+//       break;
+//     }
+//   }
+
+//   if (!cookieDetails) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: 'No working account found',
+//       data: null,
+//     });
+//   }
+
+//   // =========================
+//   // Generate headers + URL
+//   // =========================
+
+//   const { headers, mainURL } = await freepikCookieCredentials(
+//     cookieDetails,
+//     url,
+//     type,
+//   );
+
+//   // console.log('headers -->', headers);
+//   console.log('Main Url -->', mainURL);
+
+//   if (!headers || !mainURL) {
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: 'Something went wrong! PLease enter the correct url',
+//       data: null,
+//     });
+//   }
+
+//   // =========================
+//   // AUDIO DOWNLOAD HANDLING
+//   // =========================
+
+//   const itemList = url?.trim()?.split('/');
+//   const content = itemList[3];
+
+//   if (content === 'audio') {
+//     const audioResponse = await axios({
+//       method: 'GET',
+//       url: mainURL,
+//       headers: headers,
+//       responseType: 'stream',
+//       maxRedirects: 5,
+//     });
+//     // console.log('audioResponse-->', audioResponse);
+//     const audioName = itemList[itemList.length - 1];
+
+//     const filename = `freepik-${audioName}.mp3`;
+
+//     // Save download log
+//     const download = {
+//       service: 'Freepik',
+//       content: url,
+//       contentLicense: null,
+//       serviceId: cookieDetails?._id,
+//       licenseId: licenseId,
+//       status: 'accepted',
+//     };
+
+//     await addDownloadIntoDB(download, req.user);
+
+//     // Send download to frontend
+//     res.setHeader('Content-Type', 'audio/mpeg');
+//     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+//     audioResponse.data.pipe(res);
+
+//     return;
+//   }
+
+//   // =========================
+//   // IMAGE / VIDEO DOWNLOAD
+//   // =========================
+
+//   try {
+//     const response = await axios({
+//       method: 'GET',
+//       url: mainURL,
+//       headers: headers,
+//       maxRedirects: 5,
+//     });
+//     // console.log('res data -->', response.data);
+
+//     if (response?.data?.url) {
+//       const download = {
+//         service: 'Freepik',
+//         content: url, // Make sure 'url' is defined in your scope
+//         contentLicense: null,
+//         serviceId: cookieDetails?._id,
+//         licenseId: licenseId,
+//         status: 'pending',
+//       };
+
+//       const result = await addDownloadIntoDB(download, req.user);
+
+//       return sendResponse(res, {
+//         success: true,
+//         statusCode: 200,
+//         message: 'Download request successful',
+//         data: {
+//           downloadUrl: response?.data?.url,
+//           downloadId: result?.[0]?._id,
+//         },
+//       });
+//     }
+
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: 'Download request unsuccessful',
+//       data: null,
+//     });
+//   } catch (error) {
+//     // Log a clean, concise error message to the console
+//     console.error(
+//       'Download request error:',
+//       error.response?.status || error.message,
+//     );
+
+//     // Send a clean "Invalid URL" or request failure response back to the client
+//     return sendResponse(res, {
+//       success: false,
+//       statusCode: 400,
+//       message: 'Invalid URL or failed to fetch download link',
+//       data: null,
+//     });
+//   }
+// });
+
+// Request for getting Freepik Video Quality
+
 export const handleFreePikDownload = catchAsync(async (req, res) => {
   const { url, type } = req?.body;
   const userId = req?.user?.id;
@@ -1275,30 +1496,35 @@ export const handleFreePikDownload = catchAsync(async (req, res) => {
   }
 
   // =========================
-  // Find working cookie
+  // Find working cookie with 15-min check / regeneration
   // =========================
 
   let cookieDetails = null;
 
   for (let i = 0; i < 3; i++) {
-    const cookie = await generateRandomAccount('freepik');
+    const rawCookieDoc = await generateRandomAccount('freepik');
+    if (!rawCookieDoc) break;
 
-    if (!cookie) break;
-
-    let isCookieWorking;
+    let isCookieWorking = null;
 
     for (let j = 0; j < 3; j++) {
-      isCookieWorking = await isFreepikCookieValid(cookie);
-      // console.log('working cookie', isCookieWorking);
-
-      if (isCookieWorking) break;
+      try {
+        isCookieWorking = await isFreepikCookieValid(rawCookieDoc);
+        if (isCookieWorking) break;
+      } catch (err) {
+        console.error(
+          `Attempt ${j + 1} validation error for cookie:`,
+          err.message,
+        );
+      }
     }
 
     if (!isCookieWorking) {
-      await updateCookieByIdService(cookie?._id, { status: 'inactive' });
-    }
-
-    if (isCookieWorking) {
+      console.log(
+        `Cookie verification failed completely. Setting inactive: ${rawCookieDoc?._id}`,
+      );
+      await updateCookieByIdService(rawCookieDoc?._id, { status: 'inactive' });
+    } else {
       cookieDetails = isCookieWorking;
       break;
     }
@@ -1314,94 +1540,82 @@ export const handleFreePikDownload = catchAsync(async (req, res) => {
   }
 
   // =========================
-  // Generate headers + URL
+  // Helper function to execute download attempt
   // =========================
+  const executeDownload = async (currentCookieDetails) => {
+    const { headers, mainURL } = await freepikCookieCredentials(
+      currentCookieDetails,
+      url,
+      type,
+    );
 
-  const { headers, mainURL } = await freepikCookieCredentials(
-    cookieDetails,
-    url,
-    type,
-  );
+    if (!headers || !mainURL) {
+      // console.log('Invalid URL or credentials generation failed');
+      return sendResponse(res, {
+        success: false,
+        statusCode: 400,
+        message: 'Invalid URL or credentials! Please provide correct URL',
+        data: null,
+      });
+    }
 
-  // console.log('headers -->', headers);
-  console.log('Main Url -->', mainURL);
+    // AUDIO DOWNLOAD HANDLING
+    const itemList = url?.trim()?.split('/');
+    const content = itemList[3];
 
-  if (!headers || !mainURL) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: 'Something went wrong! PLease enter the correct url',
-      data: null,
-    });
-  }
+    if (content === 'audio') {
+      const audioResponse = await axios({
+        method: 'GET',
+        url: mainURL,
+        headers: headers,
+        responseType: 'stream',
+        maxRedirects: 5,
+      });
 
-  // =========================
-  // AUDIO DOWNLOAD HANDLING
-  // =========================
+      const audioName = itemList[itemList.length - 1];
+      const filename = `freepik-${audioName}.mp3`;
 
-  const itemList = url?.trim()?.split('/');
-  const content = itemList[3];
+      const download = {
+        service: 'Freepik',
+        content: url,
+        contentLicense: null,
+        serviceId: currentCookieDetails?._id,
+        licenseId: licenseId,
+        status: 'accepted',
+      };
 
-  if (content === 'audio') {
-    const audioResponse = await axios({
-      method: 'GET',
-      url: mainURL,
-      headers: headers,
-      responseType: 'stream',
-      maxRedirects: 5,
-    });
-    // console.log('audioResponse-->', audioResponse);
-    const audioName = itemList[itemList.length - 1];
+      await addDownloadIntoDB(download, req.user);
 
-    const filename = `freepik-${audioName}.mp3`;
+      res.setHeader('Content-Type', 'audio/mpeg');
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${filename}"`,
+      );
+      audioResponse.data.pipe(res);
+      return { handled: true };
+    }
 
-    // Save download log
-    const download = {
-      service: 'Freepik',
-      content: url,
-      contentLicense: null,
-      serviceId: cookieDetails?._id,
-      licenseId: licenseId,
-      status: 'accepted',
-    };
-
-    await addDownloadIntoDB(download, req.user);
-
-    // Send download to frontend
-    res.setHeader('Content-Type', 'audio/mpeg');
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-
-    audioResponse.data.pipe(res);
-
-    return;
-  }
-
-  // =========================
-  // IMAGE / VIDEO DOWNLOAD
-  // =========================
-
-  try {
+    // IMAGE / VIDEO DOWNLOAD
     const response = await axios({
       method: 'GET',
       url: mainURL,
       headers: headers,
       maxRedirects: 5,
     });
-    // console.log('res data -->', response.data);
 
     if (response?.data?.url) {
       const download = {
         service: 'Freepik',
-        content: url, // Make sure 'url' is defined in your scope
+        content: url,
         contentLicense: null,
-        serviceId: cookieDetails?._id,
+        serviceId: currentCookieDetails?._id,
         licenseId: licenseId,
         status: 'pending',
       };
 
       const result = await addDownloadIntoDB(download, req.user);
 
-      return sendResponse(res, {
+      sendResponse(res, {
         success: true,
         statusCode: 200,
         message: 'Download request successful',
@@ -1410,32 +1624,65 @@ export const handleFreePikDownload = catchAsync(async (req, res) => {
           downloadId: result?.[0]?._id,
         },
       });
+      return { handled: true };
     }
 
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: 'Download request unsuccessful',
-      data: null,
-    });
-  } catch (error) {
-    // Log a clean, concise error message to the console
-    console.error(
-      'Download request error:',
-      error.response?.status || error.message,
+    throw new Error('Download request unsuccessful from provider');
+  };
+
+  // ========================Execution with Retry Loop on Failure =========================
+  try {
+    let downloadResult = await executeDownload(cookieDetails);
+    if (downloadResult?.handled) return;
+  } catch (initialError) {
+    console.warn(
+      'Initial download attempt failed. Attempting token refresh loop...',
+      initialError.message,
     );
 
-    // Send a clean "Invalid URL" or request failure response back to the client
-    return sendResponse(res, {
-      success: false,
-      statusCode: 400,
-      message: 'Invalid URL or failed to fetch download link',
-      data: null,
-    });
+    let recovered = false;
+    // Retry loop to fetch a fresh token if download failed
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        // console.log(`Retry token generation attempt ${attempt + 1}...`);
+        const freshTokenObj = await generateGRToken(
+          cookieDetails.cookie.trim(),
+        );
+
+        if (freshTokenObj?.GR_TOKEN) {
+          cookieDetails.extra_cookie = freshTokenObj.GR_TOKEN;
+          // Update token in DB
+          await updateCookieByIdService(cookieDetails._id, {
+            extra_cookie: freshTokenObj.GR_TOKEN,
+          });
+
+          const retryResult = await executeDownload(cookieDetails);
+          if (retryResult?.handled) {
+            recovered = true;
+            break;
+          }
+        }
+      } catch (retryErr) {
+        console.error(`Retry attempt ${attempt + 1} failed:`, retryErr.message);
+      }
+    }
+
+    if (!recovered) {
+      console.error(
+        'All download recovery attempts failed. Setting cookie inactive.',
+      );
+      await updateCookieByIdService(cookieDetails?._id, { status: 'inactive' });
+
+      return sendResponse(res, {
+        success: false,
+        statusCode: 400,
+        message: 'Invalid URL or failed to fetch download link',
+        data: null,
+      });
+    }
   }
 });
 
-// Request for getting Freepik Video Quality
 export const getFreepikVideoQuality = async (mainURL) => {
   let browser;
   try {

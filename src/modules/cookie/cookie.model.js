@@ -23,6 +23,11 @@ const CookieSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    extra_cookie: {
+      // GR_TOKEN (Freepik)
+      type: String,
+      // required: true,
+    },
     csrfToken: {
       // csrf token(envato) || login session token(story-blocks) || walletId(Freepik)
       type: String,
