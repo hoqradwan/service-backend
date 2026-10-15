@@ -330,7 +330,7 @@ const limit = pLimit(2);
 // Credentials for envato puppeteer
 export const EnvatoPuppeteerCredential = {
   headless: 'new',
-  protocolTimeout: 180000, // Prevents protocol timeout crashes (3 minutes)
+  protocolTimeout: 300000, // Prevents protocol timeout crashes (5 minutes)
   args: [
     '--no-sandbox',
     '--disable-setuid-sandbox',
@@ -415,7 +415,11 @@ export const getRedirectEnvatoLink = async (url, cookieDetails) => {
 
       return null;
     } catch (error) {
-      console.error('Envato redirect error:', error.message);
+      const timestamp = new Date().toISOString();
+      console.error(
+        `[${timestamp}] [Envato Service Redirect] Crash/Error detected:`,
+        error.message,
+      );
 
       // Safely close page if it's still open
       if (page) {
@@ -543,27 +547,32 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
   /* ------------------ URL Processing ------------------ */
   let finalUrl = null;
   let envatoSessionToken = null;
-  if (domain === 'app.envato.com') {
-    finalUrl = url;
-  } else if (domain === 'elements.envato.com') {
-    //  Get Session
 
+  if (domain === 'app.envato.com') {
+    // Clean app.envato.com URL just in case it also has query params
+    try {
+      const parsedUrl = new URL(url);
+      finalUrl = `${parsedUrl.origin}${parsedUrl.pathname}`;
+    } catch {
+      finalUrl = url;
+    }
+  } else if (domain === 'elements.envato.com') {
     // Check if session is 30 minutes old
     const THIRTY_MINUTES = 30 * 60 * 1000;
     const now = Date.now();
     const updatedAt = new Date(cookieDetails.updatedAt).getTime();
     const isExpired = now - updatedAt > THIRTY_MINUTES;
-    // console.log('Time-->', cookieDetails.account, ' = ', isExpired);
+
     // Request for new session if isExpired
     if (isExpired) {
       const MAX_ATTEMPTS = 3;
       for (let i = 0; i < MAX_ATTEMPTS; i++) {
         envatoSessionToken = await getEnvatoSessionToken(cookieDetails);
-        // console.log('session-->', envatoSessionToken);
         if (envatoSessionToken) {
           break;
         }
       }
+
       if (envatoSessionToken) {
         cookieDetails.csrfToken = envatoSessionToken;
         // Update in DB
@@ -571,6 +580,12 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
           csrfToken: envatoSessionToken,
         });
       } else {
+        console.log(
+          'Inactive cookie for Session Token Failed-->',
+          cookieDetails?.account,
+        );
+        console.log('Current URL-->', url);
+
         await updateCookieByIdService(cookieDetails._id, {
           status: 'inactive',
         });
@@ -584,22 +599,32 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
       }
     }
 
-    finalUrl = await getRedirectEnvatoLink(url, cookieDetails);
-    // console.log('Final Url-->', finalUrl);
+    const rawFinalUrl = await getRedirectEnvatoLink(url, cookieDetails);
 
-    if (!finalUrl || finalUrl.split('/').length !== 5) {
-      return sendResponse(res, {
-        success: false,
-        statusCode: 400,
-        message: 'There was a problem getting the file! Please try again.',
-        data: null,
-      });
+    // Clean the redirected URL by removing query parameters (e.g., _gl, gclid, gbraid)
+    if (rawFinalUrl) {
+      try {
+        const parsedUrl = new URL(rawFinalUrl);
+        finalUrl = `${parsedUrl.origin}${parsedUrl.pathname}`;
+      } catch {
+        finalUrl = rawFinalUrl;
+      }
     }
   } else {
     return sendResponse(res, {
       success: false,
       statusCode: 400,
       message: 'Invalid URL! Please provide correct url from envato',
+      data: null,
+    });
+  }
+
+  // Validate the final cleaned URL structure
+  if (!finalUrl || finalUrl.split('/').length !== 5) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'There was a problem getting the file! Please try again.',
       data: null,
     });
   }
@@ -753,6 +778,11 @@ export const handleEnvatoDownload = catchAsync(async (req, res) => {
 
   // If after all retries no valid downloadUrl was obtained
   if (!downloadUrl) {
+    console.log(
+      'Inactive cookie for download link Failed-->',
+      cookieDetails?.account,
+    );
+    console.log('Current URL-->', url);
     await updateCookieByIdService(cookieDetails._id, { status: 'inactive' });
 
     return sendResponse(res, {

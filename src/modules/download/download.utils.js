@@ -53,6 +53,7 @@ export const envatoCookieCredentials = (cookieDetails, url) => {
 export const StoryBlocksPuppeteerCredential = {
   headless: 'new',
   // executablePath: '/usr/bin/chromium-browser', // only for deployed server
+  protocolTimeout: 300000, //  to 5 minutes (300000ms)
   args: [
     '--no-sandbox',
     '--disable-setuid-sandbox',

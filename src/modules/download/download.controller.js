@@ -1004,7 +1004,8 @@ const storyBlocksDownloadRequest = async (mainURL, cookieDetails) => {
 const motionArrayDownloadRequest = async (headers, mainURL) => {
   const browser = await puppeteer?.launch({
     headless: true,
-    executablePath: '/usr/bin/chromium-browser',
+    // executablePath: '/usr/bin/chromium-browser',
+    protocolTimeout: 300000, //  to 5 minutes (300000ms)
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
@@ -1039,6 +1040,11 @@ const motionArrayDownloadRequest = async (headers, mainURL) => {
       return signedUrl;
     } else return false;
   } catch (error) {
+    const timestamp = new Date().toISOString();
+    console.error(
+      `[${timestamp}] [Motion Array Download Service] Crash/Error detected:`,
+      error.message,
+    );
     // console.error('Error:', error.message);
     await browser.close();
   }
@@ -1468,6 +1474,7 @@ export const getFreepikVideoQuality = async (mainURL) => {
   try {
     browser = await puppeteer.launch({
       headless: 'new',
+      protocolTimeout: 300000, // Prevents protocol timeout crashes (5 minutes)
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -1494,8 +1501,11 @@ export const getFreepikVideoQuality = async (mainURL) => {
     const options = nextData?.props?.pageProps?.options;
     return options || false;
   } catch (error) {
-    // Log only a clean, readable message instead of the massive stack trace
-    console.error('Error fetching Freepik video quality:', error.message);
+    const timestamp = new Date().toISOString();
+    console.error(
+      `[${timestamp}] [Error fetching Freepik video quality] Crash/Error detected:`,
+      error.message,
+    );
     return false;
   } finally {
     // Always close the browser, success or failure

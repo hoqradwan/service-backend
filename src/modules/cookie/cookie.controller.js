@@ -376,7 +376,8 @@ export const isStoryBlocksCookieValid = async (cookieDetails) => {
 export const isMotionArrayCookieValid = async (cookieDetails) => {
   const browser = await puppeteer.launch({
     headless: true,
-    executablePath: '/usr/bin/chromium-browser',
+    // executablePath: '/usr/bin/chromium-browser',
+    protocolTimeout: 300000, //  to 5 minutes (300000ms)
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
@@ -419,6 +420,12 @@ export const isMotionArrayCookieValid = async (cookieDetails) => {
 
     return signedUrl ? true : false;
   } catch (error) {
+    const timestamp = new Date().toISOString();
+    console.error(
+      `[${timestamp}] [Motion Array Service] Crash/Error detected:`,
+      error.message,
+    );
+
     await browser.close();
     return false;
   }
@@ -483,6 +490,7 @@ export const generateGRToken = async (cookie) => {
   try {
     browser = await puppeteer.launch({
       headless: 'new',
+      protocolTimeout: 300000, // Prevents protocol timeout crashes (5 minutes)
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -525,7 +533,11 @@ export const generateGRToken = async (cookie) => {
     console.log('GR_Token --> Failed to find GR_TOKEN in cookies');
     return false;
   } catch (error) {
-    console.error('Puppeteer generateGRToken error:', error.message);
+    const timestamp = new Date().toISOString();
+    console.error(
+      `[${timestamp}] [Freepik generateGRToken Service] Crash/Error detected:`,
+      error.message,
+    );
     return false;
   } finally {
     if (browser) {
